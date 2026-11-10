@@ -1,0 +1,16 @@
+# Android Release Keystore Signing Secrets
+# Copy this file to 'android/key.properties' and fill in your secrets.
+# NEVER commit 'key.properties' or your '*.keystore' file into git!
+
+# Path to your keystore file relative to the 'android/app' directory
+# (or absolute path, e.g. /home/user/release-key.keystore)
+storeFile=release.keystore
+
+# Password for the keystore
+storePassword=your_keystore_password_here
+
+# Alias name for your key
+keyAlias=milkypy_release_key
+
+# Password for your key alias
+keyPassword=your_key_password_here

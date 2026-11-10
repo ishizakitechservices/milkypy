@@ -1,0 +1,8 @@
+{
+  "name": "Milky AI Tutor",
+  "description": "An interactive, friendly, and detailed Python tutor website featuring step-by-step lessons, live code execution, customized playground, arcade games, and dynamic non-preset AI-powered quizzes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

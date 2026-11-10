@@ -1,0 +1,296 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Universal Design System Core Palette */
+  --color-obsidian: #08090D;
+  --color-deep-black: #050608;
+  --color-charcoal: #15171E;
+  --color-graphite: #252933;
+  --color-slate-custom: #353A46;
+  --color-silver: #BFC4CE;
+  --color-soft-white: #F3F4F6;
+
+  /* Accent Palette */
+  --color-ice-blue: #8BBEFF;
+  --color-electric-violet: #A98BFF;
+  --color-aqua: #65D9D0;
+  --color-soft-cyan: #73D9F5;
+  --color-warm-amber: #F2BC72;
+  --color-rose-accent: #E99AB5;
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer utilities {
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.2s ease-out forwards;
+  }
+
+  /* Glassmorphism Styles */
+  .glass-panel {
+    background: rgba(21, 23, 30, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .dark .glass-panel-dark {
+    background: rgba(15, 17, 23, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 36px rgba(5, 6, 8, 0.6);
+  }
+
+  .glass-panel-elevated {
+    background: rgba(37, 41, 51, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 16px 48px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Light mode glass refinement */
+  :root:not(.dark) .glass-panel,
+  :root:not(.dark) .glass-panel-dark,
+  :root:not(.dark) .glass-panel-elevated {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(20, 25, 35, 0.12);
+    box-shadow: 0 4px 20px rgba(20, 25, 35, 0.06);
+  }
+
+  /* Neumorphic Depth Controls */
+  .neumorphic-card {
+    background: #15171E;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 4px 4px 12px rgba(5, 6, 8, 0.6), -2px -2px 8px rgba(255, 255, 255, 0.03);
+  }
+
+  .neumorphic-button {
+    background: #252933;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transition: all 0.15s ease-out;
+  }
+  .neumorphic-button:hover {
+    background: #2e3340;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .neumorphic-button:active {
+    background: #1f222b;
+    box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.6), inset -1px -1px 4px rgba(255, 255, 255, 0.05);
+  }
+
+  /* Skeuomorphic Metallic Details */
+  .skeuo-metal {
+    background: linear-gradient(135deg, #252933 0%, #15171E 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+
+  .skeuo-indicator {
+    box-shadow: 0 0 8px currentColor, inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+
+  /* Mobile Touch Target Expansion (Expands hit area without distorting visual dimensions) */
+  .touch-target {
+    position: relative;
+  }
+  .touch-target::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 44px;
+    min-height: 44px;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+  
+  .mobile-drawer-sheet {
+    border-top-left-radius: 1.5rem;
+    border-top-right-radius: 1.5rem;
+  }
+}
+
+/* Custom Sleek Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(8, 9, 13, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(60, 65, 80, 0.5);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 190, 255, 0.5);
+}
+
+/* Prism.js Light Theme Syntax Tokens */
+.token.comment,.token.prolog,.token.doctype,.token.cdata { color: #6a737d; font-style: italic; }
+.token.punctuation { color: #24292e; }
+.token.property,.token.tag,.token.boolean,.token.number,.token.constant,.token.symbol,.token.deleted { color: #005cc5; }
+.token.selector,.token.attr-name,.token.string,.token.char,.token.builtin,.token.inserted { color: #032f62; }
+.token.operator,.token.entity,.token.url,.language-css .token.string,.style .token.string { color: #d73a49; }
+.token.atrule,.token.attr-value,.token.keyword { color: #d73a49; }
+.token.function,.token.class-name { color: #6f42c1; }
+.token.regex,.token.important,.token.variable { color: #e36209; }
+
+/* Prism.js Refined Dark Theme Tokens */
+.dark .token.comment,.dark .token.prolog,.dark .token.doctype,.dark .token.cdata { color: #788296; font-style: italic; }
+.dark .token.punctuation { color: #BFC4CE; }
+.dark .token.property,.dark .token.tag,.dark .token.boolean,.dark .token.number,.dark .token.constant,.dark .token.symbol,.dark .token.deleted { color: #F2BC72; }
+.dark .token.selector,.dark .token.attr-name,.dark .token.string,.dark .token.char,.dark .token.builtin,.dark .token.inserted { color: #65D9D0; }
+.dark .token.operator,.dark .token.entity,.dark .token.url,.dark .language-css .token.string,.dark .style .token.string { color: #BFC4CE; }
+.dark .token.atrule,.dark .token.attr-value,.dark .token.keyword { color: #8BBEFF; font-weight: 600; }
+.dark .token.function,.dark .token.class-name { color: #A98BFF; font-weight: 600; }
+.dark .token.regex,.dark .token.important,.dark .token.variable { color: #E99AB5; }
+
+/* Custom responsive markdown/prose styles */
+.markdown-body {
+  font-family: inherit;
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  font-weight: 800;
+  color: inherit;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.015em;
+}
+.markdown-body h1 { font-size: 1.875rem; }
+.markdown-body h2 { font-size: 1.5rem; }
+.markdown-body h3 { font-size: 1.25rem; }
+.markdown-body p {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.65;
+}
+.markdown-body ul, .markdown-body ol {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+.markdown-body ul {
+  list-style-type: disc;
+}
+.markdown-body ol {
+  list-style-type: decimal;
+}
+.markdown-body li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+.markdown-body code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  font-weight: 600;
+  background-color: rgba(139, 190, 255, 0.12);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.375rem;
+  color: #8BBEFF;
+}
+:root:not(.dark) .markdown-body code {
+  background-color: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+}
+
+.markdown-body pre {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  background-color: #E5E7EC;
+  border: 1px solid rgba(20, 25, 35, 0.12);
+  color: #171920;
+}
+.dark .markdown-body pre {
+  background-color: #050608;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #F3F4F6;
+}
+.markdown-body pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-weight: 400;
+  color: inherit;
+}
+
+/* Universal Responsive Viewport & Safe Insets */
+body {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Dark mode main background baseline (#08090D Obsidian) */
+.dark body, html.dark {
+  background-color: #08090D;
+  color: #F3F4F6;
+}
+
+:root:not(.dark) body, html:not(.dark) {
+  background-color: #F1F2F5;
+  color: #171920;
+}
+
+/* Small phone ergonomics (320px to 380px) */
+@media (max-width: 380px) {
+  html {
+    font-size: 14px;
+  }
+  .markdown-body pre {
+    padding: 0.625rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Big Screens (1920px+) */
+@media (min-width: 2560px) {
+  html {
+    font-size: 18px;
+  }
+  .markdown-body pre {
+    font-size: 1.1rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 3840px) {
+  html {
+    font-size: 22px;
+  }
+  .markdown-body pre {
+    font-size: 1.25rem;
+    padding: 2rem;
+  }
+}
+

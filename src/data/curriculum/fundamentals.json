@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "description": "Foundational Python concepts available prior to formal curriculum progression",
+  "fundamentalConcepts": [
+    {
+      "id": "concept-python-basics",
+      "name": "Python Language Basics",
+      "description": "Understanding that Python is an interpreted, high-level programming language."
+    },
+    {
+      "id": "concept-syntax-comments",
+      "name": "Comments (#)",
+      "description": "Lines prefixed with # that Python ignores during execution."
+    },
+    {
+      "id": "concept-io-output",
+      "name": "Basic Standard Output",
+      "description": "Sending text to the console terminal using print()."
+    },
+    {
+      "id": "concept-numeric-literals",
+      "name": "Numbers & Arithmetic",
+      "description": "Basic arithmetic calculations and numeric values."
+    },
+    {
+      "id": "concept-basic-text-strings",
+      "name": "Text Strings in Quotes",
+      "description": "Text enclosed in single or double quotes."
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "id": "module-01-basics",
+  "title": "1. Python Basics & Syntax",
+  "order": 1,
+  "description": "Learn syntax, output with print(), numbers, and comments in Python.",
+  "category": "standard",
+  "lessons": [
+    {
+      "id": "lesson-01-print-function",
+      "title": "The print() Function",
+      "order": 1,
+      "summary": "The print() function outputs text or numbers onto your screen. Learn its syntax and quote rules.",
+      "difficulty": "beginner",
+      "estimatedMinutes": 5,
+      "learningObjectives": [
+        "Understand how print() displays data to the screen",
+        "Learn how quotation marks define text strings",
+        "Write and run your first Python program"
+      ],
+      "prerequisites": [],
+      "conceptsIntroduced": [
+        "concept-print-output",
+        "concept-text-strings"
+      ],
+      "tags": ["print", "syntax", "strings"],
+      "sections": [
+        {
+          "type": "explanation",
+          "title": "How print() Works",
+          "content": "The `print()` function is used to output text or data onto your screen.\n\n### Syntax\n\n```python\nprint(\"Your message goes here\")\n```\n\n| Component | Purpose |\n| :--- | :--- |\n| `print` | The built-in instruction telling Python to display something. |\n| `( )` | Parentheses hold the data you want to display (arguments). |\n| `\" \"` | Quotation marks mark the text inside as a string literal. |"
+        },
+        {
+          "type": "terms",
+          "title": "Key Terms",
+          "terms": [
+            {
+              "term": "Program",
+              "definition": "A set of ordered instructions written in code for a computer to execute.",
+              "example": "A script that prints a greeting."
+            },
+            {
+              "term": "String",
+              "definition": "A sequence of text characters enclosed inside quotation marks.",
+              "example": "\"Hello, World!\""
+            }
+          ]
+        },
+        {
+          "type": "example",
+          "title": "Example: Hello, World!",
+          "code": "print(\"Hello, World!\")",
+          "expectedOutput": "Hello, World!"
+        },
+        {
+          "type": "editor-activity",
+          "title": "Try it Yourself",
+          "instructions": "Change the text inside the quotes to 'Welcome to Python!' and click Run Code.",
+          "starterCode": "print(\"Hello, World!\")\n",
+          "solutionCode": "print(\"Welcome to Python!\")",
+          "expectedOutput": "Welcome to Python!",
+          "hints": [
+            "Keep the quotation marks around your new text.",
+            "Replace Hello, World! with Welcome to Python!"
+          ]
+        },
+        {
+          "type": "practice",
+          "title": "Test Yourself",
+          "questions": [
+            {
+              "id": "q-01-practice-1",
+              "type": "short-answer",
+              "question": "Insert the missing keyword to output text on screen: ____(\"Hello, World!\")",
+              "prompt": "Insert the missing keyword to output text on screen: ____(\"Hello, World!\")",
+              "correctAnswer": "print",
+              "acceptedAnswers": ["print", "print()"],
+              "hint": "It is the function you just used to display text.",
+              "explanation": "The print() function outputs text or data to the console."
+            }
+          ]
+        },
+        {
+          "type": "common-mistakes",
+          "title": "Common Mistakes to Avoid",
+          "mistakes": [
+            {
+              "title": "Capitalizing Print",
+              "badCode": "Print(\"Hello, World!\")",
+              "goodCode": "print(\"Hello, World!\")",
+              "explanation": "Python is case-sensitive! Built-in functions must be lowercase."
+            }
+          ]
+        },
+        {
+          "type": "recap",
+          "title": "Lesson Recap",
+          "takeaways": [
+            "The print() function displays data to the screen.",
+            "Text strings must be enclosed in matching quotes."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3308 @@
+{
+  "curriculumId": "pyslide-python-fundamentals",
+  "title": "Python Programming Tutorial",
+  "version": "2.2.0",
+  "description": "A friendly, step-by-step Python course using the clear W3Schools format. Learn to code from your first line up to reusable functions.",
+  "author": "PySlide Lab",
+  "totalEstimatedHours": 10,
+  "modules": [
+    {
+      "id": "module-01-python-basics",
+      "title": "1. Python Basics & Syntax",
+      "order": 1,
+      "description": "Write your very first line of code, show words on screen with print(), do simple math, and leave notes with comments.",
+      "category": "standard",
+      "lessons": [
+        {
+          "id": "lesson-01-01-what-is-python",
+          "title": "Python Introduction",
+          "order": 1,
+          "summary": "Learn what Python is, why people love it, and how a computer follows your code line by line.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 5,
+          "learningObjectives": [
+            "Understand what a computer program is",
+            "Learn how Python runs code from top to bottom",
+            "Write and run your very first Python program"
+          ],
+          "prerequisites": [],
+          "conceptsIntroduced": [
+            "concept-python-basics",
+            "concept-io-output"
+          ],
+          "tags": [
+            "intro",
+            "python",
+            "basics"
+          ],
+          "sections": [
+            {
+              "id": "sec-01-01-exp",
+              "type": "explanation",
+              "title": "Welcome to Python: The Language of Readable Code",
+              "content": "Python is an open-source, high-level programming language created in 1991 by Dutch computer scientist Guido van Rossum. When designing Python, Guido was inspired by a simple but revolutionary philosophy: **code should be as pleasant, transparent, and intuitive to read as plain everyday English**.\n\nIn many traditional programming languages like C, C++, or Java, displaying a simple greeting on screen requires five to ten lines of complicated boilerplate—declaring classes, configuring static methods, handling strict memory management, and placing semicolons after every statement. In Python, you accomplish the exact same outcome in one clean, elegant line:\n\n```python\nprint(\"Hello, World!\")\n```\n\n### Why Has Python Become the World's Most Popular Language?\nFrom universities and coding bootcamps to top research facilities and Fortune 500 tech companies, Python consistently ranks as the world's most widely adopted language:\n\n* **Uncompromising Readability:** Python replaces noisy brackets `{}` with clean, visual indentation. When you inspect a Python script, its logic reads like a bulleted sequence of logical instructions.\n* **Massive Real-World Impact:** Python is not a toy language; it powers mission-critical systems across the globe. NASA uses Python to process images from the James Webb Space Telescope; Netflix relies on Python for streaming algorithms; Spotify uses Python for music recommendations; and AI researchers build world-class machine learning models with Python frameworks.\n* **Rapid Prototyping:** Because Python allows you to express sophisticated logic in fewer lines of code, engineers can design, build, test, and ship complete products in days rather than months.\n\n### How Your Computer Executes Python Code\nComputers cannot directly understand words or sentences. Inside your computer's Central Processing Unit (CPU), the hardware only recognizes microscopic electrical pulses—patterns of binary zeros and ones called machine code.\n\nPython acts as an ultra-fast software translator called an **interpreter**. When you click **Run Code**, the interpreter processes your program **from top to bottom, exactly one line after another**, just like a chef following a culinary recipe:\n\n1. **Reading Line 1:** It reads the first instruction, validates that your syntax follows Python's rules, and performs that action immediately.\n2. **Moving Line by Line:** Once Line 1 finishes, it moves down to Line 2, executes it, and continues sequentially all the way to the end of the file.\n3. **Graceful Completion:** After executing the final statement, the interpreter terminates cleanly.\n\nTo communicate results back to the user, your fundamental tool is Python's built-in `print()` function. Let's look closely at how it displays information.",
+              "keyPoints": [
+                "Python code reads like simple English.",
+                "Computers run your instructions from top to bottom, one line at a time.",
+                "Use print() to display words and numbers on your screen."
+              ]
+            },
+            {
+              "id": "sec-01-01-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "print(\"Your message here\")",
+              "description": "The print() function shows text or numbers on your screen.",
+              "components": [
+                {
+                  "component": "print",
+                  "purpose": "The built-in word that tells Python to show something on screen.",
+                  "example": "print",
+                  "required": true
+                },
+                {
+                  "component": "( )",
+                  "purpose": "Parentheses hold the information you want to display.",
+                  "example": "(\"...\")",
+                  "required": true
+                },
+                {
+                  "component": "\" \"",
+                  "purpose": "Quotation marks tell Python: 'This is plain human text, not a code command.'",
+                  "example": "\"Hello, World!\"",
+                  "required": true
+                }
+              ],
+              "notes": "You can use double quotes (\"...\") or single quotes ('...'). Just make sure both ends match!"
+            },
+            {
+              "id": "sec-01-01-example",
+              "type": "example",
+              "title": "Example: Hello, World!",
+              "code": "print(\"Hello, World!\")\nprint(\"I am learning Python!\")",
+              "description": "A complete two-line Python script demonstrating sequential top-to-bottom execution and automatic line breaks.",
+              "expectedOutput": "Hello, World!\nI am learning Python!",
+              "stepByStep": [
+                "Step 1 (Line 1): Python reads print(\"Hello, World!\"), extracts the text characters between the quotation marks, and outputs 'Hello, World!' to the console.",
+                "Step 2 (Automatic Line Break): Upon completing the print statement, Python automatically transmits a hidden newline character (\\n) that positions the cursor on the next line.",
+                "Step 3 (Line 2): Python reads print(\"I am learning Python!\") and outputs that text immediately beneath the first message.",
+                "Step 4 (Clean Termination): Reaching the end of the script instructions, Python successfully exits."
+              ]
+            },
+            {
+              "id": "sec-01-01-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Change the message inside the quotes to 'Welcome to Python!' and click Run Code.",
+              "starterCode": "print(\"Hello, World!\")\n",
+              "solutionCode": "print(\"Welcome to Python!\")",
+              "expectedOutput": "Welcome to Python!",
+              "hints": [
+                "Keep the quotation marks inside the parentheses.",
+                "Type Welcome to Python! inside the quotes."
+              ]
+            },
+            {
+              "id": "sec-01-01-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Forgetting Quotes Around Text",
+                  "badCode": "print(Hello World)",
+                  "goodCode": "print(\"Hello World\")",
+                  "explanation": "Without quotes, Python gets confused and thinks Hello is a code command instead of plain words."
+                },
+                {
+                  "title": "2. Using a Capital P in Print",
+                  "badCode": "Print(\"Hello\")",
+                  "goodCode": "print(\"Hello\")",
+                  "explanation": "Python cares about capital letters. 'print' must always be lowercase."
+                }
+              ]
+            },
+            {
+              "id": "sec-01-01-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-01-01-1",
+                  "type": "short-answer",
+                  "question": "Type the missing word to show words on screen: ____(\"Python is fun\")",
+                  "prompt": "Type the word:",
+                  "correctAnswer": "print",
+                  "acceptedAnswers": [
+                    "print",
+                    "print()"
+                  ],
+                  "hint": "It starts with the letter 'p'.",
+                  "explanation": "The print() command shows words on your screen."
+                },
+                {
+                  "id": "q-01-01-2",
+                  "type": "multiple-choice",
+                  "question": "How does Python run your code?",
+                  "options": [
+                    "From top to bottom, one line after another",
+                    "All lines at the exact same second",
+                    "Backwards from the bottom to the top",
+                    "In a random order every time"
+                  ],
+                  "correctIndex": 0,
+                  "explanation": "Python follows instructions in order, from top to bottom."
+                }
+              ]
+            },
+            {
+              "id": "sec-01-01-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Programs are step-by-step instructions for computers.",
+                "print() displays words on your screen.",
+                "Always wrap plain words in quotes like \"Hello\"."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-01-02-the-print-function",
+          "title": "The print() Function",
+          "order": 2,
+          "summary": "Print multiple things together, display numbers, and choose custom spaces or line endings.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 6,
+          "learningObjectives": [
+            "Print multiple words separated by commas",
+            "See the difference between printing words and numbers",
+            "Use 'sep' to change the spacer and 'end' to control lines"
+          ],
+          "prerequisites": [
+            "lesson-01-01-what-is-python"
+          ],
+          "conceptsIntroduced": [
+            "concept-io-output-sep-end"
+          ],
+          "tags": [
+            "print",
+            "output"
+          ],
+          "sections": [
+            {
+              "id": "sec-01-02-exp",
+              "type": "explanation",
+              "title": "Mastering print(): Multiple Items, Spacers, and Line Control",
+              "content": "In real-world software, programs constantly need to display dynamic data—such as a player's username followed by their score, a date formatted with hyphens, or a download progress indicator that updates on the same row.\n\nPython's built-in `print()` function provides extraordinary formatting flexibility through multiple arguments, automatic spacing, and keyword parameters.\n\n### 1. Printing Multiple Items With Commas\nYou can pass as many items as you want inside a single `print()` call simply by separating them with commas:\n\n```python\nprint(\"Player:\", \"Alex\", \"Score:\", 100)\n```\n\nWhen Python encounters comma-separated items, it automatically performs two actions:\n* It outputs each item in the exact order specified.\n* It automatically places a single space between each item, preventing words from colliding into one another.\n\n### 2. Why Numbers Don't Need Quotation Marks\nNotice that the number `100` in the example above does not have quotation marks around it. In Python:\n* Wrapping characters in quotes like `\"100\"` creates a **string**—a piece of text treated like letters in a book.\n* Writing raw digits without quotes like `100` creates an **integer**—a mathematical number capable of addition, subtraction, and calculations.\n\n### 3. Customizing the Separator with `sep=`\nBy default, Python places a single space character between items. What if you want to format a date like `2026-10-24` with hyphens, or create a list separated by slashes? You can override the default spacer using `sep=`:\n\n```python\nprint(\"2026\", \"10\", \"24\", sep=\"-\")    # Displays: 2026-10-24\nprint(\"apple\", \"banana\", sep=\" & \")    # Displays: apple & banana\nprint(\"A\", \"B\", \"C\", sep=\"\")          # Displays: ABC (no spaces at all!)\n```\n\n### 4. Controlling Line Endings with `end=`\nNormally, every `print()` statement finishes by printing an invisible newline character (`\\n`) that jumps the cursor down to the next row. If you want consecutive print statements to remain on the same row, specify the `end=` parameter:\n\n```python\nprint(\"Loading\", end=\"...\")\nprint(\"Done!\")\n# Outputs: Loading...Done! on a single line!\n```",
+              "keyPoints": [
+                "Use commas to print multiple items on the same line.",
+                "Words need quotes; real numbers do not.",
+                "Use sep='-' to change the space between items."
+              ]
+            },
+            {
+              "id": "sec-01-02-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "print(item1, item2, sep=\" \", end=\"\\n\")",
+              "description": "How to customize what print() displays.",
+              "components": [
+                {
+                  "component": "item1, item2",
+                  "purpose": "The words, numbers, or variables you want to print, separated by commas.",
+                  "example": "\"Age:\", 12",
+                  "required": true
+                },
+                {
+                  "component": "sep=\" \"",
+                  "purpose": "What Python puts between items. Default is a single space.",
+                  "example": "sep=\"-\"",
+                  "required": false
+                },
+                {
+                  "component": "end=\"\\n\"",
+                  "purpose": "What Python puts at the very end. Default is a new line.",
+                  "example": "end=\" \"",
+                  "required": false
+                }
+              ],
+              "notes": "Setting end=\" \" stops Python from jumping to a new line, so the next print() continues on the same line."
+            },
+            {
+              "id": "sec-01-02-example",
+              "type": "example",
+              "title": "Example: Multiple Items & Custom Spacers",
+              "code": "print(\"Python\", \"is\", \"fun!\")\nprint(\"2026\", \"10\", \"24\", sep=\"-\")\nprint(\"Loading\", end=\"...\")\nprint(\"Done!\")",
+              "description": "Demonstrating comma-separated printing, custom hyphen separators, and continuous printing using end='...'.",
+              "expectedOutput": "Python is fun!\n2026-10-24\nLoading...Done!",
+              "stepByStep": [
+                "Step 1 (Line 1): Evaluates print(\"Python\", \"is\", \"fun!\") and outputs the words with standard single spaces.",
+                "Step 2 (Line 2): Evaluates print(\"2026\", \"10\", \"24\", sep=\"-\") and replaces standard spaces with dashes, producing '2026-10-24'.",
+                "Step 3 (Line 3): Evaluates print(\"Loading\", end=\"...\"). Because the newline was replaced with dots, the cursor stays on the current row.",
+                "Step 4 (Line 4): Evaluates print(\"Done!\"), outputting 'Done!' immediately adjacent to the dots on that same row."
+              ]
+            },
+            {
+              "id": "sec-01-02-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Print your name and your age separated by a comma. For example: print(\"Sam\", 15)",
+              "starterCode": "# Print your name and age below\nprint(\"Sam\", 15)\n",
+              "solutionCode": "print(\"Sam\", 15)",
+              "expectedOutput": "Sam 15",
+              "hints": [
+                "Put quotes around the name, but no quotes around the number.",
+                "Put a comma between them."
+              ]
+            },
+            {
+              "id": "sec-01-02-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Using + to Combine Words and Numbers",
+                  "badCode": "print(\"Score: \" + 10)  # TypeError!",
+                  "goodCode": "print(\"Score:\", 10)",
+                  "explanation": "You cannot add text and numbers together with '+'. Use a comma (,) instead—it works with everything."
+                }
+              ]
+            },
+            {
+              "id": "sec-01-02-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-01-02-1",
+                  "type": "code-output",
+                  "question": "What does this code display?",
+                  "codeSnippet": "print(\"Cat\", \"Dog\", sep=\"&\")",
+                  "correctAnswer": "Cat&Dog",
+                  "acceptedAnswers": [
+                    "Cat&Dog"
+                  ],
+                  "hint": "sep replaces the space between Cat and Dog with an & symbol.",
+                  "explanation": "sep='&' places an ampersand between the two words."
+                }
+              ]
+            },
+            {
+              "id": "sec-01-02-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Commas let you print multiple things on one line.",
+                "Numbers do not need quotation marks.",
+                "Use sep to change the spacer between items."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-01-03-numbers-and-math",
+          "title": "Numbers & Basic Math",
+          "order": 3,
+          "summary": "Use Python as a super-fast calculator to add, subtract, multiply, and divide numbers.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Learn about whole numbers (int) and decimal numbers (float)",
+            "Do math with +, -, *, /, //, %, and **",
+            "Understand the math order of operations"
+          ],
+          "prerequisites": [
+            "lesson-01-01-what-is-python"
+          ],
+          "conceptsIntroduced": [
+            "concept-math-operators",
+            "concept-data-numbers"
+          ],
+          "tags": [
+            "math",
+            "numbers",
+            "operators"
+          ],
+          "sections": [
+            {
+              "id": "sec-01-03-exp",
+              "type": "explanation",
+              "title": "Numbers & Basic Math: Python as a High-Precision Calculator",
+              "content": "Python is widely celebrated across scientific computing, data science, financial modeling, and game physics because it handles mathematics with tremendous speed and accuracy.\n\nIn Python, numerical data primarily falls into two fundamental categories:\n* **Integers (`int`):** Whole numbers without a decimal point. Examples: `42`, `0`, `-15`, `1000000`. Integers can grow to arbitrary size in Python—they never overflow!\n* **Floating-Point Numbers (`float`):** Numbers that contain a fractional decimal point. Examples: `3.14159`, `0.75`, `-2.5`.\n\n### Complete Arithmetic Operators Table\nPython supports all standard algebraic operations along with specialized computer science operators:\n\n| Operator | Operation | Code Example | Calculated Result | Explanation |\n|---|---|---|---|---|\n| `+` | Addition | `10 + 5` | `15` | Combines values |\n| `-` | Subtraction | `20 - 7` | `13` | Computes difference |\n| `*` | Multiplication | `4 * 6` | `24` | Multiplies values |\n| `/` | True Division | `15 / 2` | `7.5` | Always returns a float! |\n| `//` | Floor Division | `15 // 2` | `7` | Discards the decimal fraction |\n| `%` | Modulo (Remainder) | `15 % 2` | `1` | Calculates division remainder |\n| `**` | Exponentiation | `2 ** 3` | `8` | Raises base to a power (2 * 2 * 2) |\n\n### Notice the True Division Rule\nIn Python, dividing with a single slash `/` **always produces a floating-point number**, even when numbers divide evenly! For instance, `10 / 2` produces `5.0` instead of `5`. If you need an exact whole number with no decimals, use floor division `10 // 2`.\n\n### Order of Operations (PEMDAS)\nPython strictly follows algebraic rules of precedence:\n1. **P**arentheses `()` are evaluated first.\n2. **E**xponents `**` are evaluated next.\n3. **M**ultiplication `*`, **D**ivision `/`, Floor Division `//`, and Modulo `%` are computed left-to-right.\n4. **A**ddition `+` and **S**ubtraction `-` are computed last.\n\nAlways wrap complex operations in parentheses `()` to eliminate ambiguity for yourself and other developers.",
+              "keyPoints": [
+                "Normal division (/) always gives you a decimal number with a dot.",
+                "Use ** to calculate powers (like 5 squared).",
+                "Python follows standard math rules: it does multiplication before addition."
+              ]
+            },
+            {
+              "id": "sec-01-03-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "answer = number1 + number2",
+              "description": "Doing math between two numbers.",
+              "components": [
+                {
+                  "component": "number1, number2",
+                  "purpose": "The numbers you want to calculate with.",
+                  "example": "10, 5",
+                  "required": true
+                },
+                {
+                  "component": "operator",
+                  "purpose": "The math symbol: +, -, *, /, //, %, or **.",
+                  "example": "*",
+                  "required": true
+                }
+              ],
+              "notes": "You can use parentheses () to group calculations, like (2 + 3) * 4."
+            },
+            {
+              "id": "sec-01-03-example",
+              "type": "example",
+              "title": "Example: Math in Action",
+              "code": "print(10 + 5)\nprint(20 - 7)\nprint(4 * 6)\nprint(15 / 2)\nprint(2 ** 3)",
+              "description": "Performing five core arithmetic operations in sequence: addition, subtraction, multiplication, true division, and exponentiation.",
+              "expectedOutput": "15\n13\n24\n7.5\n8",
+              "stepByStep": [
+                "Step 1 (Line 1): Evaluates 10 + 5 and prints the sum 15.",
+                "Step 2 (Line 2): Evaluates 20 - 7 and prints the difference 13.",
+                "Step 3 (Line 3): Evaluates 4 * 6 and prints the product 24.",
+                "Step 4 (Line 4): Evaluates 15 / 2 and prints the floating-point result 7.5.",
+                "Step 5 (Line 5): Evaluates 2 ** 3 (2 raised to the 3rd power: 2 * 2 * 2) and prints 8."
+              ]
+            },
+            {
+              "id": "sec-01-03-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Calculate 5 to the power of 3 using ** and print the answer.",
+              "starterCode": "# Print 5 to the power of 3 below\nprint(5 ** 3)\n",
+              "solutionCode": "print(5 ** 3)",
+              "expectedOutput": "125",
+              "hints": [
+                "Use the ** symbol for powers.",
+                "5 ** 3 means 5 * 5 * 5."
+              ]
+            },
+            {
+              "id": "sec-01-03-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Using ^ for Powers Instead of **",
+                  "badCode": "print(2 ^ 3)  # In Python, ^ does not mean power!",
+                  "goodCode": "print(2 ** 3) # Evaluates to 8",
+                  "explanation": "In Python, power uses two stars (**). A single caret (^) means something completely different."
+                },
+                {
+                  "title": "2. Dividing by Zero",
+                  "badCode": "print(10 / 0)",
+                  "goodCode": "print(10 / 2)",
+                  "explanation": "You cannot divide by zero. Python will show an error called ZeroDivisionError."
+                }
+              ]
+            },
+            {
+              "id": "sec-01-03-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-01-03-1",
+                  "type": "short-answer",
+                  "question": "What is 10 plus 4 times 2 in Python? (print(10 + 4 * 2))",
+                  "prompt": "Enter the number:",
+                  "correctAnswer": "18",
+                  "acceptedAnswers": [
+                    "18"
+                  ],
+                  "hint": "Multiplication happens first: 4 * 2 = 8, then 10 + 8.",
+                  "explanation": "Python multiplies 4 * 2 = 8 first, then adds 10 to get 18."
+                }
+              ]
+            },
+            {
+              "id": "sec-01-03-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Python does math just like a calculator.",
+                "Use * to multiply and / to divide.",
+                "Use ** to raise a number to a power."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-01-04-comments",
+          "title": "Python Comments",
+          "order": 4,
+          "summary": "Leave friendly notes in your code that Python ignores when running.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 5,
+          "learningObjectives": [
+            "Write notes in your code using the # symbol",
+            "Understand why comments help you and other programmers",
+            "Temporarily turn off a line of code while testing"
+          ],
+          "prerequisites": [
+            "lesson-01-01-what-is-python"
+          ],
+          "conceptsIntroduced": [
+            "concept-comments"
+          ],
+          "tags": [
+            "comments",
+            "notes"
+          ],
+          "sections": [
+            {
+              "id": "sec-01-04-exp",
+              "type": "explanation",
+              "title": "Code Documentation: Why Comments Matter in Real Software",
+              "content": "There is a well-known proverb among software engineers: **always code as if the person who ends up maintaining your code will be a violent psychopath who knows where you live**. \n\nMore realistically: when you revisit code you wrote six months ago—or when you collaborate with teammates on an engineering project—clear explanations can save days of head-scratching.\n\nA **comment** is a note written directly inside your source code file solely for human readers. Whenever the Python interpreter encounters a comment, it completely ignores it, treating it as if it were blank space.\n\n### Types of Comments in Python\nPython provides clean ways to document your code at every level:\n\n1. **Single-Line Comments (`#`):** Any text following a hash character `#` on that line is ignored by Python:\n```python\n# Calculate total price with 8% sales tax\ntotal = subtotal * 1.08\n```\n\n2. **Inline Comments:** You can place comments at the end of an active line of code to clarify a specific instruction:\n```python\ntimeout = 30  # Maximum seconds to wait for network response\n```\n\n3. **Multi-Line Explanations & Docstrings (`\"\"\"`):** When you need to write a lengthy architectural explanation or summarize what a whole module does, enclose the text inside triple quotes:\n```python\n\"\"\"\nAuthentication Module\nHandles secure user login, password hashing,\nand session token verification.\n\"\"\"\n```\n\n### Using Comments for Rapid Debugging\nComments are also one of your most powerful debugging tools. If a specific line of code is throwing an error and you want to test whether the rest of your program works without it, you don't have to delete your work! Simply place a `#` at the start of the line to **comment it out**. Once you locate and fix the issue, remove the `#` to reactivate the line.",
+              "keyPoints": [
+                "Comments start with the '#' symbol.",
+                "Python ignores comments completely.",
+                "Comments help you remember what your code does."
+              ]
+            },
+            {
+              "id": "sec-01-04-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "# This is a helpful note\nprint(\"Hello\")  # You can also put notes here",
+              "description": "Put # before any words you want Python to skip.",
+              "components": [
+                {
+                  "component": "#",
+                  "purpose": "The comment symbol telling Python to ignore the rest of the line.",
+                  "example": "# Set user points",
+                  "required": true
+                },
+                {
+                  "component": "Note text",
+                  "purpose": "Your friendly explanation in plain English.",
+                  "example": "Add 10 points",
+                  "required": false
+                }
+              ],
+              "notes": "Comments can be on their own line, or at the end of a line of code."
+            },
+            {
+              "id": "sec-01-04-example",
+              "type": "example",
+              "title": "Example: Friendly Notes in Code",
+              "code": "# Calculate the total price of apples\nprice = 2\nquantity = 5\ntotal = price * quantity  # Multiply price by count\n\nprint(\"Total is $\", total)",
+              "description": "A Python script showing header documentation, active code, inline notes, and calculated product costs.",
+              "expectedOutput": "Total is $ 10",
+              "stepByStep": [
+                "Step 1 (Line 1): Python encounters '#' at the start of '# Calculate the total price of apples' and skips it completely.",
+                "Step 2 (Line 2): Assigns the integer 2 to variable price.",
+                "Step 3 (Line 3): Assigns the integer 5 to variable quantity.",
+                "Step 4 (Line 4): Evaluates price * quantity (2 * 5 = 10) and assigns 10 to total. The inline comment '# Multiply price by count' is ignored.",
+                "Step 5 (Line 5): Prints 'Total is $' followed by 10, displaying 'Total is $ 10'."
+              ]
+            },
+            {
+              "id": "sec-01-04-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Add a comment above the print line that says '# Say hello' and run your code.",
+              "starterCode": "# Say hello\nprint(\"Hello friend!\")\n",
+              "solutionCode": "# Say hello\nprint(\"Hello friend!\")",
+              "expectedOutput": "Hello friend!",
+              "hints": [
+                "Start your note with the # symbol.",
+                "Notice that adding a comment does not change the output."
+              ]
+            },
+            {
+              "id": "sec-01-04-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Putting the # Inside Quotation Marks",
+                  "badCode": "print(\"# This is a note\")  # This prints the text with #!",
+                  "goodCode": "# This is a real note\nprint(\"Hello\")",
+                  "explanation": "Inside quotes, # is treated as plain text and will be printed out."
+                }
+              ]
+            },
+            {
+              "id": "sec-01-04-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-01-04-1",
+                  "type": "multiple-choice",
+                  "question": "Which symbol starts a comment in Python?",
+                  "options": [
+                    "#",
+                    "//",
+                    "--",
+                    "/*"
+                  ],
+                  "correctIndex": 0,
+                  "explanation": "The hash mark (#) is used for comments in Python."
+                }
+              ]
+            },
+            {
+              "id": "sec-01-04-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Comments start with #.",
+                "Python ignores comments when running code.",
+                "Use comments to explain your thoughts."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "module-02-variables",
+      "title": "2. Variables & Core Data Types",
+      "order": 2,
+      "description": "Save information in named boxes called variables, follow naming rules, and convert between types.",
+      "category": "standard",
+      "lessons": [
+        {
+          "id": "lesson-02-01-creating-variables",
+          "title": "Python Variables",
+          "order": 1,
+          "summary": "Variables are like labeled storage boxes in your computer that hold information you can use later.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 6,
+          "learningObjectives": [
+            "Create a variable using the = sign",
+            "Store words and numbers in variables",
+            "Change the value inside a variable"
+          ],
+          "prerequisites": [
+            "lesson-01-01-what-is-python",
+            "lesson-01-03-numbers-and-math"
+          ],
+          "conceptsIntroduced": [
+            "concept-variables",
+            "concept-assignment"
+          ],
+          "tags": [
+            "variables",
+            "storage"
+          ],
+          "sections": [
+            {
+              "id": "sec-02-01-exp",
+              "type": "explanation",
+              "title": "Variables: Labeled Boxes for Storing Program Data",
+              "content": "Programs exist to process information: user names, game high scores, shopping cart totals, temperature readings, and account balances. To keep track of this data as your program runs, Python provides **variables**.\n\n### The Mental Model: Labeled Storage Boxes\nThink of a variable as a **labeled storage box** in your computer's memory:\n* The **name** of the variable (like `name` or `points`) is written on the front of the box.\n* The **value** (like `\"Maya\"` or `50`) is the content placed inside the box.\n\nWhenever you want to inspect or change that value later, you simply refer to its label name!\n\n### How Assignment Works in Python\nIn algebra class, the equals sign `=` signifies that two sides are already identical. In Python, however, the `=` symbol is the **assignment operator**. It works as an active command:\n\n```python\npoints = 50\npoints = 70\n```\n\nPython always executes assignment statements from **right to left**:\n1. First, it looks at the value or expression on the **right side** of the `=`.\n2. Then, it places that value into the variable name on the **left side** (`points`).\n\n### Reassigning Variables\nVariables are called *variable* because their values can change over time. When you assign a new value to an existing variable name, Python replaces the old value with the new one. The previous value is discarded, and the variable holds only the newest data.",
+              "keyPoints": [
+                "Variables let you save information and reuse it later.",
+                "The '=' sign puts the value into the box.",
+                "You can change what is inside the box anytime."
+              ]
+            },
+            {
+              "id": "sec-02-01-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "box_name = value",
+              "description": "Saving a value inside a variable.",
+              "components": [
+                {
+                  "component": "box_name",
+                  "purpose": "The name you choose for your variable.",
+                  "example": "player_name",
+                  "required": true
+                },
+                {
+                  "component": "=",
+                  "purpose": "The assignment sign: puts the value on the right into the box on the left.",
+                  "example": "=",
+                  "required": true
+                },
+                {
+                  "component": "value",
+                  "purpose": "The words, numbers, or data you want to save.",
+                  "example": "\"Alex\"",
+                  "required": true
+                }
+              ],
+              "notes": "The variable name must always go on the left, and the value on the right."
+            },
+            {
+              "id": "sec-02-01-example",
+              "type": "example",
+              "title": "Example: Creating and Changing Variables",
+              "code": "name = \"Maya\"\npoints = 50\nprint(name, \"has\", points, \"points\")\n\n# Give Maya 20 more points:\npoints = 70\nprint(name, \"now has\", points, \"points\")",
+              "description": "Creating variables for a player's name and points, displaying them, and reassigning updated points.",
+              "expectedOutput": "Maya has 50 points\nMaya now has 70 points",
+              "stepByStep": [
+                "Step 1 (Line 1): Creates a variable named name and assigns it the string 'Maya'.",
+                "Step 2 (Line 2): Creates a variable named points and assigns it the initial integer 50.",
+                "Step 3 (Line 3): Prints 'Maya has 50 points' using the variable values.",
+                "Step 4 (Line 5): Overwrites points with the new integer 70.",
+                "Step 5 (Line 6): Prints 'Maya now has 70 points' showing the updated state."
+              ]
+            },
+            {
+              "id": "sec-02-01-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Create a variable named 'score' with the value 100, then print it.",
+              "starterCode": "# Create score below\nscore = 100\nprint(score)\n",
+              "solutionCode": "score = 100\nprint(score)",
+              "expectedOutput": "100",
+              "hints": [
+                "Type 'score = 100'.",
+                "Print score without quotes: print(score)."
+              ]
+            },
+            {
+              "id": "sec-02-01-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Putting Variable Names in Quotes When Printing",
+                  "badCode": "name = \"Sam\"\nprint(\"name\")  # Prints the literal word 'name'",
+                  "goodCode": "name = \"Sam\"\nprint(name)    # Prints 'Sam'",
+                  "explanation": "If you put quotes around the variable name, Python prints the letters n-a-m-e instead of what is inside the box."
+                }
+              ]
+            },
+            {
+              "id": "sec-02-01-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-02-01-1",
+                  "type": "short-answer",
+                  "question": "Which symbol puts a value into a variable? x ___ 10",
+                  "prompt": "Enter symbol:",
+                  "correctAnswer": "=",
+                  "acceptedAnswers": [
+                    "="
+                  ],
+                  "hint": "The equals sign.",
+                  "explanation": "The single equals sign (=) saves the value on the right into the variable on the left."
+                }
+              ]
+            },
+            {
+              "id": "sec-02-01-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Variables are named boxes that hold information.",
+                "Use the = sign to store a value.",
+                "Do not put quotes around variable names when printing."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-02-02-variable-names",
+          "title": "Variable Naming Rules",
+          "order": 2,
+          "summary": "Learn the rules for naming your variables and how to use clean snake_case.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 5,
+          "learningObjectives": [
+            "Learn what characters are allowed in variable names",
+            "Understand why variables cannot start with a number",
+            "Use underscores instead of spaces"
+          ],
+          "prerequisites": [
+            "lesson-02-01-creating-variables"
+          ],
+          "conceptsIntroduced": [
+            "concept-variable-naming"
+          ],
+          "tags": [
+            "naming",
+            "variables",
+            "rules"
+          ],
+          "sections": [
+            {
+              "id": "sec-02-02-exp",
+              "type": "explanation",
+              "title": "Variable Naming Rules & Professional Python Conventions",
+              "content": "Choosing good variable names is one of the most important skills in software engineering. Clear names make your code self-documenting, meaning anyone reading it can understand what the program does without needing extensive comments.\n\nPython has strict syntax rules for variable names that must be followed, as well as community conventions that professional developers respect.\n\n### The 4 Hard Rules of Variable Names\nIf you break any of these four rules, Python will refuse to run your code and throw a `SyntaxError`:\n\n1. **Must begin with a letter or underscore (`_`):** `score` and `_temp` are valid; `2cool` is invalid!\n2. **Can only contain letters, numbers, and underscores:** No spaces, hyphens, exclamation marks, or dollar signs (`total_score` is valid, `total-score` is invalid).\n3. **Names are strictly case-sensitive:** `Score`, `score`, and `SCORE` are three completely separate variables! Mixing them up is a frequent source of bugs.\n4. **Cannot use Python reserved keywords:** You cannot name a variable `print`, `if`, `else`, `for`, `while`, or `def`, because Python uses these words for its own language instructions.\n\n### The Python Standard: snake_case\nDifferent programming languages favor different naming styles. In JavaScript and Java, developers use camelCase (`studentName`). In Python, the official style guide (PEP 8) dictates **snake_case**:\n* All letters are lowercase.\n* Multiple words are joined with underscores (`student_name`, `math_score`, `is_happy`, `maximum_speed`).\n\nDescriptive names like `total_cart_price` are infinitely better than vague single letters like `x` or `t`.",
+              "keyPoints": [
+                "Start with a letter or underscore.",
+                "Never put spaces in variable names: use snake_case like 'my_name'.",
+                "Pick names that clearly describe what is inside."
+              ]
+            },
+            {
+              "id": "sec-02-02-syntax",
+              "type": "syntax",
+              "title": "Syntax: snake_case",
+              "syntax": "first_name = \"Sarah\"\nuser_age = 14",
+              "description": "Use all lowercase letters with words connected by underscores.",
+              "components": [
+                {
+                  "component": "lowercase_word",
+                  "purpose": "Spells out a clear descriptive word.",
+                  "example": "user",
+                  "required": true
+                },
+                {
+                  "component": "_",
+                  "purpose": "Connects two words together instead of a space.",
+                  "example": "_",
+                  "required": false
+                }
+              ],
+              "notes": "Python programmers call this 'snake_case' because the words crawl on the ground connected by underscores!"
+            },
+            {
+              "id": "sec-02-02-example",
+              "type": "example",
+              "title": "Example: Clean Variable Names",
+              "code": "student_name = \"Alex\"\nmath_score = 95\nis_happy = True\n\nprint(student_name, \"got\", math_score)",
+              "description": "Demonstrating clean snake_case variable names for text, numbers, and boolean values.",
+              "expectedOutput": "Alex got 95",
+              "stepByStep": [
+                "Step 1 (Line 1): Assigns 'Alex' to descriptive variable student_name.",
+                "Step 2 (Line 2): Assigns the integer 95 to math_score.",
+                "Step 3 (Line 3): Assigns the boolean True to is_happy.",
+                "Step 4 (Line 4): Combines student_name, 'got', and math_score to print 'Alex got 95'."
+              ]
+            },
+            {
+              "id": "sec-02-02-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Fix the broken variable name '2nd_player' so it starts with a letter like 'second_player' and runs.",
+              "starterCode": "# Fix the variable name below:\nsecond_player = \"Jordan\"\nprint(second_player)\n",
+              "solutionCode": "second_player = \"Jordan\"\nprint(second_player)",
+              "expectedOutput": "Jordan",
+              "hints": [
+                "Variable names cannot start with a number.",
+                "Spell out 'second_player'."
+              ]
+            },
+            {
+              "id": "sec-02-02-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Putting Spaces in Names",
+                  "badCode": "user name = \"Sam\"  # SyntaxError!",
+                  "goodCode": "user_name = \"Sam\"",
+                  "explanation": "Python gets confused by spaces in names. Connect words with an underscore (_)."
+                }
+              ]
+            },
+            {
+              "id": "sec-02-02-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-02-02-1",
+                  "type": "multiple-choice",
+                  "question": "Which of these is a correct Python variable name?",
+                  "options": [
+                    "player_score",
+                    "player score",
+                    "1st_player",
+                    "player-score"
+                  ],
+                  "correctIndex": 0,
+                  "explanation": "player_score uses an underscore and starts with a letter."
+                }
+              ]
+            },
+            {
+              "id": "sec-02-02-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Start names with a letter.",
+                "Use underscores instead of spaces (snake_case).",
+                "Names cannot start with numbers."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-02-03-python-data-types",
+          "title": "Python Data Types",
+          "order": 3,
+          "summary": "Learn the four basic types of data: text (str), whole numbers (int), decimals (float), and True/False (bool).",
+          "difficulty": "beginner",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Learn the four main data types in Python",
+            "Use type() to ask Python what type a variable is",
+            "Learn how True and False booleans work"
+          ],
+          "prerequisites": [
+            "lesson-02-01-creating-variables"
+          ],
+          "conceptsIntroduced": [
+            "concept-data-types",
+            "concept-type-function"
+          ],
+          "tags": [
+            "types",
+            "str",
+            "int",
+            "float",
+            "bool"
+          ],
+          "sections": [
+            {
+              "id": "sec-02-03-exp",
+              "type": "explanation",
+              "title": "The Core Data Types: Strings, Integers, Floats, and Booleans",
+              "content": "Every piece of data inside a Python program has a specific **type**. The data type tells Python what operations are permitted on that data—you can multiply two numbers, but you cannot multiply two dates or calculate the square root of a person's name!\n\nPython features four primary primitive data types that you will use constantly:\n\n### 1. String (`str`)\nText data wrapped in quotation marks (`\"Tokyo\"`, `'Python'`). Strings can contain any characters: letters, numbers, spaces, and emoji.\n* Example: `city = \"Tokyo\"`\n\n### 2. Integer (`int`)\nWhole positive or negative numbers without a decimal point. Integers can grow to arbitrary precision in Python.\n* Example: `age = 14`\n\n### 3. Floating-Point Number (`float`)\nNumbers that include a decimal point, used for measurements, fractional amounts, and currency.\n* Example: `price = 4.99`\n\n### 4. Boolean (`bool`)\nNamed after mathematician George Boole, a boolean can only have one of two possible values: `True` or `False`. Note that both must be capitalized in Python!\n* Example: `is_open = True`\n\n### Inspecting Types with `type()`\nWhen debugging code, you can ask Python to tell you the type of any variable using the built-in `type()` function:\n```python\nprint(type(\"Tokyo\"))  # Output: <class 'str'>\nprint(type(14))       # Output: <class 'int'>\nprint(type(4.99))     # Output: <class 'float'>\nprint(type(True))     # Output: <class 'bool'>\n```",
+              "keyPoints": [
+                "Text is called 'str' (string).",
+                "Whole numbers are called 'int'.",
+                "Decimals are called 'float'.",
+                "True and False are called 'bool' (booleans)."
+              ]
+            },
+            {
+              "id": "sec-02-03-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "type(my_variable)",
+              "description": "Ask Python to tell you what kind of data is inside a variable.",
+              "components": [
+                {
+                  "component": "type()",
+                  "purpose": "The built-in tool that inspects a variable's type.",
+                  "example": "type(age)",
+                  "required": true
+                }
+              ],
+              "notes": "type(10) outputs <class 'int'>. type('hello') outputs <class 'str'>."
+            },
+            {
+              "id": "sec-02-03-example",
+              "type": "example",
+              "title": "Example: Checking Data Types",
+              "code": "city = \"Tokyo\"\nage = 14\nprice = 4.99\nis_open = True\n\nprint(type(city))\nprint(type(age))\nprint(type(price))\nprint(type(is_open))",
+              "description": "Declaring variables of each primary type and using type() to inspect their internal classes.",
+              "expectedOutput": "<class 'str'>\n<class 'int'>\n<class 'float'>\n<class 'bool'>",
+              "stepByStep": [
+                "Step 1 (Lines 1-4): Creates city (str), age (int), price (float), and is_open (bool).",
+                "Step 2 (Line 5): Passes city into type() and prints <class 'str'>.",
+                "Step 3 (Line 6): Passes age into type() and prints <class 'int'>.",
+                "Step 4 (Line 7): Passes price into type() and prints <class 'float'>.",
+                "Step 5 (Line 8): Passes is_open into type() and prints <class 'bool'>."
+              ]
+            },
+            {
+              "id": "sec-02-03-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Create a boolean variable named 'is_sunny' set to True, and print its type.",
+              "starterCode": "is_sunny = True\nprint(type(is_sunny))\n",
+              "solutionCode": "is_sunny = True\nprint(type(is_sunny))",
+              "expectedOutput": "<class 'bool'>",
+              "hints": [
+                "Capitalize True with a capital 'T'.",
+                "Use print(type(is_sunny))."
+              ]
+            },
+            {
+              "id": "sec-02-03-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Lowercase true or false",
+                  "badCode": "is_ready = true   # NameError!",
+                  "goodCode": "is_ready = True",
+                  "explanation": "In Python, True and False MUST start with a capital letter."
+                }
+              ]
+            },
+            {
+              "id": "sec-02-03-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-02-03-1",
+                  "type": "multiple-choice",
+                  "question": "What kind of data type is 7.5?",
+                  "options": [
+                    "float",
+                    "int",
+                    "str",
+                    "bool"
+                  ],
+                  "correctIndex": 0,
+                  "explanation": "Any number with a decimal point is a float in Python."
+                }
+              ]
+            },
+            {
+              "id": "sec-02-03-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "str holds text in quotes.",
+                "int holds whole numbers.",
+                "float holds decimal numbers.",
+                "bool holds True or False."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-02-04-type-conversion",
+          "title": "Type Casting (Conversion)",
+          "order": 4,
+          "summary": "Turn text numbers into real numbers with int() and float() so you can do math on them.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 6,
+          "learningObjectives": [
+            "Convert text into numbers using int() and float()",
+            "Turn numbers into text using str()",
+            "Understand why type conversion is needed"
+          ],
+          "prerequisites": [
+            "lesson-02-03-python-data-types"
+          ],
+          "conceptsIntroduced": [
+            "concept-type-casting"
+          ],
+          "tags": [
+            "convert",
+            "int",
+            "float",
+            "str"
+          ],
+          "sections": [
+            {
+              "id": "sec-02-04-exp",
+              "type": "explanation",
+              "title": "Type Conversion: Explicit Casting and Type Inspection",
+              "content": "Python is a **strongly typed** programming language. This means Python cares deeply about what type of data you are working with, and it will refuse to guess what you mean if you try to combine incompatible types.\n\nFor example, if you try to execute:\n```python\ntotal = \"50\" + 20  # CRASH! TypeError\n```\nPython halts and raises a `TypeError`. Why? Because `\"50\"` is text and `20` is a number. Python does not know whether you wanted to mathematically add them to get `70`, or glue the text together to get `\"5020\"`.\n\nTo resolve this, you must use **explicit type conversion** (also called **type casting**).\n\n### The Type Conversion Functions\nPython provides intuitive constructor functions named directly after each data type:\n\n* **`int(x)`:** Converts text or float into an integer. `int(\"50\")` becomes `50`. `int(9.99)` chops off the decimal, giving `9`.\n* **`float(x)`:** Converts text or integer into a float. `float(\"3.14\")` becomes `3.14`. `float(5)` becomes `5.0`.\n* **`str(x)`:** Converts any data into a text string. `str(100)` becomes `\"100\"`.\n* **`bool(x)`:** Converts values into `True` or `False`.\n\n### Converting Numbers to Strings for Output\nWhen you need to construct a message, converting numbers into strings with `str()` allows you to concatenate them with other strings cleanly:\n```python\nage = 15\nprint(\"I am \" + str(age) + \" years old.\")\n```",
+              "keyPoints": [
+                "Use int() to turn text into a whole number.",
+                "Use float() to turn text into a decimal number.",
+                "Use str() to turn a number into text."
+              ]
+            },
+            {
+              "id": "sec-02-04-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "real_number = int(\"25\")\ndecimal_number = float(\"9.99\")\ntext_words = str(100)",
+              "description": "Converting values between types.",
+              "components": [
+                {
+                  "component": "int()",
+                  "purpose": "Converts to a whole number.",
+                  "example": "int(\"5\")",
+                  "required": true
+                },
+                {
+                  "component": "float()",
+                  "purpose": "Converts to a decimal number.",
+                  "example": "float(\"3.14\")",
+                  "required": true
+                },
+                {
+                  "component": "str()",
+                  "purpose": "Converts to text wrapped in quotes.",
+                  "example": "str(42)",
+                  "required": true
+                }
+              ],
+              "notes": "If you convert a float like int(9.99), Python chops off the decimal and leaves you with 9."
+            },
+            {
+              "id": "sec-02-04-example",
+              "type": "example",
+              "title": "Example: Converting Text to Number for Math",
+              "code": "text_points = \"50\"\n# Convert text into a real number:\npoints = int(text_points)\nbonus = points + 20\n\nprint(\"Total points:\", bonus)",
+              "description": "Converting a text string into an integer so it can participate in mathematical addition.",
+              "expectedOutput": "Total points: 70",
+              "stepByStep": [
+                "Step 1 (Line 1): Assigns the text string '50' to variable text_points.",
+                "Step 2 (Line 3): Uses int(text_points) to convert '50' into the real number 50 and stores it in points.",
+                "Step 3 (Line 4): Evaluates points + 20 (50 + 20 = 70) and stores 70 in bonus.",
+                "Step 4 (Line 5): Prints 'Total points: 70' to the console."
+              ]
+            },
+            {
+              "id": "sec-02-04-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Convert the text '15' into an integer, add 5 to it, and print the result.",
+              "starterCode": "text_num = \"15\"\n# Convert text_num to int and add 5\nnum = int(text_num)\nprint(num + 5)\n",
+              "solutionCode": "text_num = \"15\"\nnum = int(text_num)\nprint(num + 5)",
+              "expectedOutput": "20",
+              "hints": [
+                "Use int(text_num).",
+                "Add 5 to the converted number."
+              ]
+            },
+            {
+              "id": "sec-02-04-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Converting Words into Numbers",
+                  "badCode": "number = int(\"ten\")  # ValueError!",
+                  "goodCode": "number = int(\"10\")",
+                  "explanation": "Python cannot turn the English word 'ten' into a number. The text inside quotes must be digits like '10'."
+                }
+              ]
+            },
+            {
+              "id": "sec-02-04-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-02-04-1",
+                  "type": "short-answer",
+                  "question": "What is the answer to int(5.8)?",
+                  "prompt": "Enter number:",
+                  "correctAnswer": "5",
+                  "acceptedAnswers": [
+                    "5"
+                  ],
+                  "hint": "int() chops off the decimal part.",
+                  "explanation": "int() removes the decimal part without rounding, leaving 5."
+                }
+              ]
+            },
+            {
+              "id": "sec-02-04-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "int() turns text numbers into whole numbers.",
+                "float() turns text into decimal numbers.",
+                "str() turns numbers into text."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "module-03-operators",
+      "title": "3. Operators & Booleans",
+      "order": 3,
+      "description": "Compare values to see what is bigger or smaller, combine rules with and/or/not, and format text with f-strings.",
+      "category": "standard",
+      "lessons": [
+        {
+          "id": "lesson-03-01-comparison-operators",
+          "title": "Comparison Operators",
+          "order": 1,
+          "summary": "Compare two values to see if something is bigger, smaller, or equal. The result is always True or False.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 6,
+          "learningObjectives": [
+            "Use == to check if two things are equal",
+            "Use != to check if two things are different",
+            "Use >, <, >=, and <= to compare numbers"
+          ],
+          "prerequisites": [
+            "lesson-02-03-python-data-types"
+          ],
+          "conceptsIntroduced": [
+            "concept-comparison-operators"
+          ],
+          "tags": [
+            "compare",
+            "booleans"
+          ],
+          "sections": [
+            {
+              "id": "sec-03-01-exp",
+              "type": "explanation",
+              "title": "Comparison Operators: Asking True or False Questions",
+              "content": "Computers make decisions by evaluating conditions. Does the player have enough gold to buy this sword? Is the user's password correct? Is the game level greater than 10?\n\nTo answer these questions, Python uses **comparison operators**. Every comparison evaluates to one of two boolean values: strictly `True` or strictly `False`.\n\n### The Six Comparison Operators\n| Operator | Meaning | Code Example | Evaluates To |\n|---|---|---|---|\n| `==` | Equal to | `5 == 5` | `True` |\n| `!=` | Not equal to | `5 != 3` | `True` |\n| `>` | Greater than | `10 > 7` | `True` |\n| `<` | Less than | `4 < 2` | `False` |\n| `>=` | Greater than or equal to | `18 >= 18` | `True` |\n| `<=` | Less than or equal to | `25 <= 20` | `False` |\n\n### The Critical Difference Between `=` and `==`\nThis is one of the most common stumbling blocks for beginners:\n* **Single Equals (`=`):** The **assignment operator**. It tells Python: 'Store this value inside this variable name.'\n* **Double Equals (`==`):** The **equality comparison operator**. It asks Python: 'Are these two values equal to each other?'\n\nIf you write `if age = 18:`, Python will produce a syntax error! Always use `==` when comparing.",
+              "keyPoints": [
+                "Comparisons always give back True or False.",
+                "Double equals '==' checks if values match.",
+                "Single equals '=' is for saving into a variable."
+              ]
+            },
+            {
+              "id": "sec-03-01-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "is_allowed = (age >= 18)",
+              "description": "Comparing two values.",
+              "components": [
+                {
+                  "component": "==",
+                  "purpose": "Checks if two values are equal.",
+                  "example": "score == 100",
+                  "required": false
+                },
+                {
+                  "component": "!=",
+                  "purpose": "Checks if two values are NOT equal.",
+                  "example": "score != 0",
+                  "required": false
+                },
+                {
+                  "component": ">, <, >=, <=",
+                  "purpose": "Checks which number is bigger or smaller.",
+                  "example": "age >= 18",
+                  "required": false
+                }
+              ],
+              "notes": "Never use a single '=' to compare. Always use double '=='."
+            },
+            {
+              "id": "sec-03-01-example",
+              "type": "example",
+              "title": "Example: Comparing Numbers",
+              "code": "age = 15\nprint(\"Is adult (18 or older):\", age >= 18)\nprint(\"Is teenager (equal to 15):\", age == 15)\nprint(\"Is not zero:\", age != 0)",
+              "description": "Comparing an age variable against adult, teenage, and non-zero thresholds.",
+              "expectedOutput": "Is adult (18 or older): False\nIs teenager (equal to 15): True\nIs not zero: True",
+              "stepByStep": [
+                "Step 1 (Line 1): Assigns the integer 15 to variable age.",
+                "Step 2 (Line 2): Evaluates age >= 18 (15 >= 18), which is False, and prints 'Is adult (18 or older): False'.",
+                "Step 3 (Line 3): Evaluates age == 15 (15 == 15), which is True, and prints 'Is teenager (equal to 15): True'.",
+                "Step 4 (Line 4): Evaluates age != 0 (15 != 0), which is True, and prints 'Is not zero: True'."
+              ]
+            },
+            {
+              "id": "sec-03-01-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Check if 20 is greater than 10 and print the True/False answer.",
+              "starterCode": "# Print if 20 > 10 below\nprint(20 > 10)\n",
+              "solutionCode": "print(20 > 10)",
+              "expectedOutput": "True",
+              "hints": [
+                "Use the > symbol.",
+                "print(20 > 10)"
+              ]
+            },
+            {
+              "id": "sec-03-01-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Using Single = Instead of Double ==",
+                  "badCode": "if score = 100:  # Error!",
+                  "goodCode": "if score == 100:",
+                  "explanation": "A single '=' is used to save into a variable. Double '==' is used to check if things are equal."
+                }
+              ]
+            },
+            {
+              "id": "sec-03-01-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-03-01-1",
+                  "type": "code-output",
+                  "question": "What does this code display?",
+                  "codeSnippet": "print(10 == 20)",
+                  "correctAnswer": "False",
+                  "acceptedAnswers": [
+                    "False"
+                  ],
+                  "hint": "Does 10 equal 20?",
+                  "explanation": "Since 10 is not equal to 20, Python says False."
+                }
+              ]
+            },
+            {
+              "id": "sec-03-01-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Comparisons always result in True or False.",
+                "Use == to test if two things are equal.",
+                "Use > and < to check bigger and smaller."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-03-02-logical-operators",
+          "title": "Logical Operators (and, or, not)",
+          "order": 2,
+          "summary": "Combine rules using everyday words: 'and' (both must be true), 'or' (either can be true), and 'not' (flip the answer).",
+          "difficulty": "beginner",
+          "estimatedMinutes": 6,
+          "learningObjectives": [
+            "Use 'and' to check if two conditions are both True",
+            "Use 'or' to check if at least one condition is True",
+            "Use 'not' to flip True to False and False to True"
+          ],
+          "prerequisites": [
+            "lesson-03-01-comparison-operators"
+          ],
+          "conceptsIntroduced": [
+            "concept-logical-operators"
+          ],
+          "tags": [
+            "and",
+            "or",
+            "not",
+            "logic"
+          ],
+          "sections": [
+            {
+              "id": "sec-03-02-exp",
+              "type": "explanation",
+              "title": "Logical Operators: Combining Conditions with and, or, and not",
+              "content": "Real-world decisions rarely depend on a single factor. To ride a roller coaster, you must be tall enough **AND** you must have a ticket. To get a school snow day, it must be freezing **OR** there must be deep snow.\n\nPython provides three **logical operators** to combine and invert boolean expressions: `and`, `or`, and `not`.\n\n### 1. The `and` Operator (Both Must Be True)\nThe `and` operator requires **both** sides of the expression to be `True`. If even one side is `False`, the entire expression becomes `False`:\n* `True and True` -> `True`\n* `True and False` -> `False`\n* `False and False` -> `False`\n\n### 2. The `or` Operator (At Least One Must Be True)\nThe `or` operator requires **at least one** side to be `True`. It only evaluates to `False` if both conditions are `False`:\n* `True or False` -> `True`\n* `False or True` -> `True`\n* `False or False` -> `False`\n\n### 3. The `not` Operator (Inverts Truth)\nThe `not` operator simply flips any boolean value to its opposite:\n* `not True` -> `False`\n* `not False` -> `True`",
+              "keyPoints": [
+                "'and' requires both rules to be True.",
+                "'or' is happy if either rule is True.",
+                "'not' flips the answer upside down."
+              ]
+            },
+            {
+              "id": "sec-03-02-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "can_enter = has_ticket and age >= 12\ncan_play = is_weekend or is_holiday\nis_offline = not is_online",
+              "description": "Combining rules with and, or, and not.",
+              "components": [
+                {
+                  "component": "and",
+                  "purpose": "True only if BOTH sides are True.",
+                  "example": "age >= 10 and has_ticket",
+                  "required": false
+                },
+                {
+                  "component": "or",
+                  "purpose": "True if EITHER side is True.",
+                  "example": "is_sat or is_sun",
+                  "required": false
+                },
+                {
+                  "component": "not",
+                  "purpose": "Flips True to False, or False to True.",
+                  "example": "not is_closed",
+                  "required": false
+                }
+              ],
+              "notes": "Python uses plain English words (and, or, not)."
+            },
+            {
+              "id": "sec-03-02-example",
+              "type": "example",
+              "title": "Example: Checking Roller Coaster Rules",
+              "code": "age = 14\nhas_ticket = True\n\ncan_ride = (age >= 12) and has_ticket\nprint(\"Can ride roller coaster:\", can_ride)\n\nis_sunny = False\nis_warm = True\ngood_weather = is_sunny or is_warm\nprint(\"Good weather:\", good_weather)",
+              "description": "Testing amusement park ride admission using 'and', and weekend weather checks using 'or'.",
+              "expectedOutput": "Can ride roller coaster: True\nGood weather: True",
+              "stepByStep": [
+                "Step 1 (Lines 1-2): Sets age = 14 and has_ticket = True.",
+                "Step 2 (Line 3): Evaluates (age >= 12) [True] and has_ticket [True]. Both are True, so can_ride becomes True.",
+                "Step 3 (Line 4): Prints 'Can ride roller coaster: True'.",
+                "Step 4 (Lines 6-7): Sets is_sunny = False and is_warm = True.",
+                "Step 5 (Line 8): Evaluates is_sunny or is_warm (False or True). At least one is True, so good_weather becomes True.",
+                "Step 6 (Line 9): Prints 'Good weather: True'."
+              ]
+            },
+            {
+              "id": "sec-03-02-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Check if temperature > 20 and temperature < 30, and print the answer.",
+              "starterCode": "temp = 25\n# Check if temp is between 20 and 30\nprint(temp > 20 and temp < 30)\n",
+              "solutionCode": "temp = 25\nprint(temp > 20 and temp < 30)",
+              "expectedOutput": "True",
+              "hints": [
+                "Use the word 'and' between the two comparisons.",
+                "temp > 20 and temp < 30"
+              ]
+            },
+            {
+              "id": "sec-03-02-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Using && or ||",
+                  "badCode": "if age > 10 && has_ticket:  # Error!",
+                  "goodCode": "if age > 10 and has_ticket:",
+                  "explanation": "Python does not use && or || like other languages. Always spell out 'and' and 'or'."
+                }
+              ]
+            },
+            {
+              "id": "sec-03-02-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-03-02-1",
+                  "type": "code-output",
+                  "question": "What does this code display?",
+                  "codeSnippet": "print(not (5 > 2))",
+                  "correctAnswer": "False",
+                  "acceptedAnswers": [
+                    "False"
+                  ],
+                  "hint": "5 > 2 is True. What does 'not True' become?",
+                  "explanation": "5 > 2 is True, and 'not True' flips to False."
+                }
+              ]
+            },
+            {
+              "id": "sec-03-02-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "'and' requires both to be True.",
+                "'or' requires at least one to be True.",
+                "'not' flips the result."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-03-03-fstrings",
+          "title": "F-Strings (Formatted Strings)",
+          "order": 3,
+          "summary": "Insert your variables directly inside messages using {curly braces} and an f in front.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 6,
+          "learningObjectives": [
+            "Put an 'f' in front of quotes to make an f-string",
+            "Insert variables inside {curly braces}",
+            "Write clean, readable messages without messy plus signs"
+          ],
+          "prerequisites": [
+            "lesson-02-01-creating-variables",
+            "lesson-01-02-the-print-function"
+          ],
+          "conceptsIntroduced": [
+            "concept-fstrings",
+            "concept-string-interpolation"
+          ],
+          "tags": [
+            "f-strings",
+            "strings",
+            "formatting"
+          ],
+          "sections": [
+            {
+              "id": "sec-03-03-exp",
+              "type": "explanation",
+              "title": "F-Strings: The Cleanest, Most Modern Way to Build Messages",
+              "content": "When writing real applications, you constantly need to assemble text that mixes static words with live variables: user profiles, shopping totals, game statistics, and system alerts.\n\nIn older versions of Python, developers had to use tedious string concatenation with `+` and wrap every single number in `str()`:\n```python\n# The old, tedious way:\nmessage = \"Player \" + name + \" has \" + str(score) + \" points!\"\n```\n\nPython 3.6 introduced **f-strings** (formatted string literals), which transformed how Python developers write code.\n\n### How to Write an F-String\n1. Place the letter `f` or `F` immediately before the opening quotation mark: `f\"...\"`.\n2. Inside the string, put any variable name or Python expression inside curly braces `{ }`.\n3. Python automatically calculates whatever is inside the braces and seamlessly converts it into text!\n\n```python\nname = \"Lucas\"\nlevel = 4\nprint(f\"Welcome back, {name}! Next level is {level + 1}.\")\n```\n\n### Expressions Inside Braces\nYou can do math, call functions, and access object attributes directly inside the curly braces:\n* `f\"Total: ${price * quantity}\"`\n* `f\"Uppercase: {name.upper()}\"`\n* `f\"Next year you will be {age + 1}.\"`\n\nF-strings are cleaner, significantly faster to execute, and eliminate tedious type conversions.",
+              "keyPoints": [
+                "Put the letter 'f' before the quotes.",
+                "Wrap your variables inside {curly braces}.",
+                "Much easier to read than lots of commas or plus signs."
+              ]
+            },
+            {
+              "id": "sec-03-03-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "f\"Hello, {name}! Your score is {score}.\"",
+              "description": "Putting variables inside text.",
+              "components": [
+                {
+                  "component": "f",
+                  "purpose": "Tells Python to look for {curly braces} inside.",
+                  "example": "f\"...\"",
+                  "required": true
+                },
+                {
+                  "component": "{variable}",
+                  "purpose": "Replaced with the actual value of that variable.",
+                  "example": "{player_name}",
+                  "required": true
+                }
+              ],
+              "notes": "You can even do math inside the braces, like {5 + 5}."
+            },
+            {
+              "id": "sec-03-03-example",
+              "type": "example",
+              "title": "Example: Creating Friendly Messages",
+              "code": "name = \"Lucas\"\nlevel = 4\nprint(f\"Welcome back, {name}!\")\nprint(f\"You are on level {level}, and next is level {level + 1}.\")",
+              "description": "Using f-strings to inject a name and calculate the next level directly inside curly braces.",
+              "expectedOutput": "Welcome back, Lucas!\nYou are on level 4, and next is level 5.",
+              "stepByStep": [
+                "Step 1 (Lines 1-2): Assigns name = 'Lucas' and level = 4.",
+                "Step 2 (Line 3): Python evaluates f'Welcome back, {name}!', replaces {name} with 'Lucas', and prints 'Welcome back, Lucas!'.",
+                "Step 3 (Line 4): Evaluates {level} (4) and {level + 1} (5), printing 'You are on level 4, and next is level 5.'."
+              ]
+            },
+            {
+              "id": "sec-03-03-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Use an f-string to print 'My dog is named Max' using the pet variable.",
+              "starterCode": "pet = \"Max\"\n# Print 'My dog is named Max' using an f-string:\nprint(f\"My dog is named {pet}\")\n",
+              "solutionCode": "pet = \"Max\"\nprint(f\"My dog is named {pet}\")",
+              "expectedOutput": "My dog is named Max",
+              "hints": [
+                "Put the letter f before the first quote.",
+                "Put {pet} inside the string."
+              ]
+            },
+            {
+              "id": "sec-03-03-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Forgetting the 'f' Before Quotes",
+                  "badCode": "print(\"Hello {name}\")  # Prints literal '{name}'!",
+                  "goodCode": "print(f\"Hello {name}\")",
+                  "explanation": "Without the 'f' in front, Python thinks you literally want to print the curly braces and the word name."
+                }
+              ]
+            },
+            {
+              "id": "sec-03-03-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-03-03-1",
+                  "type": "code-output",
+                  "question": "What does this code display?",
+                  "codeSnippet": "x = 10\nprint(f\"Double is {x * 2}\")",
+                  "correctAnswer": "Double is 20",
+                  "acceptedAnswers": [
+                    "Double is 20"
+                  ],
+                  "hint": "x * 2 calculates 10 * 2 = 20.",
+                  "explanation": "{x * 2} evaluates to 20, producing 'Double is 20'."
+                }
+              ]
+            },
+            {
+              "id": "sec-03-03-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "f-strings start with 'f' before the opening quote.",
+                "Variables go inside {curly braces}.",
+                "F-strings are the modern, clean way to build messages."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "module-04-conditions",
+      "title": "4. Conditions & Decisions (If...Else)",
+      "order": 4,
+      "description": "Teach your program to make smart choices using if, elif, and else, and master 4-space indentation.",
+      "category": "standard",
+      "lessons": [
+        {
+          "id": "lesson-04-01-the-if-statement",
+          "title": "The if Statement & Indentation",
+          "order": 1,
+          "summary": "Make your code do something only when a rule is met, and learn how Python uses 4-space indentation.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Write an if statement with a condition and colon (:)",
+            "Indent lines with 4 spaces to show what belongs inside",
+            "Understand how Python skips code when a condition is False"
+          ],
+          "prerequisites": [
+            "lesson-03-01-comparison-operators"
+          ],
+          "conceptsIntroduced": [
+            "concept-control-flow-if",
+            "concept-indentation"
+          ],
+          "tags": [
+            "if",
+            "choices",
+            "indentation"
+          ],
+          "sections": [
+            {
+              "id": "sec-04-01-exp",
+              "type": "explanation",
+              "title": "The if Statement: Teaching Your Code to Make Smart Choices",
+              "content": "So far, all of our programs have executed every single line from top to bottom. But real applications must adapt: a game should grant a trophy only when the player wins; an online banking app should reject a withdrawal if the balance is too low; an alarm should sound only when smoke is detected.\n\nThe `if` statement is Python's fundamental tool for creating **conditional branches**—code blocks that only run when a specific condition is met.\n\n### The Anatomy of an if Statement\nEvery Python if statement consists of three essential elements:\n1. The **`if` keyword** followed by a condition that evaluates to `True` or `False`.\n2. A **colon `:`** at the very end of the line. The colon tells Python: 'Pay attention! A block of code is about to follow.'\n3. An **indented block** of code underneath.\n\n```python\nscore = 85\nif score >= 60:\n    print(\"Great job!\")\n    print(\"You passed the exam.\")\nprint(\"Report card complete.\")\n```\n\n### The Golden Rule of Python: Indentation\nIn other programming languages like JavaScript or Java, code blocks are wrapped inside curly brackets `{ }`. In Python, **indentation (spacing from the left margin) defines the code block**.\n\n* Standard Python convention is exactly **4 spaces** per indent level.\n* Any lines indented under the `if` header belong to that block. They only execute if the condition is `True`.\n* As soon as you unindent back to the left margin, you exit the if statement. Unindented code runs unconditionally, whether the condition was True or False!",
+              "keyPoints": [
+                "An if statement runs code only when its rule is True.",
+                "Always end the if line with a colon (:).",
+                "Lines inside the if statement must be indented by 4 spaces."
+              ]
+            },
+            {
+              "id": "sec-04-01-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "if condition:\n    # Indented 4 spaces\n    do_this_action()",
+              "description": "Making a choice in Python.",
+              "components": [
+                {
+                  "component": "if",
+                  "purpose": "Starts the decision statement.",
+                  "example": "if",
+                  "required": true
+                },
+                {
+                  "component": "condition",
+                  "purpose": "The rule Python tests (must evaluate to True or False).",
+                  "example": "score >= 50",
+                  "required": true
+                },
+                {
+                  "component": ":",
+                  "purpose": "Signals that the action steps start on the next line.",
+                  "example": ":",
+                  "required": true
+                },
+                {
+                  "component": "4 Spaces",
+                  "purpose": "Shows Python that these actions belong inside the if block.",
+                  "example": "    print(\"Passed!\")",
+                  "required": true
+                }
+              ],
+              "notes": "Lines that are not indented are outside the if statement and will run regardless."
+            },
+            {
+              "id": "sec-04-01-example",
+              "type": "example",
+              "title": "Example: Passing the Test",
+              "code": "score = 85\n\nif score >= 60:\n    print(\"Great job!\")\n    print(\"You passed the exam.\")\n\nprint(\"Report card complete.\")",
+              "description": "Testing an exam score threshold with an indented if block that executes only when the condition is met.",
+              "expectedOutput": "Great job!\nYou passed the exam.\nReport card complete.",
+              "stepByStep": [
+                "Step 1 (Line 1): Assigns the integer 85 to variable score.",
+                "Step 2 (Line 2): Python checks if score >= 60 (85 >= 60). The condition is True.",
+                "Step 3 (Lines 3-4): Because it is True, Python enters the indented block and prints 'Great job!' and 'You passed the exam.'.",
+                "Step 4 (Line 5): Python exits the if block and executes the unindented print('Report card complete.')."
+              ]
+            },
+            {
+              "id": "sec-04-01-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Write an if statement that checks if temperature > 30. If so, print 'It is hot!'.",
+              "starterCode": "temperature = 35\n# Write your if statement below:\nif temperature > 30:\n    print(\"It is hot!\")\n",
+              "solutionCode": "temperature = 35\nif temperature > 30:\n    print(\"It is hot!\")",
+              "expectedOutput": "It is hot!",
+              "hints": [
+                "End the if line with a colon (:).",
+                "Indent print('It is hot!') with 4 spaces."
+              ]
+            },
+            {
+              "id": "sec-04-01-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Forgetting the Colon (:)",
+                  "badCode": "if score >= 50\n    print(\"Passed\")  # SyntaxError!",
+                  "goodCode": "if score >= 50:\n    print(\"Passed\")",
+                  "explanation": "You must always place a colon (:) at the end of the if line."
+                },
+                {
+                  "title": "2. Forgetting to Indent",
+                  "badCode": "if score >= 50:\nprint(\"Passed\")  # IndentationError!",
+                  "goodCode": "if score >= 50:\n    print(\"Passed\")",
+                  "explanation": "Python requires code inside an if statement to be indented by 4 spaces."
+                }
+              ]
+            },
+            {
+              "id": "sec-04-01-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-04-01-1",
+                  "type": "short-answer",
+                  "question": "What punctuation mark must go at the end of the line: if age >= 18__",
+                  "prompt": "Enter symbol:",
+                  "correctAnswer": ":",
+                  "acceptedAnswers": [
+                    ":"
+                  ],
+                  "hint": "A colon (:).",
+                  "explanation": "Python statements like if, else, for, while, and def must end with a colon (:)."
+                }
+              ]
+            },
+            {
+              "id": "sec-04-01-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "if runs code only when a condition is True.",
+                "Always end the line with a colon (:).",
+                "Indent lines inside by 4 spaces."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-04-02-else-and-elif",
+          "title": "The else and elif Statements",
+          "order": 2,
+          "summary": "Add backup plans with 'else', and check multiple choices with 'elif'.",
+          "difficulty": "beginner",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Use 'else' to provide a backup plan when 'if' is False",
+            "Use 'elif' to test several choices in a row",
+            "Understand that only one choice in the chain will run"
+          ],
+          "prerequisites": [
+            "lesson-04-01-the-if-statement"
+          ],
+          "conceptsIntroduced": [
+            "concept-control-flow-elif-else"
+          ],
+          "tags": [
+            "else",
+            "elif",
+            "choices"
+          ],
+          "sections": [
+            {
+              "id": "sec-04-02-exp",
+              "type": "explanation",
+              "title": "The else and elif Statements: Handling Both Paths & Multi-Choice Chains",
+              "content": "An `if` statement by itself allows your program to do something special when a condition is `True`. But what if you need to take an alternative action when the condition is `False`?\n\n### The `else` Statement: The Alternative Path\nThink of an `if-else` statement as a **fork in the road**. When your code arrives at the fork, it evaluates the condition:\n* If the condition is **`True`**, it takes the `if` path.\n* If the condition is **`False`**, it takes the `else` path.\n\nCrucially, **exactly one of the two blocks will execute—never both, and never neither!**\n\n### The `elif` Statement: Multiple Scenarios\nReal life often presents more than just two choices. Traffic lights can be red, yellow, or green; temperatures can be freezing, mild, or hot.\n\nWhen you have three or more mutually exclusive outcomes, Python provides the **`elif`** keyword (short for *else if*):\n\n```python\nlight = \"yellow\"\nif light == \"red\":\n    print(\"Stop!\")\nelif light == \"yellow\":\n    print(\"Slow down!\")\nelse:\n    print(\"Go!\")\n```\n\n### How Python Checks an elif Chain\nPython checks each condition from top to bottom. **As soon as it finds the first True condition, it runs that block and immediately skips the rest of the chain!** If none of the conditions were True, the final `else` executes as a reliable fallback.",
+              "keyPoints": [
+                "else gives you a fallback when if is False.",
+                "elif lets you test additional choices.",
+                "Only one branch in the ladder will ever run."
+              ]
+            },
+            {
+              "id": "sec-04-02-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "if score >= 90:\n    print(\"Grade A\")\nelif score >= 80:\n    print(\"Grade B\")\nelse:\n    print(\"Keep practicing!\")",
+              "description": "Choosing between multiple paths.",
+              "components": [
+                {
+                  "component": "if rule:",
+                  "purpose": "Tested first.",
+                  "example": "if score >= 90:",
+                  "required": true
+                },
+                {
+                  "component": "elif rule:",
+                  "purpose": "Tested second if the first was False.",
+                  "example": "elif score >= 80:",
+                  "required": false
+                },
+                {
+                  "component": "else:",
+                  "purpose": "Runs if none of the rules above were True.",
+                  "example": "else:",
+                  "required": false
+                }
+              ],
+              "notes": "Notice that 'else' does NOT have a condition. It is just 'else:'."
+            },
+            {
+              "id": "sec-04-02-example",
+              "type": "example",
+              "title": "Example: Choosing Traffic Light Actions",
+              "code": "light = \"yellow\"\n\nif light == \"red\":\n    print(\"Stop!\")\nelif light == \"yellow\":\n    print(\"Slow down!\")\nelse:\n    print(\"Go!\")",
+              "description": "A traffic light simulator using if, elif, and else to display the correct driver action.",
+              "expectedOutput": "Slow down!",
+              "stepByStep": [
+                "Step 1 (Line 1): Sets light = 'yellow'.",
+                "Step 2 (Line 2): Checks if light == 'red' ('yellow' == 'red') -> False. Skips to the next condition.",
+                "Step 3 (Line 4): Checks elif light == 'yellow' ('yellow' == 'yellow') -> True!",
+                "Step 4 (Line 5): Executes print('Slow down!').",
+                "Step 5 (Line 6): Skips the else block completely because an earlier elif condition matched."
+              ]
+            },
+            {
+              "id": "sec-04-02-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "If age < 13 print 'Child', elif age < 20 print 'Teenager', else print 'Adult'.",
+              "starterCode": "age = 15\nif age < 13:\n    print(\"Child\")\nelif age < 20:\n    print(\"Teenager\")\nelse:\n    print(\"Adult\")\n",
+              "solutionCode": "age = 15\nif age < 13:\n    print(\"Child\")\nelif age < 20:\n    print(\"Teenager\")\nelse:\n    print(\"Adult\")",
+              "expectedOutput": "Teenager",
+              "hints": [
+                "15 is not < 13, but it is < 20.",
+                "So it prints 'Teenager'."
+              ]
+            },
+            {
+              "id": "sec-04-02-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Giving 'else' a Rule",
+                  "badCode": "else score < 50:  # SyntaxError!",
+                  "goodCode": "else:\n    print(\"Try again\")",
+                  "explanation": "'else' is a catch-all fallback and does not take a rule. If you need a rule, use 'elif'."
+                }
+              ]
+            },
+            {
+              "id": "sec-04-02-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-04-02-1",
+                  "type": "code-output",
+                  "question": "What does this code display?",
+                  "codeSnippet": "x = 5\nif x > 10:\n    print(\"Big\")\nelse:\n    print(\"Small\")",
+                  "correctAnswer": "Small",
+                  "acceptedAnswers": [
+                    "Small"
+                  ],
+                  "hint": "Is 5 > 10? No, so it goes to else.",
+                  "explanation": "Since 5 > 10 is False, the else block runs and displays 'Small'."
+                }
+              ]
+            },
+            {
+              "id": "sec-04-02-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "use elif to test more choices.",
+                "use else for the final fallback.",
+                "Only one choice in the ladder will run."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "module-05-loops",
+      "title": "5. Loops (Repeating Things)",
+      "order": 5,
+      "description": "Automate repetitive tasks with while loops, for loops with range(), and control loops with break and continue.",
+      "category": "standard",
+      "lessons": [
+        {
+          "id": "lesson-05-01-while-loops",
+          "title": "The while Loop",
+          "order": 1,
+          "summary": "Repeat code again and again as long as a condition stays True.",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Write a while loop with a condition",
+            "Update the loop counter so the loop finishes",
+            "Understand how to avoid infinite loops"
+          ],
+          "prerequisites": [
+            "lesson-04-01-the-if-statement"
+          ],
+          "conceptsIntroduced": [
+            "concept-loops-while"
+          ],
+          "tags": [
+            "while",
+            "loops",
+            "repeat"
+          ],
+          "sections": [
+            {
+              "id": "sec-05-01-exp",
+              "type": "explanation",
+              "title": "The while Loop: Repeating Code Until a Condition Changes",
+              "content": "Computers excel at doing repetitive tasks without ever getting tired or making accidental calculation errors. If you had to print numbers 1 through 1,000 by hand, writing 1,000 separate print statements would take hours. With a loop, you can do it in three lines!\n\nA **`while` loop** repeatedly executes a block of code **as long as its condition remains `True`**.\n\n### The Anatomy of a while Loop\nA well-structured while loop always has three critical components:\n1. **Initialization:** You set up a counter or state variable *before* the loop begins (e.g. `countdown = 3`).\n2. **Condition:** The loop evaluates the condition at the start of every iteration (e.g. `while countdown > 0:`).\n3. **State Update:** Inside the loop, you must change the variable (e.g. `countdown -= 1`) so that the condition eventually becomes `False`.\n\n```python\ncountdown = 3\nwhile countdown > 0:\n    print(countdown)\n    countdown -= 1\nprint(\"Blast off!\")\n```\n\n### Beware the Infinite Loop!\nWhat happens if you forget to decrement `countdown -= 1`? The variable `countdown` would stay `3` forever. `3 > 0` would be `True` forever, and Python would run endlessly in what programmers call an **infinite loop**, freezing your application! Whenever you write a while loop, always verify that your code moves toward a termination condition.",
+              "keyPoints": [
+                "while loops repeat as long as their condition is True.",
+                "Always make sure to update your counter so the loop can finish.",
+                "count += 1 is shorthand for count = count + 1."
+              ]
+            },
+            {
+              "id": "sec-05-01-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "count = 1\nwhile count <= 3:\n    print(count)\n    count += 1  # Move forward!",
+              "description": "Repeating code with a condition.",
+              "components": [
+                {
+                  "component": "while",
+                  "purpose": "Starts the repeat loop.",
+                  "example": "while",
+                  "required": true
+                },
+                {
+                  "component": "condition",
+                  "purpose": "Checked before each round. If True, the code inside repeats.",
+                  "example": "count <= 3",
+                  "required": true
+                },
+                {
+                  "component": "count += 1",
+                  "purpose": "Increases the counter so the loop eventually stops.",
+                  "example": "count += 1",
+                  "required": true
+                }
+              ],
+              "notes": "Always remember to update your counter inside the loop!"
+            },
+            {
+              "id": "sec-05-01-example",
+              "type": "example",
+              "title": "Example: Rocket Countdown",
+              "code": "countdown = 3\n\nwhile countdown > 0:\n    print(countdown)\n    countdown -= 1\n\nprint(\"Blast off!\")",
+              "description": "A rocket launch countdown timer counting down from 3 to 1 before printing 'Blast off!'.",
+              "expectedOutput": "3\n2\n1\nBlast off!",
+              "stepByStep": [
+                "Step 1 (Line 1): Initializes countdown = 3.",
+                "Step 2 (Iteration 1): Checks countdown > 0 (3 > 0) -> True. Prints 3, decrements countdown to 2.",
+                "Step 3 (Iteration 2): Checks countdown > 0 (2 > 0) -> True. Prints 2, decrements countdown to 1.",
+                "Step 4 (Iteration 3): Checks countdown > 0 (1 > 0) -> True. Prints 1, decrements countdown to 0.",
+                "Step 5 (Iteration 4): Checks countdown > 0 (0 > 0) -> False! The while loop terminates.",
+                "Step 6 (Line 5): Python executes print('Blast off!') after the loop finishes."
+              ]
+            },
+            {
+              "id": "sec-05-01-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Write a while loop that prints numbers from 1 up to 3.",
+              "starterCode": "i = 1\nwhile i <= 3:\n    print(i)\n    i += 1\n",
+              "solutionCode": "i = 1\nwhile i <= 3:\n    print(i)\n    i += 1",
+              "expectedOutput": "1\n2\n3",
+              "hints": [
+                "Use 'while i <= 3:'.",
+                "Don't forget 'i += 1'."
+              ]
+            },
+            {
+              "id": "sec-05-01-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Forgetting to Add to the Counter (Infinite Loop)",
+                  "badCode": "i = 1\nwhile i <= 3:\n    print(i)  # i never changes; runs forever!",
+                  "goodCode": "i = 1\nwhile i <= 3:\n    print(i)\n    i += 1",
+                  "explanation": "Without i += 1, i stays 1 forever, so the loop never stops running."
+                }
+              ]
+            },
+            {
+              "id": "sec-05-01-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-05-01-1",
+                  "type": "short-answer",
+                  "question": "How many times does this loop print? x = 0; while x < 3: x += 1; print(x)",
+                  "prompt": "Enter number:",
+                  "correctAnswer": "3",
+                  "acceptedAnswers": [
+                    "3"
+                  ],
+                  "hint": "It runs for x = 0, 1, and 2.",
+                  "explanation": "The loop runs 3 times before x reaches 3."
+                }
+              ]
+            },
+            {
+              "id": "sec-05-01-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "while loops repeat as long as their condition is True.",
+                "Always increase your counter so the loop can stop.",
+                "Infinite loops happen when the condition never turns False."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-05-02-for-loops-and-range",
+          "title": "The for Loop & range()",
+          "order": 2,
+          "summary": "Repeat an action a specific number of times easily using for loops and range().",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Use 'for i in range()' to repeat code easily",
+            "Understand that range(5) counts 0, 1, 2, 3, 4",
+            "Use range(start, stop) to pick your starting number"
+          ],
+          "prerequisites": [
+            "lesson-05-01-while-loops"
+          ],
+          "conceptsIntroduced": [
+            "concept-loops-for",
+            "concept-range"
+          ],
+          "tags": [
+            "for",
+            "loops",
+            "range"
+          ],
+          "sections": [
+            {
+              "id": "sec-05-02-exp",
+              "type": "explanation",
+              "title": "The for Loop & range(): Definite Iteration Over Number Sequences",
+              "content": "While a `while` loop repeats as long as a condition holds true, a **`for` loop** is designed for **definite iteration**—repeating code a predetermined number of times, or visiting every element in a sequence.\n\nIn Python, the for loop is praised for its elegant, readable syntax: `for item in sequence:`.\n\n### The `range()` Function\nTo repeat an action a specific number of times, Python provides the built-in `range()` function. It can be called in three different ways:\n\n1. **`range(stop)`:** Generates numbers starting from `0` up to (but not including) `stop`:\n   * `range(3)` produces: `0, 1, 2` (exactly 3 iterations).\n2. **`range(start, stop)`:** Starts at `start` and goes up to `stop - 1`:\n   * `range(1, 4)` produces: `1, 2, 3`.\n3. **`range(start, stop, step)`:** Increments by `step` on each cycle:\n   * `range(0, 10, 2)` produces: `0, 2, 4, 6, 8` (even numbers!).\n   * `range(5, 0, -1)` produces: `5, 4, 3, 2, 1` (counting backwards!).\n\n### Why Does range() Stop Before the End?\nA common question from new coders is: *why does range(1, 4) stop at 3 instead of 4?*\nThis convention matches zero-based indexing and makes calculating lengths easy. Notice that `stop - start` gives the exact count of items: `4 - 1 = 3` total numbers!",
+              "keyPoints": [
+                "for loops are the easiest way to repeat code a set number of times.",
+                "range(5) counts 5 numbers: 0, 1, 2, 3, 4.",
+                "range() stops right before the final number."
+              ]
+            },
+            {
+              "id": "sec-05-02-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "for i in range(3):\n    print(\"Hello!\")",
+              "description": "Repeating code a set number of times.",
+              "components": [
+                {
+                  "component": "for",
+                  "purpose": "Starts the sequence loop.",
+                  "example": "for",
+                  "required": true
+                },
+                {
+                  "component": "i",
+                  "purpose": "The counter variable that holds the current number.",
+                  "example": "i",
+                  "required": true
+                },
+                {
+                  "component": "in range(count)",
+                  "purpose": "Tells Python how many times to count.",
+                  "example": "in range(5)",
+                  "required": true
+                }
+              ],
+              "notes": "range(1, 4) produces 1, 2, 3 (it stops right before 4)."
+            },
+            {
+              "id": "sec-05-02-example",
+              "type": "example",
+              "title": "Example: Counting Up",
+              "code": "print(\"Counting 0 to 2:\")\nfor i in range(3):\n    print(i)\n\nprint(\"Counting 1 to 3:\")\nfor num in range(1, 4):\n    print(num)",
+              "description": "Demonstrating range(3) starting at zero and range(1, 4) starting at a custom value.",
+              "expectedOutput": "Counting 0 to 2:\n0\n1\n2\nCounting 1 to 3:\n1\n2\n3",
+              "stepByStep": [
+                "Step 1 (Line 1): Prints 'Counting 0 to 2:'.",
+                "Step 2 (Lines 2-3): for i in range(3): executes three times, with i taking values 0, 1, and 2.",
+                "Step 3 (Line 4): Prints 'Counting 1 to 3:'.",
+                "Step 4 (Lines 5-6): for num in range(1, 4): executes three times, with num taking values 1, 2, and 3."
+              ]
+            },
+            {
+              "id": "sec-05-02-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Write a for loop with range(3) to print numbers 0, 1, and 2.",
+              "starterCode": "for i in range(3):\n    print(i)\n",
+              "solutionCode": "for i in range(3):\n    print(i)",
+              "expectedOutput": "0\n1\n2",
+              "hints": [
+                "Use 'for i in range(3):'.",
+                "Print i inside the loop."
+              ]
+            },
+            {
+              "id": "sec-05-02-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Expecting range(5) to Include 5",
+                  "badCode": "for i in range(1, 5):\n    print(i)  # Prints 1, 2, 3, 4 (stops before 5!)",
+                  "goodCode": "for i in range(1, 6):\n    print(i)  # Prints 1, 2, 3, 4, 5",
+                  "explanation": "range() always stops before the end number. To count to 5, write range(1, 6)."
+                }
+              ]
+            },
+            {
+              "id": "sec-05-02-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-05-02-1",
+                  "type": "code-output",
+                  "question": "What is the last number printed by this loop?",
+                  "codeSnippet": "for i in range(1, 4):\n    print(i)",
+                  "correctAnswer": "3",
+                  "acceptedAnswers": [
+                    "3"
+                  ],
+                  "hint": "It stops before 4.",
+                  "explanation": "range(1, 4) produces 1, 2, 3. The last number is 3."
+                }
+              ]
+            },
+            {
+              "id": "sec-05-02-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "for loops iterate over a sequence of numbers.",
+                "range(n) starts at 0 and stops before n.",
+                "range(1, 5) counts 1, 2, 3, 4."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-05-03-break-and-continue",
+          "title": "break and continue",
+          "order": 3,
+          "summary": "Stop a loop early with break, or skip to the next round with continue.",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 6,
+          "learningObjectives": [
+            "Stop a loop immediately using 'break'",
+            "Skip the rest of a round using 'continue'",
+            "Use if checks inside loops to control flow"
+          ],
+          "prerequisites": [
+            "lesson-05-02-for-loops-and-range"
+          ],
+          "conceptsIntroduced": [
+            "concept-loops-break-continue"
+          ],
+          "tags": [
+            "break",
+            "continue",
+            "loops"
+          ],
+          "sections": [
+            {
+              "id": "sec-05-03-exp",
+              "type": "explanation",
+              "title": "Loop Control: Early Exits with break and Skipping with continue",
+              "content": "Sometimes running a loop from start to finish is unnecessary or wasteful.\n* Imagine searching through a database of 100,000 users for an email address. Once you find the matching user on record #5, there is no reason to check the remaining 99,995 records! You want to stop immediately.\n* Imagine processing invoices where some entries are blank. You want to skip the blank ones and move directly to the next invoice without crashing.\n\nPython provides two powerful control statements to steer your loops: **`break`** and **`continue`**.\n\n### 1. The `break` Statement: Emergency Exit\nWhen Python encounters `break` inside a loop, it **instantly terminates the entire loop**. Execution jumps immediately to the first line of code following the loop block:\n\n```python\nfor i in range(1, 5):\n    if i == 3:\n        break\n    print(i)\n# Outputs: 1, 2 (stops when i becomes 3!)\n```\n\n### 2. The `continue` Statement: Skip to the Next Iteration\nWhen Python encounters `continue`, it **skips the rest of the current iteration** and jumps directly back up to the top of the loop for the next cycle:\n\n```python\nfor i in range(1, 5):\n    if i == 3:\n        continue\n    print(i)\n# Outputs: 1, 2, 4 (only 3 is skipped!)\n```",
+              "keyPoints": [
+                "break stops the whole loop completely.",
+                "continue skips only the current turn.",
+                "Both are used inside an if check inside the loop."
+              ]
+            },
+            {
+              "id": "sec-05-03-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "for item in range(10):\n    if item == 3:\n        break     # Stop loop now!\n    if item == 1:\n        continue  # Skip 1 and move to 2",
+              "description": "Stopping or skipping loop rounds.",
+              "components": [
+                {
+                  "component": "break",
+                  "purpose": "Exits the loop immediately.",
+                  "example": "break",
+                  "required": false
+                },
+                {
+                  "component": "continue",
+                  "purpose": "Skips to the next round of the loop.",
+                  "example": "continue",
+                  "required": false
+                }
+              ],
+              "notes": "Use break when you find what you were looking for and don't need to check any more."
+            },
+            {
+              "id": "sec-05-03-example",
+              "type": "example",
+              "title": "Example: break vs continue",
+              "code": "print(\"--- Testing break ---\")\nfor i in range(1, 5):\n    if i == 3:\n        break\n    print(i)\n\nprint(\"--- Testing continue ---\")\nfor i in range(1, 5):\n    if i == 3:\n        continue\n    print(i)",
+              "description": "Side-by-side demonstration of break terminating a loop early vs continue skipping a single iteration.",
+              "expectedOutput": "--- Testing break ---\n1\n2\n--- Testing continue ---\n1\n2\n4",
+              "stepByStep": [
+                "Step 1 (Break Test): Loops i from 1 to 4. When i is 1 and 2, it prints. When i reaches 3, break triggers, ending the loop immediately.",
+                "Step 2 (Continue Test): Loops i from 1 to 4. When i reaches 3, continue triggers, skipping print(3) and immediately advancing to i = 4.",
+                "Step 3: Prints 4, demonstrating that the rest of the loop survived."
+              ]
+            },
+            {
+              "id": "sec-05-03-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Use continue to skip printing the number 2 in a loop from 1 to 4.",
+              "starterCode": "for i in range(1, 5):\n    if i == 2:\n        continue\n    print(i)\n",
+              "solutionCode": "for i in range(1, 5):\n    if i == 2:\n        continue\n    print(i)",
+              "expectedOutput": "1\n3\n4",
+              "hints": [
+                "Use 'if i == 2: continue'.",
+                "Notice that 2 is skipped while 1, 3, and 4 print."
+              ]
+            },
+            {
+              "id": "sec-05-03-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Forgetting to Update Counter in while Loops",
+                  "badCode": "i = 0\nwhile i < 5:\n    if i == 2:\n        continue  # i stays 2 forever!\n    i += 1",
+                  "goodCode": "i = 0\nwhile i < 5:\n    i += 1\n    if i == 2:\n        continue\n    print(i)",
+                  "explanation": "In while loops, update your counter before calling continue, otherwise your loop gets stuck."
+                }
+              ]
+            },
+            {
+              "id": "sec-05-03-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-05-03-1",
+                  "type": "multiple-choice",
+                  "question": "Which word stops the loop completely and jumps out?",
+                  "options": [
+                    "break",
+                    "continue",
+                    "skip",
+                    "stop"
+                  ],
+                  "correctIndex": 0,
+                  "explanation": "'break' exits the loop immediately."
+                }
+              ]
+            },
+            {
+              "id": "sec-05-03-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "break stops the loop immediately.",
+                "continue skips to the next turn.",
+                "Both help you control loop flow."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "module-06-collections",
+      "title": "6. Collections (Lists & Dictionaries)",
+      "order": 6,
+      "description": "Store groups of items together in ordered Lists and label data by name in Dictionaries.",
+      "category": "standard",
+      "lessons": [
+        {
+          "id": "lesson-06-01-python-lists",
+          "title": "Python Lists & Indexing",
+          "order": 1,
+          "summary": "A list is a shopping cart that holds items in order. Pick items out by their position (starting at 0).",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Create a list using square brackets [ ]",
+            "Pick items using 0-based indexing",
+            "Use [-1] to grab the last item easily"
+          ],
+          "prerequisites": [
+            "lesson-02-01-creating-variables"
+          ],
+          "conceptsIntroduced": [
+            "concept-lists",
+            "concept-indexing"
+          ],
+          "tags": [
+            "lists",
+            "indexing"
+          ],
+          "sections": [
+            {
+              "id": "sec-06-01-exp",
+              "type": "explanation",
+              "title": "Python Lists: Ordered, Flexible Collections of Data",
+              "content": "Until now, our variables have stored a single piece of information at a time: one number, one string, or one boolean. But real software handles collections: a user's shopping cart, a music playlist, game inventory items, or sensor readings.\n\nIn Python, the most versatile collection is the **list**. A list is an **ordered, mutable sequence of items** enclosed within square brackets `[ ]`.\n\n### Key Characteristics of Lists\n* **Enclosed in Square Brackets:** `colors = [\"Red\", \"Green\", \"Blue\"]`.\n* **Zero-Based Indexing:** Just like strings, the first item is at index `0`: `colors[0]` is `\"Red\"`.\n* **Second Item:** `colors[1]` is `\"Green\"`.\n* **Negative Indexing:** Python supports negative indices counting backwards from the end! `colors[-1]` is the very last element (`\"Blue\"`), and `colors[-2]` is the second-to-last.\n* **Can Hold Mixed Types:** A Python list can store strings, integers, floats, and booleans simultaneously.\n\n### Finding List Length\nTo find out how many elements are currently stored in a list, pass it to Python's built-in `len()` function:\n```python\nprint(len(colors))  # Displays: 3\n```",
+              "keyPoints": [
+                "Lists use square brackets [].",
+                "Positions start at 0, not 1.",
+                "[-1] gets the last item."
+              ]
+            },
+            {
+              "id": "sec-06-01-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "fruits = [\"Apple\", \"Banana\", \"Cherry\"]\nfirst = fruits[0]\nlast = fruits[-1]",
+              "description": "Creating a list and picking items out.",
+              "components": [
+                {
+                  "component": "[ ]",
+                  "purpose": "Square brackets that hold the list items.",
+                  "example": "[\"A\", \"B\"]",
+                  "required": true
+                },
+                {
+                  "component": "list[0]",
+                  "purpose": "Gets the very first item (position 0).",
+                  "example": "fruits[0]",
+                  "required": true
+                },
+                {
+                  "component": "list[-1]",
+                  "purpose": "Gets the last item from the right.",
+                  "example": "fruits[-1]",
+                  "required": false
+                }
+              ],
+              "notes": "Asking for an index that doesn't exist (like index 10 in a 3-item list) causes an IndexError."
+            },
+            {
+              "id": "sec-06-01-example",
+              "type": "example",
+              "title": "Example: Colors in a List",
+              "code": "colors = [\"Red\", \"Green\", \"Blue\"]\n\nprint(\"First color:\", colors[0])\nprint(\"Second color:\", colors[1])\nprint(\"Last color:\", colors[-1])",
+              "description": "Creating a list of three colors and accessing elements using positive and negative indices.",
+              "expectedOutput": "First color: Red\nSecond color: Green\nLast color: Blue",
+              "stepByStep": [
+                "Step 1 (Line 1): Creates colors containing 'Red', 'Green', and 'Blue'.",
+                "Step 2 (Line 2): Accesses colors[0] to retrieve the first item 'Red'.",
+                "Step 3 (Line 3): Accesses colors[1] to retrieve the second item 'Green'.",
+                "Step 4 (Line 4): Accesses colors[-1] to retrieve the final item 'Blue' using negative indexing."
+              ]
+            },
+            {
+              "id": "sec-06-01-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Print the second animal (index 1) from the animals list.",
+              "starterCode": "animals = [\"Dog\", \"Cat\", \"Bird\"]\n# Print the second animal:\nprint(animals[1])\n",
+              "solutionCode": "animals = [\"Dog\", \"Cat\", \"Bird\"]\nprint(animals[1])",
+              "expectedOutput": "Cat",
+              "hints": [
+                "Index 0 is Dog, so index 1 is Cat.",
+                "Use animals[1]."
+              ]
+            },
+            {
+              "id": "sec-06-01-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Counting from 1 Instead of 0",
+                  "badCode": "items = [\"A\", \"B\", \"C\"]\nprint(items[3])  # IndexError!",
+                  "goodCode": "print(items[2])  # Index 2 is 'C'",
+                  "explanation": "For 3 items, the positions are 0, 1, and 2. Index 3 does not exist!"
+                }
+              ]
+            },
+            {
+              "id": "sec-06-01-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-06-01-1",
+                  "type": "code-output",
+                  "question": "What does this code display?",
+                  "codeSnippet": "nums = [10, 20, 30]\nprint(nums[-1])",
+                  "correctAnswer": "30",
+                  "acceptedAnswers": [
+                    "30"
+                  ],
+                  "hint": "Index -1 grabs the final item.",
+                  "explanation": "nums[-1] accesses the last item, which is 30."
+                }
+              ]
+            },
+            {
+              "id": "sec-06-01-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Lists hold multiple items in square brackets [].",
+                "Counting starts at 0.",
+                "[-1] grabs the last item."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-06-02-list-methods",
+          "title": "List Methods (append, len, remove)",
+          "order": 2,
+          "summary": "Add new items with .append(), count items with len(), and remove items with .remove().",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Use len(list) to see how many items are in a list",
+            "Use list.append() to add a new item to the end",
+            "Use list.remove() to delete an item"
+          ],
+          "prerequisites": [
+            "lesson-06-01-python-lists"
+          ],
+          "conceptsIntroduced": [
+            "concept-list-methods"
+          ],
+          "tags": [
+            "append",
+            "len",
+            "remove",
+            "lists"
+          ],
+          "sections": [
+            {
+              "id": "sec-06-02-exp",
+              "type": "explanation",
+              "title": "List Methods: Modifying Lists with append, len, and remove",
+              "content": "Unlike strings (which are immutable and cannot be changed once created), **Python lists are mutable**. This means you can freely add items, remove items, replace values, and change elements without creating an entirely new list.\n\nPython provides powerful built-in **methods**—functions attached directly to list objects:\n\n### 1. Adding Items with `.append()`\nThe `.append(item)` method adds a new element to the **very end** of the list:\n```python\ntasks = [\"Clean room\", \"Read book\"]\ntasks.append(\"Feed dog\")\n# tasks is now: [\"Clean room\", \"Read book\", \"Feed dog\"]\n```\n\n### 2. Measuring Length with `len()`\nThe `len(list)` function returns the total count of items in the list:\n```python\nprint(len(tasks))  # 3\n```\n\n### 3. Removing Items with `.remove()`\nThe `.remove(value)` method finds the first matching item in the list and deletes it:\n```python\ntasks.remove(\"Clean room\")\n# tasks is now: [\"Read book\", \"Feed dog\"]\n```\n\nIf you try to remove an item that does not exist in the list, Python will raise a `ValueError`. You can check if an item is present first using `if item in tasks:`.",
+              "keyPoints": [
+                "len(list) gives the total count of items.",
+                "append() adds an item to the end of your list.",
+                "remove() deletes an item by its name."
+              ]
+            },
+            {
+              "id": "sec-06-02-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "my_list.append(\"New Item\")\nmy_list.remove(\"Old Item\")\ntotal = len(my_list)",
+              "description": "Adding, deleting, and counting items in a list.",
+              "components": [
+                {
+                  "component": ".append(item)",
+                  "purpose": "Adds item to the end of the list.",
+                  "example": "fruits.append(\"Orange\")",
+                  "required": true
+                },
+                {
+                  "component": "len(list)",
+                  "purpose": "Returns how many items are inside.",
+                  "example": "len(fruits)",
+                  "required": true
+                },
+                {
+                  "component": ".remove(item)",
+                  "purpose": "Deletes the specified item.",
+                  "example": "fruits.remove(\"Apple\")",
+                  "required": false
+                }
+              ],
+              "notes": "append() changes your list directly. Do not write my_list = my_list.append()."
+            },
+            {
+              "id": "sec-06-02-example",
+              "type": "example",
+              "title": "Example: Managing a To-Do List",
+              "code": "tasks = [\"Clean room\", \"Read book\"]\nprint(\"Total tasks:\", len(tasks))\n\ntasks.append(\"Feed dog\")\nprint(\"After adding:\", tasks)\n\ntasks.remove(\"Clean room\")\nprint(\"After removing:\", tasks)",
+              "description": "Inspecting list size with len(), appending a new task to the end, and removing a completed task.",
+              "expectedOutput": "Total tasks: 2\nAfter adding: ['Clean room', 'Read book', 'Feed dog']\nAfter removing: ['Read book', 'Feed dog']",
+              "stepByStep": [
+                "Step 1 (Line 1): Creates tasks with two initial string elements.",
+                "Step 2 (Line 2): Uses len(tasks) to display 'Total tasks: 2'.",
+                "Step 3 (Line 3): Calls tasks.append('Feed dog') to add a third task to the end.",
+                "Step 4 (Line 4): Prints the updated list containing all three tasks.",
+                "Step 5 (Line 5): Calls tasks.remove('Clean room') to delete that specific task.",
+                "Step 6 (Line 6): Prints the final list showing the remaining two tasks."
+              ]
+            },
+            {
+              "id": "sec-06-02-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Append 'Grape' to the fruits list and print how many fruits there are using len().",
+              "starterCode": "fruits = [\"Apple\", \"Banana\"]\n# Append 'Grape' and print len(fruits):\nfruits.append(\"Grape\")\nprint(len(fruits))\n",
+              "solutionCode": "fruits = [\"Apple\", \"Banana\"]\nfruits.append(\"Grape\")\nprint(len(fruits))",
+              "expectedOutput": "3",
+              "hints": [
+                "Call fruits.append('Grape').",
+                "Print len(fruits)."
+              ]
+            },
+            {
+              "id": "sec-06-02-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Reassigning with append()",
+                  "badCode": "fruits = fruits.append(\"Kiwi\")  # fruits is now None!",
+                  "goodCode": "fruits.append(\"Kiwi\")",
+                  "explanation": "append() modifies the list directly. If you put fruits =, you accidentally replace your list with None!"
+                }
+              ]
+            },
+            {
+              "id": "sec-06-02-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-06-02-1",
+                  "type": "short-answer",
+                  "question": "Which method adds an item to the end of a list? fruits.____(\"Peach\")",
+                  "prompt": "Enter method:",
+                  "correctAnswer": "append",
+                  "acceptedAnswers": [
+                    "append",
+                    "append()"
+                  ],
+                  "hint": "It starts with 'app'.",
+                  "explanation": "append() adds a new item to the end of a list."
+                }
+              ]
+            },
+            {
+              "id": "sec-06-02-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "len() counts the items in a list.",
+                "append() adds to the end.",
+                "remove() deletes by name."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-06-03-looping-through-lists",
+          "title": "Looping Through Lists",
+          "order": 3,
+          "summary": "Look at every single item in your list one by one using a clean for loop.",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Use 'for item in my_list' to visit every item",
+            "Do actions with each item during the loop",
+            "Filter or add up items as you loop"
+          ],
+          "prerequisites": [
+            "lesson-06-01-python-lists",
+            "lesson-05-02-for-loops-and-range"
+          ],
+          "conceptsIntroduced": [
+            "concept-looping-lists"
+          ],
+          "tags": [
+            "loops",
+            "lists",
+            "iteration"
+          ],
+          "sections": [
+            {
+              "id": "sec-06-03-exp",
+              "type": "explanation",
+              "title": "Looping Through Lists: Iterating Over Every Element with for",
+              "content": "One of the most powerful combinations in programming is pairing a **`for` loop** with a **list**.\n\nImagine you are building an email newsletter: you have a list of 5,000 subscriber names and want to send each one a personalized greeting. Writing 5,000 separate function calls would be impossible. With a for loop, you can process every subscriber in just two lines of code!\n\n### The `for item in list:` Pattern\nPython's syntax for looping through a collection reads like natural English:\n\n```python\nguests = [\"Alice\", \"Bob\", \"Charlie\"]\nfor guest in guests:\n    print(f\"Welcome to the party, {guest}!\")\n```\n\n### How Python Executes the Loop\n1. Python inspects the list `guests`.\n2. On the **first iteration**, it assigns `\"Alice\"` to the loop variable `guest` and runs the indented code block.\n3. On the **second iteration**, it assigns `\"Bob\"` to `guest` and runs the code block.\n4. On the **third iteration**, it assigns `\"Charlie\"` to `guest` and runs the code block.\n5. Having visited every element in the list, Python automatically exits the loop!\n\nYou can choose any name for the loop variable (e.g. `for x in guests:`), but choosing singular/plural pairs like `for guest in guests:` or `for score in scores:` is considered professional Python best practice.",
+              "keyPoints": [
+                "Use 'for item in my_list:' to visit every item.",
+                "Python picks up one item at a time.",
+                "You don't have to keep track of index numbers."
+              ]
+            },
+            {
+              "id": "sec-06-03-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "for item in my_list:\n    print(item)",
+              "description": "Visiting each item in a list.",
+              "components": [
+                {
+                  "component": "for",
+                  "purpose": "Starts the item loop.",
+                  "example": "for",
+                  "required": true
+                },
+                {
+                  "component": "item",
+                  "purpose": "A friendly name for the current item in this round.",
+                  "example": "fruit",
+                  "required": true
+                },
+                {
+                  "component": "in my_list",
+                  "purpose": "The list you want to look through.",
+                  "example": "in fruits",
+                  "required": true
+                }
+              ],
+              "notes": "Pick singular names: for dog in dogs, for score in scores."
+            },
+            {
+              "id": "sec-06-03-example",
+              "type": "example",
+              "title": "Example: Welcoming Each Guest",
+              "code": "guests = [\"Alice\", \"Bob\", \"Charlie\"]\n\nfor guest in guests:\n    print(f\"Welcome to the party, {guest}!\")",
+              "description": "Iterating through a list of party guests and printing a personalized welcome message for each person.",
+              "expectedOutput": "Welcome to the party, Alice!\nWelcome to the party, Bob!\nWelcome to the party, Charlie!",
+              "stepByStep": [
+                "Step 1 (Line 1): Initializes guests with ['Alice', 'Bob', 'Charlie'].",
+                "Step 2 (Iteration 1): Assigns guest = 'Alice' and prints 'Welcome to the party, Alice!'.",
+                "Step 3 (Iteration 2): Assigns guest = 'Bob' and prints 'Welcome to the party, Bob!'.",
+                "Step 4 (Iteration 3): Assigns guest = 'Charlie' and prints 'Welcome to the party, Charlie!'.",
+                "Step 5: Reaching the end of the list, Python terminates the loop cleanly."
+              ]
+            },
+            {
+              "id": "sec-06-03-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Loop through colors and print each color.",
+              "starterCode": "colors = [\"Red\", \"Green\", \"Blue\"]\n# Loop through colors below:\nfor c in colors:\n    print(c)\n",
+              "solutionCode": "colors = [\"Red\", \"Green\", \"Blue\"]\nfor c in colors:\n    print(c)",
+              "expectedOutput": "Red\nGreen\nBlue",
+              "hints": [
+                "Use 'for c in colors:'.",
+                "Print c inside the loop."
+              ]
+            },
+            {
+              "id": "sec-06-03-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Deleting Items While Inside the Loop",
+                  "badCode": "for item in my_list:\n    my_list.remove(item)  # Skips items!",
+                  "goodCode": "# Don't delete directly while looping over it",
+                  "explanation": "If you remove items while looping over a list, Python's counter skips elements."
+                }
+              ]
+            },
+            {
+              "id": "sec-06-03-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-06-03-1",
+                  "type": "multiple-choice",
+                  "question": "What is the cleanest way to visit every item in a list named pets?",
+                  "options": [
+                    "for pet in pets:",
+                    "while pets.has_more():",
+                    "loop through pets:",
+                    "for i in range(len(pets)): print(i)"
+                  ],
+                  "correctIndex": 0,
+                  "explanation": "'for pet in pets:' is the simple Python way to visit each item."
+                }
+              ]
+            },
+            {
+              "id": "sec-06-03-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Use 'for item in list:' to visit every item.",
+                "Python does the counting for you.",
+                "Pick friendly singular names for items."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-06-04-python-dictionaries",
+          "title": "Python Dictionaries",
+          "order": 4,
+          "summary": "Store information by name using key-value pairs inside curly braces {}, like a phone contact book.",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 8,
+          "learningObjectives": [
+            "Create a dictionary using curly braces { }",
+            "Store information in 'key': value pairs",
+            "Look up and update values using their key names"
+          ],
+          "prerequisites": [
+            "lesson-06-01-python-lists"
+          ],
+          "conceptsIntroduced": [
+            "concept-dictionaries",
+            "concept-key-value"
+          ],
+          "tags": [
+            "dict",
+            "dictionaries",
+            "key-value"
+          ],
+          "sections": [
+            {
+              "id": "sec-06-04-exp",
+              "type": "explanation",
+              "title": "Python Dictionaries: Storing Real-World Data with Key-Value Pairs",
+              "content": "Lists are great for ordered sequences like shopping lists. But what if you need to represent a person, a product catalog, or a game character?\n\nImagine a contact book: you don't look up a phone number by asking 'what is item #3?'; you look it up by **name**. In Python, this is called a **Dictionary** (`dict`).\n\nA dictionary stores data in **key-value pairs** wrapped in curly braces `{ }`:\n* The **Key** is the unique identifier (like `\"username\"` or `\"level\"`).\n* The **Value** is the data associated with that key (like `\"pixel_hero\"` or `5`).\n\n```python\nuser = {\n    \"username\": \"pixel_hero\",\n    \"level\": 5,\n    \"is_online\": True\n}\n```\n\n### Accessing & Updating Dictionary Data\n* **Accessing by Key:** `user[\"username\"]` retrieves `\"pixel_hero\"`.\n* **Updating an Existing Key:** Simply assign to the key: `user[\"level\"] = 6`.\n* **Adding a Brand New Key:** `user[\"score\"] = 250` creates a new key-value pair immediately!\n\nDictionaries allow you to structure complex, realistic data cleanly and intuitively.",
+              "keyPoints": [
+                "Dictionaries use curly braces {}.",
+                "Data is stored in 'key': value pairs.",
+                "Look up values by their key name: dict[key]."
+              ]
+            },
+            {
+              "id": "sec-06-04-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "person = {\"name\": \"Alex\", \"age\": 15}\nprint(person[\"name\"])\nperson[\"age\"] = 16  # Update age",
+              "description": "Creating and using dictionaries.",
+              "components": [
+                {
+                  "component": "{ }",
+                  "purpose": "Curly braces that hold the key-value pairs.",
+                  "example": "{\"a\": 1}",
+                  "required": true
+                },
+                {
+                  "component": "key : value",
+                  "purpose": "The label and its data, separated by a colon (:).",
+                  "example": "\"score\": 100",
+                  "required": true
+                },
+                {
+                  "component": "dict[key]",
+                  "purpose": "Looks up the value stored under that key.",
+                  "example": "person[\"name\"]",
+                  "required": true
+                }
+              ],
+              "notes": "You can also use dict.get(\"key\") to look up values safely without errors."
+            },
+            {
+              "id": "sec-06-04-example",
+              "type": "example",
+              "title": "Example: Storing User Profile",
+              "code": "user = {\n    \"username\": \"pixel_hero\",\n    \"level\": 5,\n    \"is_online\": True\n}\n\nprint(\"Player:\", user[\"username\"])\nprint(\"Level:\", user[\"level\"])\n\n# Level up!\nuser[\"level\"] = 6\nprint(\"New Level:\", user[\"level\"])",
+              "description": "Creating a dictionary representing a game player, accessing values by key, and leveling up the player.",
+              "expectedOutput": "Player: pixel_hero\nLevel: 5\nNew Level: 6",
+              "stepByStep": [
+                "Step 1 (Lines 1-5): Creates dictionary user with keys 'username', 'level', and 'is_online'.",
+                "Step 2 (Line 6): Accesses user['username'] and prints 'Player: pixel_hero'.",
+                "Step 3 (Line 7): Accesses user['level'] and prints 'Level: 5'.",
+                "Step 4 (Line 9): Overwrites user['level'] = 6 to level up the player.",
+                "Step 5 (Line 10): Prints 'New Level: 6' showing the modified dictionary state."
+              ]
+            },
+            {
+              "id": "sec-06-04-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Create a car dictionary with 'brand': 'Tesla' and 'year': 2024, and print car['brand'].",
+              "starterCode": "# Create car dictionary below:\ncar = {\"brand\": \"Tesla\", \"year\": 2024}\nprint(car[\"brand\"])\n",
+              "solutionCode": "car = {\"brand\": \"Tesla\", \"year\": 2024}\nprint(car[\"brand\"])",
+              "expectedOutput": "Tesla",
+              "hints": [
+                "Use curly braces: car = {'brand': 'Tesla', 'year': 2024}.",
+                "Look up brand with car['brand']."
+              ]
+            },
+            {
+              "id": "sec-06-04-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Looking Up a Key That Doesn't Exist",
+                  "badCode": "user = {\"name\": \"Alex\"}\nprint(user[\"phone\"])  # KeyError!",
+                  "goodCode": "print(user.get(\"phone\", \"No phone\"))",
+                  "explanation": "If you ask for a key that isn't in the dictionary, Python stops with a KeyError. Use .get() for safety."
+                }
+              ]
+            },
+            {
+              "id": "sec-06-04-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-06-04-1",
+                  "type": "short-answer",
+                  "question": "Which bracket is used to look up a key? car__\"brand\"]",
+                  "prompt": "Enter bracket:",
+                  "correctAnswer": "[",
+                  "acceptedAnswers": [
+                    "["
+                  ],
+                  "hint": "Square brackets are used to look up keys: dict[key].",
+                  "explanation": "Use square brackets to look up values: dict[key]."
+                }
+              ]
+            },
+            {
+              "id": "sec-06-04-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Dictionaries store data by name inside curly braces {}.",
+                "Each item has a key and a value.",
+                "Look up values with dict[key]."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "module-07-functions",
+      "title": "7. Functions & Reusable Blocks",
+      "order": 7,
+      "description": "Package your code into reusable recipes using def, pass ingredients with parameters, and send answers back with return.",
+      "category": "standard",
+      "lessons": [
+        {
+          "id": "lesson-07-01-creating-functions",
+          "title": "Creating & Calling Functions",
+          "order": 1,
+          "summary": "A function is a named recipe of code instructions that you can run anytime you need it.",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Create a reusable function using the 'def' keyword",
+            "Call (run) your function using parentheses ()",
+            "Understand why functions make coding faster and cleaner"
+          ],
+          "prerequisites": [
+            "lesson-01-01-what-is-python",
+            "lesson-04-01-the-if-statement"
+          ],
+          "conceptsIntroduced": [
+            "concept-functions-def",
+            "concept-functions-call"
+          ],
+          "tags": [
+            "functions",
+            "def",
+            "recipe"
+          ],
+          "sections": [
+            {
+              "id": "sec-07-01-exp",
+              "type": "explanation",
+              "title": "Functions: Packaging Reusable Logic with the def Keyword",
+              "content": "In programming, there is a legendary principle known as **DRY: Don't Repeat Yourself**. If you find yourself copying and pasting the same five lines of code in multiple places in your program, you are setting a trap for yourself. If a bug is found, you will have to fix it in every single place you pasted it!\n\nThe solution is a **function**—a self-contained, named mini-program that performs a specific task. Once written, you can invoke (call) that function as many times as you like from anywhere in your project!\n\n### Defining vs Calling a Function\nWorking with functions involves two distinct phases:\n\n1. **Defining the Function (`def`):** You write the recipe. Python stores the instructions in memory under the name you chose, but **does not execute them yet**:\n```python\ndef show_banner():\n    print(\"********************\")\n    print(\"  Welcome to Python \")\n    print(\"********************\")\n```\n\n2. **Calling the Function:** When you want the instructions to actually execute, write the function's name followed by parentheses `()`:\n```python\nshow_banner()  # Runs the three print lines!\nshow_banner()  # Runs them again!\n```\n\n### Execution Flow with Functions\nWhen Python reaches a function call:\n1. It pauses its current location in the main program.\n2. It jumps directly to the function definition and executes every indented line inside it.\n3. When the function finishes, Python jumps back to where it paused and resumes execution!",
+              "keyPoints": [
+                "Use 'def' to create a function.",
+                "Code inside only runs when you call the function.",
+                "Call a function using parentheses: my_function()."
+              ]
+            },
+            {
+              "id": "sec-07-01-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "def say_hello():\n    print(\"Hello friend!\")\n\n# Call it to run:\nsay_hello()",
+              "description": "Defining and running a function.",
+              "components": [
+                {
+                  "component": "def",
+                  "purpose": "Short for 'define'. Tells Python you are creating a new recipe.",
+                  "example": "def",
+                  "required": true
+                },
+                {
+                  "component": "function_name",
+                  "purpose": "The name you choose for your function.",
+                  "example": "greet",
+                  "required": true
+                },
+                {
+                  "component": "( )",
+                  "purpose": "Parentheses holding any inputs.",
+                  "example": "()",
+                  "required": true
+                },
+                {
+                  "component": ":",
+                  "purpose": "Colon ending the header and starting the recipe steps.",
+                  "example": ":",
+                  "required": true
+                }
+              ],
+              "notes": "You must define a function before the line where you call it."
+            },
+            {
+              "id": "sec-07-01-example",
+              "type": "example",
+              "title": "Example: Reusing a Welcome Banner",
+              "code": "def show_banner():\n    print(\"********************\")\n    print(\"  Welcome to Python \")\n    print(\"********************\")\n\n# Call the function twice:\nshow_banner()\nprint(\"Some work happening here...\")\nshow_banner()",
+              "description": "Defining a banner function once with def and calling it twice with intermediate work between.",
+              "expectedOutput": "********************\n  Welcome to Python \n********************\nSome work happening here...\n********************\n  Welcome to Python \n********************",
+              "stepByStep": [
+                "Step 1 (Lines 1-4): Python reads def show_banner(): and stores the function instructions in memory without running them.",
+                "Step 2 (Line 6): Calls show_banner(). Python jumps to line 1 and prints the 3 banner lines.",
+                "Step 3 (Line 7): Prints 'Some work happening here...'.",
+                "Step 4 (Line 8): Calls show_banner() again. Python re-executes the banner lines and returns cleanly."
+              ]
+            },
+            {
+              "id": "sec-07-01-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Define a function 'say_hi()' that prints 'Hi there!', then call say_hi().",
+              "starterCode": "# Define say_hi below:\ndef say_hi():\n    print(\"Hi there!\")\n\n# Call say_hi:\nsay_hi()\n",
+              "solutionCode": "def say_hi():\n    print(\"Hi there!\")\n\nsay_hi()",
+              "expectedOutput": "Hi there!",
+              "hints": [
+                "Write 'def say_hi():'.",
+                "Indent print('Hi there!').",
+                "Call say_hi()."
+              ]
+            },
+            {
+              "id": "sec-07-01-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Forgetting Parentheses When Calling",
+                  "badCode": "def greet():\n    print(\"Hi\")\n\ngreet  # Nothing happens!",
+                  "goodCode": "greet()",
+                  "explanation": "Writing just 'greet' does not run the code. You must add parentheses 'greet()' to call it."
+                }
+              ]
+            },
+            {
+              "id": "sec-07-01-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-07-01-1",
+                  "type": "short-answer",
+                  "question": "Which keyword defines a function in Python? ____ my_function():",
+                  "prompt": "Enter keyword:",
+                  "correctAnswer": "def",
+                  "acceptedAnswers": [
+                    "def"
+                  ],
+                  "hint": "Short for 'define'.",
+                  "explanation": "The 'def' keyword defines a new function."
+                }
+              ]
+            },
+            {
+              "id": "sec-07-01-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Use 'def' to create a function.",
+                "Use '()' to call and run the function.",
+                "Functions keep your code organized and reusable."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-07-02-parameters-and-arguments",
+          "title": "Function Parameters & Arguments",
+          "order": 2,
+          "summary": "Pass information into your functions so they can do different things each time.",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 8,
+          "learningObjectives": [
+            "Add parameters inside function parentheses",
+            "Pass values (arguments) when calling a function",
+            "Make your functions flexible and adaptable"
+          ],
+          "prerequisites": [
+            "lesson-07-01-creating-functions"
+          ],
+          "conceptsIntroduced": [
+            "concept-parameters-arguments"
+          ],
+          "tags": [
+            "parameters",
+            "arguments",
+            "inputs"
+          ],
+          "sections": [
+            {
+              "id": "sec-07-02-exp",
+              "type": "explanation",
+              "title": "Parameters & Arguments: Passing Custom Ingredients into Functions",
+              "content": "A function that prints the exact same static message every time is helpful, but functions become truly transformative when you can feed them **custom data** so they perform work tailored to that input.\n\n### Parameters vs Arguments\nAlthough these terms are often used interchangeably in casual conversation, they have precise meanings:\n* **Parameter:** The variable placeholder listed in the function's definition header (e.g. `def greet(name, hobby):`).\n* **Argument:** The actual, concrete value passed into the function when you invoke it (e.g. `greet(\"Alex\", \"skateboarding\")`).\n\nThink of a function like a blender:\n* The blender's slot is the **parameter** (waiting for fruit).\n* The actual strawberries you drop into the blender are the **arguments**!\n\n### Positional Arguments\nIn Python, arguments are matched to parameters by position from left to right:\n```python\ndef greet(name, hobby):\n    print(f\"Hi {name}, have fun {hobby}!\")\n\ngreet(\"Alex\", \"skateboarding\")\ngreet(\"Emma\", \"reading\")\n```\n\nWhen you call `greet(\"Alex\", \"skateboarding\")`, Python assigns `\"Alex\"` to `name` and `\"skateboarding\"` to `hobby`. Calling the same function with different arguments produces custom output every time!",
+              "keyPoints": [
+                "Parameters are inputs you give to a function.",
+                "Arguments are the real values you send when calling it.",
+                "Separate multiple parameters with commas."
+              ]
+            },
+            {
+              "id": "sec-07-02-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "def greet_person(name):\n    print(f\"Hello, {name}!\")\n\ngreet_person(\"Sam\")",
+              "description": "Passing data into a function.",
+              "components": [
+                {
+                  "component": "def func(param)",
+                  "purpose": "Defines the placeholder variable inside parentheses.",
+                  "example": "def greet(name):",
+                  "required": true
+                },
+                {
+                  "component": "func(value)",
+                  "purpose": "Passes the actual value to the function.",
+                  "example": "greet(\"Sam\")",
+                  "required": true
+                }
+              ],
+              "notes": "You can pass multiple parameters: def add(a, b):."
+            },
+            {
+              "id": "sec-07-02-example",
+              "type": "example",
+              "title": "Example: Custom Greeter",
+              "code": "def greet(name, hobby):\n    print(f\"Hi {name}, have fun {hobby}!\")\n\n# Call with different people:\ngreet(\"Alex\", \"skateboarding\")\ngreet(\"Emma\", \"reading\")",
+              "description": "Defining a greet function with two parameters and calling it with two different pairs of arguments.",
+              "expectedOutput": "Hi Alex, have fun skateboarding!\nHi Emma, have fun reading!",
+              "stepByStep": [
+                "Step 1 (Lines 1-2): Defines greet(name, hobby) with two parameters.",
+                "Step 2 (Line 4): Calls greet('Alex', 'skateboarding'). Python binds name = 'Alex' and hobby = 'skateboarding', printing 'Hi Alex, have fun skateboarding!'.",
+                "Step 3 (Line 5): Calls greet('Emma', 'reading'). Python binds name = 'Emma' and hobby = 'reading', printing 'Hi Emma, have fun reading!'."
+              ]
+            },
+            {
+              "id": "sec-07-02-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Create a function 'double_number(x)' that prints x * 2. Call double_number(5).",
+              "starterCode": "# Define double_number below:\ndef double_number(x):\n    print(x * 2)\n\ndouble_number(5)\n",
+              "solutionCode": "def double_number(x):\n    print(x * 2)\n\ndouble_number(5)",
+              "expectedOutput": "10",
+              "hints": [
+                "Write 'def double_number(x):'.",
+                "Inside the function, print x * 2.",
+                "Call double_number(5)."
+              ]
+            },
+            {
+              "id": "sec-07-02-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Forgetting an Argument",
+                  "badCode": "def greet(name):\n    print(name)\ngreet()  # TypeError: missing 1 argument!",
+                  "goodCode": "greet(\"Sam\")",
+                  "explanation": "If your function expects an input, you must provide one when calling it."
+                }
+              ]
+            },
+            {
+              "id": "sec-07-02-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-07-02-1",
+                  "type": "code-output",
+                  "question": "What does this code display?",
+                  "codeSnippet": "def add(x, y):\n    print(x + y)\nadd(3, 7)",
+                  "correctAnswer": "10",
+                  "acceptedAnswers": [
+                    "10"
+                  ],
+                  "hint": "3 + 7 = 10.",
+                  "explanation": "3 and 7 are passed to x and y, and 3 + 7 = 10."
+                }
+              ]
+            },
+            {
+              "id": "sec-07-02-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Parameters let functions take in information.",
+                "Pass arguments inside parentheses when calling.",
+                "Parameters make one recipe work for many different inputs."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-07-03-returning-values",
+          "title": "The return Statement",
+          "order": 3,
+          "summary": "Send calculated answers back to the rest of your program using the return keyword.",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 8,
+          "learningObjectives": [
+            "Use the 'return' word to send an answer back",
+            "Save returned values into variables",
+            "Learn the difference between print() and return"
+          ],
+          "prerequisites": [
+            "lesson-07-02-parameters-and-arguments"
+          ],
+          "conceptsIntroduced": [
+            "concept-functions-return"
+          ],
+          "tags": [
+            "return",
+            "answers",
+            "functions"
+          ],
+          "sections": [
+            {
+              "id": "sec-07-03-exp",
+              "type": "explanation",
+              "title": "The return Statement: Sending Results Back to the Caller",
+              "content": "Up to this point, our functions have only used `print()` to display output on screen. But in real software, functions often need to **calculate an answer and hand it back** so the rest of the program can use that result in further calculations, store it in a database, or send it over the internet.\n\nTo send a value back from a function, Python uses the **`return`** keyword.\n\n### The Mental Model: Ordering at a Restaurant\n* When you call a function that prints, it's like a waiter showing you the meal on a tray and putting it away.\n* When you call a function that returns, it's like the waiter **handing you the plate** so you can eat it, store it in the fridge, or share it!\n\n```python\ndef calculate_area(width, height):\n    return width * height\n\nroom_size = calculate_area(5, 4)\nprint(\"Room size:\", room_size)  # 20\n```\n\n### What Happens When return Executes?\n1. Python calculates the value of the expression following `return`.\n2. It sends that calculated value back to the exact place where the function was called.\n3. **The function terminates immediately!** Any lines of code written after a `return` statement inside the function will never execute (often referred to as unreachable code).",
+              "keyPoints": [
+                "print() shows words on screen for humans.",
+                "return hands an answer back to your code.",
+                "Save returned values into variables: answer = calculate(10)."
+              ]
+            },
+            {
+              "id": "sec-07-03-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "def add(a, b):\n    return a + b\n\n# Save the answer:\ntotal = add(5, 10)",
+              "description": "Returning an answer from a function.",
+              "components": [
+                {
+                  "component": "return",
+                  "purpose": "Hands the result back to the caller and stops the function.",
+                  "example": "return result",
+                  "required": true
+                },
+                {
+                  "component": "variable = func()",
+                  "purpose": "Catches and saves the returned answer.",
+                  "example": "cost = calc_total(5)",
+                  "required": true
+                }
+              ],
+              "notes": "Lines of code written after a return statement will never run!"
+            },
+            {
+              "id": "sec-07-03-example",
+              "type": "example",
+              "title": "Example: Area Calculation",
+              "code": "def calculate_area(width, height):\n    return width * height\n\n# Save the answer into room_size:\nroom_size = calculate_area(5, 4)\nprint(\"Room size:\", room_size)\n\n# Use that answer in another calculation:\ncost = room_size * 10\nprint(\"Flooring cost: $\", cost)",
+              "description": "Calculating room area with a return statement and using that returned answer to compute total flooring costs.",
+              "expectedOutput": "Room size: 20\nFlooring cost: $ 200",
+              "stepByStep": [
+                "Step 1 (Lines 1-2): Defines calculate_area(width, height) which computes width * height and returns the result.",
+                "Step 2 (Line 4): Calls calculate_area(5, 4). The function computes 5 * 4 = 20 and returns 20, which is saved into room_size.",
+                "Step 3 (Line 5): Prints 'Room size: 20'.",
+                "Step 4 (Line 7): Uses the returned room_size to calculate cost = 20 * 10 = 200.",
+                "Step 5 (Line 8): Prints 'Flooring cost: $ 200'."
+              ]
+            },
+            {
+              "id": "sec-07-03-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Write a function 'square(num)' that returns num * num. Call square(5) and print the answer.",
+              "starterCode": "# Define square(num) below:\ndef square(num):\n    return num * num\n\nans = square(5)\nprint(ans)\n",
+              "solutionCode": "def square(num):\n    return num * num\n\nans = square(5)\nprint(ans)",
+              "expectedOutput": "25",
+              "hints": [
+                "Use 'return num * num'.",
+                "ans = square(5)",
+                "print(ans)"
+              ]
+            },
+            {
+              "id": "sec-07-03-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Confusing print() with return",
+                  "badCode": "def add(a, b):\n    print(a + b)  # Shows on screen, but returns nothing!\n\nx = add(2, 3)\nprint(x * 2)      # Error! x is None",
+                  "goodCode": "def add(a, b):\n    return a + b\n\nx = add(2, 3)\nprint(x * 2)      # Prints 10",
+                  "explanation": "print() just displays text on your screen. Use return if you want your code to save and reuse the calculated answer."
+                }
+              ]
+            },
+            {
+              "id": "sec-07-03-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-07-03-1",
+                  "type": "code-output",
+                  "question": "What does this code display?",
+                  "codeSnippet": "def triple(n):\n    return n * 3\nprint(triple(4))",
+                  "correctAnswer": "12",
+                  "acceptedAnswers": [
+                    "12"
+                  ],
+                  "hint": "4 * 3 = 12.",
+                  "explanation": "triple(4) returns 12, which is printed."
+                }
+              ]
+            },
+            {
+              "id": "sec-07-03-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "return hands an answer back to your program.",
+                "print() is for human eyes; return is for code data flow.",
+                "return exits the function right away."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson-07-04-variable-scope",
+          "title": "Variable Scope & Functions Recap",
+          "order": 4,
+          "summary": "Learn where variables live: variables created inside a function stay inside that function.",
+          "difficulty": "intermediate",
+          "estimatedMinutes": 7,
+          "learningObjectives": [
+            "Learn what local scope means (inside a function)",
+            "Learn what global scope means (outside all functions)",
+            "Use default parameter values like def greet(name='Friend'):"
+          ],
+          "prerequisites": [
+            "lesson-07-03-returning-values"
+          ],
+          "conceptsIntroduced": [
+            "concept-variable-scope",
+            "concept-default-parameters"
+          ],
+          "tags": [
+            "scope",
+            "functions",
+            "defaults"
+          ],
+          "sections": [
+            {
+              "id": "sec-07-04-exp",
+              "type": "explanation",
+              "title": "Variable Scope & Default Parameters: Local vs Global Data",
+              "content": "As your Python programs grow larger, understanding where variables can and cannot be accessed becomes vital. This concept is called **variable scope**.\n\n### 1. Local Scope (Inside Functions)\nAny variable created inside a function belongs to that function's **local scope**. It is born when the function runs, and it is destroyed as soon as the function finishes!\n* Code outside the function **cannot see or access** local variables.\n* This isolation prevents different parts of your program from accidentally interfering with each other's data.\n\n### 2. Default Parameter Values\nPython allows you to assign fallback default values to parameters in your function definition:\n```python\ndef say_hello(name=\"Friend\"):\n    return f\"Hi there, {name}!\"\n```\n\n* If the caller provides an argument (`say_hello(\"Maya\")`), Python uses the provided value.\n* If the caller omits the argument (`say_hello()`), Python automatically uses the default `\"Friend\"`!\n\nDefault parameters make your functions remarkably flexible and user-friendly.",
+              "keyPoints": [
+                "Variables created inside a function only exist inside that function.",
+                "Default parameters provide backup values.",
+                "Functions keep your code organized, clean, and bug-free!"
+              ]
+            },
+            {
+              "id": "sec-07-04-syntax",
+              "type": "syntax",
+              "title": "Syntax",
+              "syntax": "def greet(name=\"Friend\"):\n    local_msg = f\"Hello, {name}!\"\n    return local_msg",
+              "description": "Default parameters and local variables.",
+              "components": [
+                {
+                  "component": "name=\"Friend\"",
+                  "purpose": "Default backup value if no argument is passed.",
+                  "example": "country=\"USA\"",
+                  "required": false
+                },
+                {
+                  "component": "local_msg",
+                  "purpose": "A local variable that only exists inside this function.",
+                  "example": "message = ...",
+                  "required": true
+                }
+              ],
+              "notes": "Always put parameters with default values at the end of the parameter list."
+            },
+            {
+              "id": "sec-07-04-example",
+              "type": "example",
+              "title": "Example: Default Parameters in Action",
+              "code": "def say_hello(name=\"Friend\"):\n    return f\"Hi there, {name}!\"\n\n# Call without giving a name (uses default):\nprint(say_hello())\n\n# Call with a custom name:\nprint(say_hello(\"Maya\"))",
+              "description": "Demonstrating default parameters in say_hello(): calling with no arguments vs providing a custom name.",
+              "expectedOutput": "Hi there, Friend!\nHi there, Maya!",
+              "stepByStep": [
+                "Step 1 (Lines 1-2): Defines say_hello(name='Friend') with default parameter 'Friend'.",
+                "Step 2 (Line 4): Calls say_hello() with no arguments. Python uses default 'Friend' and prints 'Hi there, Friend!'.",
+                "Step 3 (Line 6): Calls say_hello('Maya') with an explicit argument. Python uses 'Maya' and prints 'Hi there, Maya!'."
+              ]
+            },
+            {
+              "id": "sec-07-04-activity",
+              "type": "editor-activity",
+              "title": "Try it Yourself",
+              "instructions": "Create a function 'welcome(name=\"Student\")' and call welcome() with no arguments.",
+              "starterCode": "# Define welcome with default parameter below:\ndef welcome(name=\"Student\"):\n    return f\"Welcome, {name}!\"\n\nprint(welcome())\n",
+              "solutionCode": "def welcome(name=\"Student\"):\n    return f\"Welcome, {name}!\"\n\nprint(welcome())",
+              "expectedOutput": "Welcome, Student!",
+              "hints": [
+                "Set name='Student' in the function header.",
+                "Call print(welcome())."
+              ]
+            },
+            {
+              "id": "sec-07-04-mistakes",
+              "type": "common-mistakes",
+              "title": "Common Mistakes to Avoid",
+              "mistakes": [
+                {
+                  "title": "1. Trying to Use a Local Variable Outside",
+                  "badCode": "def my_func():\n    secret = 42\n\nmy_func()\nprint(secret)  # NameError: secret is not defined!",
+                  "goodCode": "def my_func():\n    return 42\n\nsecret = my_func()\nprint(secret)",
+                  "explanation": "Variables created inside a function are private to that function. Use 'return' to send values outside."
+                }
+              ]
+            },
+            {
+              "id": "sec-07-04-practice",
+              "type": "practice",
+              "title": "Test Yourself With Exercises",
+              "questions": [
+                {
+                  "id": "q-07-04-1",
+                  "type": "multiple-choice",
+                  "question": "Where can a variable created inside a function be used?",
+                  "options": [
+                    "Only inside that specific function",
+                    "Anywhere in the entire file",
+                    "Only inside print statements",
+                    "In every program on your computer"
+                  ],
+                  "correctIndex": 0,
+                  "explanation": "Local variables only exist inside the function where they were created."
+                }
+              ]
+            },
+            {
+              "id": "sec-07-04-recap",
+              "type": "recap",
+              "title": "Lesson Recap",
+              "takeaways": [
+                "Variables created inside functions are local to that function.",
+                "Default parameters provide friendly backup values.",
+                "Congratulations! You now know the core foundations of Python!"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

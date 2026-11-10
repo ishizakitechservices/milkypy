@@ -1,0 +1,99 @@
+{
+  "users": {
+    "m162": {
+      "userId": "m162",
+      "passwordHash": "pass123",
+      "createdAt": 1785080860701
+    },
+    "k234": {
+      "userId": "k234",
+      "passwordHash": "pass123",
+      "createdAt": 1785080860701
+    },
+    "m2": {
+      "userId": "m2",
+      "passwordHash": "pass123",
+      "createdAt": 1785080860701
+    },
+    "l23": {
+      "userId": "l23",
+      "passwordHash": "pass123",
+      "createdAt": 1785080860701
+    },
+    "m1": {
+      "userId": "m1",
+      "passwordHash": "asdfqwerzxcv",
+      "createdAt": 1785082768920
+    },
+    "m175": {
+      "userId": "m175",
+      "passwordHash": "GriMel@1234",
+      "createdAt": 1785085244108
+    }
+  },
+  "files": {
+    "m162": [
+      {
+        "id": "file-m162-1",
+        "userId": "m162",
+        "name": "main.py",
+        "code": "# Hello m162! This Python file is saved in your cloud account.\nprint(f\"Student ID {u} is logged in!\")\n\nname = input(\"Enter your name: \") or \"m162\"\nprint(\"Hello\", name)\n",
+        "updatedAt": 1785080860701
+      }
+    ],
+    "k234": [
+      {
+        "id": "file-k234-1",
+        "userId": "k234",
+        "name": "main.py",
+        "code": "# Hello k234! This Python file is saved in your cloud account.\nprint(f\"Student ID {u} is logged in!\")\n\nname = input(\"Enter your name: \") or \"k234\"\nprint(\"Hello\", name)\n",
+        "updatedAt": 1785080860701
+      }
+    ],
+    "m2": [
+      {
+        "id": "file-m2-1",
+        "userId": "m2",
+        "name": "main.py",
+        "code": "# Hello m2! This Python file is saved in your cloud account.\nu = \"12345\"  # Define variable 'u' before using it\nprint(f\"Student ID {u} is logged in!\")\n\nname = input(\"Enter your name: \") or \"m2\"\nprint(\"Hello\", name)",
+        "updatedAt": 1785080959400
+      }
+    ],
+    "l23": [
+      {
+        "id": "file-l23-1",
+        "userId": "l23",
+        "name": "main.py",
+        "code": "# Hello l23! This Python file is saved in your cloud account.\nprint(f\"Student ID {u} is logged in!\")\n\nname = input(\"Enter your name: \") or \"l23\"\nprint(\"Hello\", name)\n",
+        "updatedAt": 1785080860701
+      }
+    ],
+    "m1": [
+      {
+        "id": "file-m1-1",
+        "userId": "m1",
+        "name": "main.py",
+        "code": "# Welcome m1! Your Python files auto-save in the cloud.\nprint(\"Hello from m1!\")\n\nuser_num = input(\"Enter a number: \") or \"10\"\nprint(\"Double is:\", float(user_num) * 2)\n",
+        "updatedAt": 1785082768920
+      }
+    ],
+    "m175": [
+      {
+        "id": "file-m175-1",
+        "userId": "m175",
+        "name": "main.py",
+        "code": "# Welcome m175! Your Python files auto-save in the cloud.\nprint(\"Hello from m175!\")\n\nuser_num = input(\"Enter a number: \") or \"10\"\nprint(\"Double is:\", float(user_num) * 2)\n",
+        "updatedAt": 1785085244108
+      }
+    ]
+  },
+  "sharedSnippets": {
+    "snip-mudwmvad-chkb": {
+      "id": "snip-mudwmvad-chkb",
+      "code": "print(\"Hello from Shared Snippet!\")",
+      "title": "Test Snippet",
+      "author": "MilkyPy Student",
+      "createdAt": 1790155955173
+    }
+  }
+}
