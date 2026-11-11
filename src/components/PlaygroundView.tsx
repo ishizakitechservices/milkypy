@@ -10,22 +10,20 @@ import { formatPythonCode } from "../lib/pythonFormatter";
 import { getApiUrl } from "../lib/apiConfig";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Layers,
+  MoreVertical,
+  SlidersHorizontal,
   Share2,
-  Trash2,
   Download,
-  RotateCcw,
   Check,
-  Copy,
-  Zap,
   Wand2,
   Play,
-  ArrowDown,
   ArrowUp,
   Terminal as TerminalIcon,
   Code as CodeIcon,
+  Columns,
   ChevronDown,
-  ChevronUp,
+  Sparkles,
+  FileCode2,
 } from "lucide-react";
 
 interface PlaygroundViewProps {
@@ -76,6 +74,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   const [stdinResolver, setStdinResolver] = useState<((val: string) => void) | null>(null);
   const [formatted, setFormatted] = useState(false);
   const [mobileTab, setMobileTab] = useState<"split" | "editor" | "terminal">("split");
+  const [actionMenuOpen, setActionMenuOpen] = useState(false);
   
   // Persistent Console History for Current Session
   const [consoleHistory, setConsoleHistory] = useState<ConsoleHistoryEntry[]>(() => {
@@ -128,6 +127,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
     const result = formatPythonCode(codeToFormat);
     handleCodeChange(result.code);
     setFormatted(true);
+    setActionMenuOpen(false);
     setTimeout(() => setFormatted(false), 2000);
   };
 
@@ -161,6 +161,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     setDownloaded(true);
+    setActionMenuOpen(false);
     setTimeout(() => setDownloaded(false), 2000);
   };
 
@@ -172,6 +173,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
 
     try {
       setIsSharing(true);
+      setActionMenuOpen(false);
       const res = await fetch(getApiUrl("/api/snippets/share"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -278,19 +280,15 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   };
 
   // Scroll Helpers
-  const scrollToTerminal = () => {
-    terminalRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   const scrollToEditor = () => {
     editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-[calc(100vh-7.5rem)] lg:min-h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-3.5rem)] overflow-y-auto lg:overflow-hidden bg-slate-50 dark:bg-[#08090D] p-1.5 xs:p-2.5 sm:p-4 2xl:p-6 space-y-2.5 w-full max-w-[2400px] mx-auto">
-      {/* Refined Glass & Neumorphic Toolbar Bar */}
-      <div className="bg-white/90 dark:bg-[#15171E]/90 border border-slate-200/80 dark:border-white/12 rounded-2xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 select-none shadow-sm shrink-0 backdrop-blur-md">
-        {/* User Cloud Files */}
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-7.5rem)] lg:min-h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-3.5rem)] overflow-y-auto lg:overflow-hidden bg-slate-50 dark:bg-[#08090D] p-1.5 xs:p-2.5 sm:p-4 2xl:p-6 space-y-3 w-full max-w-[2400px] mx-auto">
+      {/* Refined 'Graphite' Unified Toolbar Bar */}
+      <div className="bg-white dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] rounded-2xl px-3 py-2 flex items-center justify-between gap-2 select-none shadow-xs shrink-0 backdrop-blur-md relative z-20">
+        {/* Left: User Cloud Files Selector */}
         <CloudFileManager
           currentUser={currentUser}
           userFiles={userFiles}
@@ -303,31 +301,35 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
           onOpenAuth={onOpenAuth}
         />
 
-        {/* Clean Controls & Action Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          {/* Mobile/Tablet View Switcher (Code | Output | Split) */}
+        {/* Right: Icon-Based View Switcher + Unified Action Menu + Run Button */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Mobile/Tablet View Switcher (Icon-Based: Code | Output | Split) */}
           <div className="lg:hidden flex items-center bg-slate-100 dark:bg-[#252933] p-1 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setMobileTab("editor")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`p-1.5 px-2 rounded-lg transition-all flex items-center gap-1 cursor-pointer touch-target ${
                 mobileTab === "editor"
                   ? "bg-white dark:bg-[#15171E] text-blue-600 dark:text-[#8BBEFF] shadow-xs font-bold"
                   : "text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
               }`}
+              title="Show Code Editor Only"
             >
-              Code
+              <CodeIcon className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Code</span>
             </button>
             <button
               type="button"
               onClick={() => setMobileTab("terminal")}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`p-1.5 px-2 rounded-lg transition-all flex items-center gap-1 cursor-pointer touch-target ${
                 mobileTab === "terminal"
                   ? "bg-white dark:bg-[#15171E] text-blue-600 dark:text-[#8BBEFF] shadow-xs font-bold"
                   : "text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
               }`}
+              title="Show Terminal Output Only"
             >
-              <span>Output</span>
+              <TerminalIcon className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Output</span>
               {executionResult?.isError && (
                 <span className="w-1.5 h-1.5 rounded-full bg-[#F08089]" />
               )}
@@ -335,94 +337,125 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             <button
               type="button"
               onClick={() => setMobileTab("split")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`p-1.5 px-2 rounded-lg transition-all flex items-center gap-1 cursor-pointer touch-target ${
                 mobileTab === "split"
                   ? "bg-white dark:bg-[#15171E] text-blue-600 dark:text-[#8BBEFF] shadow-xs font-bold"
                   : "text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
               }`}
+              title="Split View Editor and Terminal"
             >
-              Split
+              <Columns className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Split</span>
             </button>
           </div>
 
-          {/* Clean Up Code / Format */}
-          <button
-            id="playground-btn-format"
-            onClick={handleFormat}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer touch-target ${
-              formatted
-                ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-[#65D9A3] shadow-xs"
-                : "bg-slate-100 dark:bg-[#252933] hover:bg-slate-200 dark:hover:bg-[#353A46] border-slate-200 dark:border-white/10 text-slate-700 dark:text-[#F3F4F6]"
-            }`}
-            title="Clean up code spacing and indentation"
-          >
-            {formatted ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-[#65D9A3]" />
-                <span>Clean!</span>
-              </>
-            ) : (
-              <>
-                <Wand2 className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
-                <span className="hidden sm:inline">Clean Code</span>
-              </>
-            )}
-          </button>
+          {/* Unified 'Action Menu' Collapsed Secondary Controls */}
+          <div className="relative">
+            <button
+              id="playground-action-menu-toggle"
+              type="button"
+              onClick={() => setActionMenuOpen(!actionMenuOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer touch-target ${
+                actionMenuOpen
+                  ? "bg-slate-200 dark:bg-[#252933] border-blue-500/50 dark:border-[#8BBEFF]/50 text-blue-600 dark:text-[#8BBEFF]"
+                  : "bg-slate-100 dark:bg-[#252933] hover:bg-slate-200 dark:hover:bg-[#353A46] border-slate-200 dark:border-white/10 text-slate-700 dark:text-[#F3F4F6]"
+              }`}
+              title="Open secondary code tools"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
+              <span className="hidden sm:inline">Tools</span>
+              <ChevronDown className={`w-3 h-3 transition-transform ${actionMenuOpen ? "rotate-180" : ""}`} />
+            </button>
 
-          {/* Share Code Snippet */}
-          <button
-            id="playground-btn-share"
-            onClick={handleShareSnippet}
-            disabled={isSharing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-[#252933] hover:bg-slate-200 dark:hover:bg-[#353A46] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-[#F3F4F6] transition-all shadow-xs cursor-pointer disabled:opacity-50 touch-target"
-            title="Get a shareable link"
-          >
-            <Share2 className="w-3.5 h-3.5 text-indigo-600 dark:text-[#A98BFF]" />
-            <span className="hidden xs:inline">{isSharing ? "Sharing..." : "Share"}</span>
-          </button>
+            {/* Collapsed Action Menu Dropdown */}
+            <AnimatePresence>
+              {actionMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setActionMenuOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] rounded-2xl p-1.5 shadow-xl z-40 space-y-1 font-sans text-xs"
+                  >
+                    {/* Clean Code Format Action */}
+                    <button
+                      onClick={handleFormat}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#252933] text-slate-700 dark:text-[#F3F4F6] transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Wand2 className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
+                        <span>Format & Clean Code</span>
+                      </div>
+                      {formatted && <Check className="w-3.5 h-3.5 text-emerald-500" />}
+                    </button>
 
-          {/* Download as .py */}
-          <button
-            id="playground-btn-download"
-            onClick={handleDownload}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all shadow-xs cursor-pointer touch-target ${
-              downloaded
-                ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-[#65D9A3] shadow-xs"
-                : "bg-slate-100 dark:bg-[#252933] hover:bg-slate-200 dark:hover:bg-[#353A46] border-slate-200 dark:border-white/10 text-slate-700 dark:text-[#F3F4F6]"
-            }`}
-            title={`Download ${activeFileName}`}
-          >
-            {downloaded ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-[#65D9A3]" />
-                <span>Saved!</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
-                <span className="hidden sm:inline">Download</span>
-              </>
-            )}
-          </button>
+                    {/* Share Snippet Action */}
+                    <button
+                      onClick={handleShareSnippet}
+                      disabled={isSharing}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#252933] text-slate-700 dark:text-[#F3F4F6] transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Share2 className="w-3.5 h-3.5 text-indigo-600 dark:text-[#A98BFF]" />
+                        <span>Share Code Snippet</span>
+                      </div>
+                      {isSharing && <span className="text-[10px] text-slate-400">...</span>}
+                    </button>
 
-          {/* Primary Run Code Button */}
+                    {/* Download File Action */}
+                    <button
+                      onClick={handleDownload}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#252933] text-slate-700 dark:text-[#F3F4F6] transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-[#65D9D0]" />
+                        <span>Download as .py File</span>
+                      </div>
+                      {downloaded && <Check className="w-3.5 h-3.5 text-emerald-500" />}
+                    </button>
+
+                    {/* Ask AI Assistant Action */}
+                    <div className="pt-1 border-t border-slate-100 dark:border-[#252933]">
+                      <button
+                        onClick={() => {
+                          setActionMenuOpen(false);
+                          onOpenAiAssist(activeCode);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 dark:bg-[#8BBEFF]/10 hover:bg-blue-100 dark:hover:bg-[#8BBEFF]/20 text-blue-700 dark:text-[#8BBEFF] font-semibold transition-colors cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                        <span>Ask AI Assistant</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Icon-Based Primary Run Code Navigation */}
           <button
             id="btn-run-code"
             onClick={handleRun}
             disabled={isRunning}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#65D9A3] dark:hover:bg-[#65D9A3]/90 text-white dark:text-[#050608] text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 touch-target"
+            className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#65D9D0] dark:hover:bg-[#65D9D0]/90 text-white dark:text-[#050608] text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 touch-target"
             title="Run Python code (Ctrl+Enter)"
           >
-            <Play className="w-4 h-4 fill-current" />
-            <span>{isRunning ? "Running..." : "Run Code"}</span>
+            <Play className="w-4 h-4 fill-current shrink-0" />
+            <span className="font-bold">{isRunning ? "Running..." : "Run"}</span>
             <span className="hidden xl:inline font-mono opacity-80 text-[10px]">(Ctrl+Enter)</span>
           </button>
         </div>
       </div>
 
-      {/* Main Split Pane: Code Editor + Terminal Console */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
-        {/* Code Editor (Span 7 cols on desktop, responsive on mobile/tablet) */}
+      {/* Unified 'Graphite' Containment Workspace Area for Editor + Terminal */}
+      <div className="flex-1 bg-white dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] rounded-2xl p-2 sm:p-3 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0 shadow-xs">
+        {/* Code Editor Panel */}
         <div
           ref={editorRef}
           className={`lg:col-span-7 flex flex-col shrink-0 ${
@@ -442,7 +475,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
           />
         </div>
 
-        {/* Terminal Output Console (Span 5 cols on desktop, responsive on mobile/tablet) */}
+        {/* Terminal Output Console Panel */}
         <div
           ref={terminalRef}
           className={`lg:col-span-5 flex flex-col shrink-0 relative ${
@@ -483,7 +516,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
         </div>
       </div>
 
-      {/* Unique Permanent Firebase Share Modal */}
+      {/* Firebase Share Modal */}
       <ShareModal
         isOpen={shareModalOpen}
         onClose={() => setShareModalOpen(false)}

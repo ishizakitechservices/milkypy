@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ais-pre-esnqt5uw3zvrzqrsduwy5u-543927946609.us-west2.run.app/sitemap.xml
+Sitemap: https://milkypy.com/sitemap.xml

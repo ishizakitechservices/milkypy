@@ -13,6 +13,20 @@ import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, quer
 const app = express();
 const PORT = 3000;
 
+// Enforce WWW & HTTPS 301 Redirects for production custom domain milkypy.com
+app.use((req, res, next) => {
+  const host = ((req.headers["x-forwarded-host"] as string) || req.headers.host || "").toLowerCase();
+  const proto = ((req.headers["x-forwarded-proto"] as string) || req.protocol || "https").toLowerCase();
+
+  if (host === "www.milkypy.com") {
+    return res.redirect(301, `https://milkypy.com${req.originalUrl || req.url}`);
+  }
+  if (host === "milkypy.com" && proto === "http") {
+    return res.redirect(301, `https://milkypy.com${req.originalUrl || req.url}`);
+  }
+  next();
+});
+
 app.use(express.json({ limit: "5mb" }));
 
 // Persistent JSON Storage Path

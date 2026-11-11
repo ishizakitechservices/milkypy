@@ -46,10 +46,19 @@ export default function App() {
   // Shared snippet notification banner state
   const [sharedToast, setSharedToast] = useState<{ title: string; author?: string } | null>(null);
 
-  // Check URL for shared snippet parameter (?snippet=... or ?share=...)
+  // Check URL for shared snippet parameter (?snippet=... or ?share=...) or mode parameter (?mode=...)
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
+      const modeParam = params.get("mode");
+      if (modeParam === "study" || modeParam === "lessons") {
+        setMode("study");
+      } else if (modeParam === "games" || modeParam === "arcade") {
+        setMode("games");
+      } else if (modeParam === "playground" || modeParam === "code") {
+        setMode("playground");
+      }
+
       const snippetId = params.get("snippet") || params.get("share");
       if (snippetId) {
         fetch(getApiUrl(`/api/snippets/${snippetId}`))
