@@ -10,6 +10,7 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "validate:curriculum": "tsx src/data/curriculum/cliValidate.ts",
+    "generate:sitemap": "node public/assets/generate-sitemap.js",
     "cap:sync": "cap sync android",
     "cap:open": "cap open android",
     "build:android": "vite build && cap sync android"

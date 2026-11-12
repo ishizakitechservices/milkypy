@@ -30,8 +30,21 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
   currentUser,
 }) => {
   // Show outline first on both mobile and desktop views; upon selection it hides
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(true);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState<boolean>(true);
+  // If a specific lesson was requested via URL (?lesson=...), start with sidebar closed so the lesson is immediately visible
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("lesson");
+      if (p) return false;
+    }
+    return true;
+  });
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("lesson");
+      if (p) return false;
+    }
+    return true;
+  });
   const [showFormatGuide, setShowFormatGuide] = useState<boolean>(false);
   const [validationResult, setValidationResult] = useState<ValidationResult>(() =>
     getCurriculumValidation()
@@ -42,6 +55,12 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
 
   // Determine initial active lesson and remember where user left off across sessions & logouts
   const [activeLessonId, setActiveLessonId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const urlLesson = new URLSearchParams(window.location.search).get("lesson");
+      if (urlLesson && allLessons.some((item) => item.lesson.id === urlLesson)) {
+        return urlLesson;
+      }
+    }
     try {
       const stored = typeof window !== "undefined" ? localStorage.getItem("milkypy_last_active_lesson_id") : null;
       if (stored && allLessons.some((item) => item.lesson.id === stored)) {

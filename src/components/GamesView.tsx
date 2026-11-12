@@ -18,7 +18,17 @@ interface GamesViewProps {
 export const GamesView: React.FC<GamesViewProps> = ({
   onOpenAiAssist,
 }) => {
-  const [selectedGame, setSelectedGame] = useState<PremadeGame | null>(null);
+  const [selectedGame, setSelectedGame] = useState<PremadeGame | null>(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const gameParam = urlParams.get("game");
+      if (gameParam) {
+        const found = PREMADE_GAMES.find((g) => g.id === gameParam);
+        if (found) return found;
+      }
+    }
+    return null;
+  });
   const [muted, setMuted] = useState<boolean>(() => isGameAudioMuted());
 
   // VIP user tag

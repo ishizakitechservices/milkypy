@@ -51,9 +51,12 @@ export default function App() {
     try {
       const params = new URLSearchParams(window.location.search);
       const modeParam = params.get("mode");
-      if (modeParam === "study" || modeParam === "lessons") {
+      const lessonParam = params.get("lesson");
+      const gameParam = params.get("game");
+
+      if (lessonParam || modeParam === "study" || modeParam === "lessons") {
         setMode("study");
-      } else if (modeParam === "games" || modeParam === "arcade") {
+      } else if (gameParam || modeParam === "games" || modeParam === "arcade") {
         setMode("games");
       } else if (modeParam === "playground" || modeParam === "code") {
         setMode("playground");
