@@ -180,6 +180,8 @@ export async function initPyodide(
   });
 }
 
+let currentNativeAbortController: AbortController | null = null;
+
 /**
  * Execute Python code via zero-latency server runner.
  * Responds in under 50ms without waiting for WebAssembly downloading.
@@ -209,11 +211,14 @@ async function runViaNativeServer(
     }
   }
 
+  currentNativeAbortController = new AbortController();
+
   try {
     const res = await fetch(getApiUrl("/api/py/run"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code, input: providedInput }),
+      signal: currentNativeAbortController.signal,
     });
     const data = await res.json();
     if (onStdout && data.stdout) {
@@ -229,12 +234,22 @@ async function runViaNativeServer(
       isError: !!data.isError,
     };
   } catch (e: any) {
+    if (e?.name === "AbortError" || currentNativeAbortController?.signal.aborted) {
+      return {
+        stdout: "",
+        stderr: "\n[Execution stopped by user]",
+        executionTimeMs: Math.round(performance.now() - startTime),
+        isError: true,
+      };
+    }
     return {
       stdout: "",
       stderr: "Execution error: " + (e?.message || "Failed to reach execution runner"),
       executionTimeMs: Math.round(performance.now() - startTime),
       isError: true,
     };
+  } finally {
+    currentNativeAbortController = null;
   }
 }
 
@@ -295,9 +310,18 @@ export async function runPythonCode(
 }
 
 /**
- * Terminate running Python execution cleanly.
+ * Terminate running Python execution cleanly across both WebAssembly and Native Server engines.
  */
 export function terminatePythonWorker() {
+  if (currentNativeAbortController) {
+    try {
+      currentNativeAbortController.abort();
+    } catch (e) {
+      console.warn("Failed to abort native runner:", e);
+    }
+    currentNativeAbortController = null;
+  }
+
   if (worker) {
     try {
       worker.terminate();
@@ -305,14 +329,21 @@ export function terminatePythonWorker() {
       console.warn("Failed to terminate worker:", e);
     }
     worker = null;
+    isWasmReady = false;
+    // Silently re-initialize WebAssembly in the background for future runs
+    setTimeout(() => {
+      initPyodide().catch(() => {});
+    }, 150);
+  } else {
+    isWasmReady = false;
   }
-  isWasmReady = false;
+
   if (pendingRunResolve) {
     const resolveFn = pendingRunResolve;
     pendingRunResolve = null;
     resolveFn({
       stdout: currentStdout.join(""),
-      stderr: "Execution stopped by user.",
+      stderr: "\n[Execution stopped by user]",
       executionTimeMs: 0,
       isError: true,
     });
@@ -320,4 +351,9 @@ export function terminatePythonWorker() {
   currentOnInputPrompt = null;
   currentOnStdout = null;
 }
+
+/**
+ * Stop active Python execution immediately
+ */
+export const stopPythonExecution = terminatePythonWorker;
 
