@@ -1,4 +1,5 @@
 import { AIDebugResult, AIExplainResult } from "../types";
+import { MILKY_CURRICULUM_OUTLINE } from "../data/curriculum/aiCurriculumGuide";
 
 /**
  * Offline Python Knowledge Engine & Error Diagnoser
@@ -392,11 +393,24 @@ print(f"Next year you will be {next_year} years old.")
 \`\`\``;
   }
 
+  if (
+    q.includes("curriculum") ||
+    q.includes("syllabus") ||
+    q.includes("module") ||
+    q.includes("lesson") ||
+    q.includes("teach") ||
+    q.includes("where should i start") ||
+    q.includes("roadmap")
+  ) {
+    return `### MilkyPy Python Curriculum Roadmap (Offline Reference)\n\n${MILKY_CURRICULUM_OUTLINE}\n\nAsk about any topic above (for example: variables, f-strings, if/else, loops, lists, dictionaries, or functions) to study offline, or reconnect for interactive AI tutoring.`;
+  }
+
   return `### Milky AI Tutor Offline Python Knowledge Base
 
-You are currently in **Offline Standalone Mode**. Code execution, arcade games, lessons, and syntax verification are running locally on your device!
+You are currently in **Offline Standalone Mode**. Code execution, arcade games, lessons, and syntax verification are running locally on your device.
 
 **Quick Topics You Can Ask About:**
+- *Curriculum Roadmap* (all 7 modules and 24 lessons)
 - *Loops* (for, while, range)
 - *Functions* (def, return, parameters)
 - *Conditionals* (if, elif, else)
@@ -404,5 +418,5 @@ You are currently in **Offline Standalone Mode**. Code execution, arcade games, 
 - *User Input & Print formatting*
 - *Random numbers & Games logic*
 
-*(Tip: When connected to the internet, live Milky AI Tutor reasoning will automatically activate!)*`;
+*(When connected to the internet, the full Milky AI chatbot automatically handles general questions, Python help, and interactive curriculum teaching.)*`;
 }

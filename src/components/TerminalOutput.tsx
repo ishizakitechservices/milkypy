@@ -10,6 +10,7 @@ import {
   Send,
   History,
   Square,
+  Sparkles,
 } from "lucide-react";
 
 interface TerminalOutputProps {
@@ -20,6 +21,7 @@ interface TerminalOutputProps {
   onClear: () => void;
   onStop?: () => void;
   onSendStdin?: (input: string) => void;
+  onAskAiFix?: (errorMsg: string) => void;
   history?: ConsoleHistoryEntry[];
   onClearHistory?: () => void;
   onRestoreCode?: (code: string) => void;
@@ -33,6 +35,7 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
   onClear,
   onStop,
   onSendStdin,
+  onAskAiFix,
   history = [],
   onClearHistory = () => {},
   onRestoreCode,
@@ -71,7 +74,7 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
 
   const handleStdinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSendStdin && stdinInput.trim()) {
+    if (onSendStdin) {
       onSendStdin(stdinInput);
       setStdinInput("");
     }
@@ -214,7 +217,7 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
 
           {!isRunning && !result && (
             <div className="text-slate-400 dark:text-[#BFC4CE]/60 py-8 text-center font-sans text-xs select-none">
-              Press the green <strong className="text-emerald-600 dark:text-[#65D9D0] font-bold">Run Code</strong> button to see your Python code work!
+              Press <strong className="text-emerald-600 dark:text-[#65D9D0] font-bold">Run</strong> or <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#15171E] border border-slate-200 dark:border-white/10 font-mono text-[10px]">Ctrl+Enter</kbd> to see your Python output.
             </div>
           )}
 
@@ -229,10 +232,22 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
 
               {/* Error Message */}
               {result.stderr && (
-                <div className="space-y-1.5">
-                  <div className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1 font-sans">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    <span>Error in code:</span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1 font-sans">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>Error in code:</span>
+                    </div>
+                    {onAskAiFix && (
+                      <button
+                        type="button"
+                        onClick={() => onAskAiFix(result.stderr)}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 dark:bg-[#8BBEFF] dark:hover:bg-[#8BBEFF]/90 text-white dark:text-[#08090D] font-sans text-[11px] font-bold shadow-xs transition-colors cursor-pointer"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>Fix with AI</span>
+                      </button>
+                    )}
                   </div>
                   <pre className="whitespace-pre-wrap font-mono text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/30 p-3 rounded-lg border border-rose-200 dark:border-rose-900/50 text-xs">
                     {result.stderr}

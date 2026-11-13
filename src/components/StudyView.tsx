@@ -425,7 +425,7 @@ export const StudyView: React.FC<StudyViewProps> = ({
             lessonConcept: lesson.concept || lesson.plainEnglish,
             difficulty: diffParam,
           }),
-          timeoutMs: 12000,
+          timeoutMs: 25000,
         });
         const ct = res.headers.get("content-type") || "";
         if (ct.includes("application/json")) {

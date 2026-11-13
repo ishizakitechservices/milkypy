@@ -432,7 +432,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                       <button
                         onClick={() => {
                           setActionMenuOpen(false);
-                          onOpenAiAssist(activeCode);
+                          onOpenAiAssist(activeCode, executionResult?.stderr || undefined);
                         }}
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 dark:bg-[#8BBEFF]/10 hover:bg-blue-100 dark:hover:bg-[#8BBEFF]/20 text-blue-700 dark:text-[#8BBEFF] font-semibold transition-colors cursor-pointer"
                       >
@@ -512,6 +512,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             isWaitingInput={isWaitingInput}
             onSendStdin={handleSendStdin}
             onStop={handleStop}
+            onAskAiFix={(errMsg) => onOpenAiAssist(activeCodeRef.current || activeCode, errMsg)}
             history={consoleHistory}
             onClearHistory={handleClearHistory}
             onRestoreCode={handleRestoreCode}

@@ -14,9 +14,6 @@ import {
   Menu,
   X,
   ChevronRight,
-  Terminal,
-  Cpu,
-  Layers,
   HelpCircle,
   ExternalLink,
   Wifi,
@@ -379,17 +376,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </button>
                       )}
                     </div>
-                    {onReloadPyodide && (
-                      <button
-                        onClick={() => {
-                          onReloadPyodide(true);
-                        }}
-                        className="w-full py-1.5 px-3 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 border border-rose-200 dark:border-rose-900/60 rounded-xl text-[10px] font-bold text-rose-700 dark:text-rose-300 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <Cpu className="w-3.5 h-3.5" />
-                        <span>Simulate 75% Allocation Crash</span>
-                      </button>
-                    )}
                   </div>
                 ) : pyodideStatus === "loading" ? (
                   <div className="p-2.5 bg-amber-50 dark:bg-amber-950/50 rounded-xl border border-amber-200/70 dark:border-amber-900/60 space-y-2">
@@ -444,7 +430,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Drawer Navigation Menu (Full slide-over sheet for phones & tablets) */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 z-50 flex justify-end">
+          <div className="md:hidden fixed inset-0 z-50 flex justify-end">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -579,9 +565,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <Gamepad2 className="w-4 h-4 text-purple-400" />
                       <span className="text-xs">Games Lab (Arcade)</span>
                     </div>
-                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-extrabold uppercase">
-                      Soon
-                    </span>
+                    <ChevronRight className="w-4 h-4 opacity-70" />
                   </button>
 
                   {/* Ask AI Assistant Trigger */}

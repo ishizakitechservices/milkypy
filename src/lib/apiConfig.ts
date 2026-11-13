@@ -34,7 +34,7 @@ export async function fetchWithTimeout(
   url: string,
   options: RequestInit & { timeoutMs?: number; externalSignal?: AbortSignal } = {}
 ): Promise<Response> {
-  const { timeoutMs = 18000, externalSignal, ...fetchOpts } = options;
+  const { timeoutMs = 45000, externalSignal, ...fetchOpts } = options;
   const controller = new AbortController();
   let timedOut = false;
 

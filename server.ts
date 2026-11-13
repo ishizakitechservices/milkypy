@@ -10,6 +10,10 @@ import { createServer as createViteServer } from "vite";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where } from "firebase/firestore";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import {
+  buildMilkyChatSystemInstruction,
+  stripDecorativeEmojis,
+} from "./src/data/curriculum/aiCurriculumGuide.ts";
 
 const app = express();
 const PORT = 3000;
@@ -28,11 +32,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Enable CORS for Cloudflare Pages / custom domain frontends & Capacitor mobile clients
+// Enable CORS & standard security headers (omits X-Frame-Options so embedded previews work)
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   if (req.method === "OPTIONS") {
     res.status(204).end();
     return;
@@ -240,8 +247,8 @@ async function callGeminiDirect(options: {
   const contents = normalizeGeminiContents(options.messages, options.prompt);
 
   const modelCandidates: Array<{ model: string; thinkingLevel: ThinkingLevel; timeoutMs: number }> = [
-    { model: "gemini-4-hydrogen", thinkingLevel: ThinkingLevel.LOW, timeoutMs: 14000 },
-    { model: "gemini-3.1-flash-lite", thinkingLevel: ThinkingLevel.MINIMAL, timeoutMs: 12000 },
+    { model: "gemini-4-hydrogen", thinkingLevel: ThinkingLevel.LOW, timeoutMs: 25000 },
+    { model: "gemini-3.1-flash-lite", thinkingLevel: ThinkingLevel.MINIMAL, timeoutMs: 20000 },
   ];
 
   let lastErr: Error | null = null;
@@ -325,8 +332,8 @@ async function callOpenAiCompatible(options: {
   const payload: any = {
     model: options.model,
     messages: formattedMessages,
-    temperature: 0.25,
-    max_tokens: Math.min(options.maxTokens || 900, 2000),
+    temperature: 0.35,
+    max_tokens: Math.min(options.maxTokens || 4096, 8192),
   };
 
   if (options.responseType === "json") {
@@ -334,7 +341,7 @@ async function callOpenAiCompatible(options: {
   }
 
   const controller = new AbortController();
-  const timeoutTimer = setTimeout(() => controller.abort(), 15000);
+  const timeoutTimer = setTimeout(() => controller.abort(), 35000);
   let resp: Response;
   try {
     resp = await fetch(options.endpoint, {
@@ -936,7 +943,7 @@ app.post("/api/ai/debug", async (req, res) => {
       return;
     }
 
-    const prompt = `You are a friendly, expert Python tutor for beginner and intermediate learners.
+    const prompt = `You are an expert Python tutor for beginner and intermediate learners.
 Analyze this Python code and the execution error (if any):
 
 PYTHON CODE:
@@ -948,9 +955,10 @@ ERROR / ISSUE REPORTED:
 ${errorMessage || "No explicit error, but code might have logical or runtime bugs."}
 
 Instructions:
-1. Provide a fixed, working version of the Python code.
+1. Provide a complete, fixed, working version of the Python code.
 2. Explain what caused the issue in simple, clear terms.
 3. List 2-3 key takeaways or tips for the student.
+4. Never use emojis.
 
 Respond ONLY in valid JSON matching this structure:
 {
@@ -961,11 +969,18 @@ Respond ONLY in valid JSON matching this structure:
 }`;
 
     const parsed = await callPlatformAi({
-      cacheKeyPrefix: "debug",
+      cacheKeyPrefix: "debug_v2",
       prompt,
       responseType: "json",
-      maxTokens: 700,
+      maxTokens: 4096,
     });
+
+    if (typeof parsed.explanation === "string") {
+      parsed.explanation = stripDecorativeEmojis(parsed.explanation);
+    }
+    if (Array.isArray(parsed.tips)) {
+      parsed.tips = parsed.tips.map((t: any) => (typeof t === "string" ? stripDecorativeEmojis(t) : t));
+    }
 
     res.json({ success: true, ...parsed });
   } catch (error: any) {
@@ -987,7 +1002,7 @@ app.post("/api/ai/add-comments", async (req, res) => {
       return;
     }
 
-    const prompt = `You are a Python programming guide. Your goal is to add concise, educational, step-by-step inline Python comments (# comments) to the following code so that a student can easily understand how every part works.
+    const prompt = `You are a Python programming guide. Add concise, educational, step-by-step inline Python comments (# comments) to the following code so a learner can understand how every part works.
 
 PYTHON CODE:
 \`\`\`python
@@ -995,9 +1010,9 @@ ${code}
 \`\`\`
 
 Instructions:
-- Preserve all existing functionality and structure.
+- Preserve all existing functionality and return the complete script.
 - Insert clear, informative comments above or beside key code lines.
-- Keep comments friendly and educational.
+- Never use emojis.
 
 Respond ONLY in valid JSON with format:
 {
@@ -1006,11 +1021,15 @@ Respond ONLY in valid JSON with format:
 }`;
 
     const parsed = await callPlatformAi({
-      cacheKeyPrefix: "comment",
+      cacheKeyPrefix: "comment_v2",
       prompt,
       responseType: "json",
-      maxTokens: 700,
+      maxTokens: 4096,
     });
+
+    if (typeof parsed.summary === "string") {
+      parsed.summary = stripDecorativeEmojis(parsed.summary);
+    }
 
     res.json({ success: true, ...parsed });
   } catch (error: any) {
@@ -1032,7 +1051,7 @@ app.post("/api/ai/explain", async (req, res) => {
       return;
     }
 
-    const prompt = `Explain the following Python code step-by-step for a beginner learner:
+    const prompt = `Explain the following Python code step-by-step for a learner (do not use emojis):
 
 \`\`\`python
 ${code}
@@ -1051,11 +1070,18 @@ Respond in JSON format:
 }`;
 
     const parsed = await callPlatformAi({
-      cacheKeyPrefix: "explain",
+      cacheKeyPrefix: "explain_v2",
       prompt,
       responseType: "json",
-      maxTokens: 600,
+      maxTokens: 3000,
     });
+
+    if (typeof parsed.summary === "string") {
+      parsed.summary = stripDecorativeEmojis(parsed.summary);
+    }
+    if (Array.isArray(parsed.steps)) {
+      parsed.steps = parsed.steps.map((s: any) => (typeof s === "string" ? stripDecorativeEmojis(s) : s));
+    }
 
     res.json({ success: true, ...parsed });
   } catch (error: any) {
@@ -1082,20 +1108,24 @@ Student's current code:
 ${currentCode || "# Empty"}
 \`\`\`
 
-Give a subtle, encouraging hint (2-3 sentences max) to help them take the next logical step without giving away the complete code directly.
+Give a clear, encouraging hint (2-3 sentences max, no emojis) to help them take the next logical step without giving away the complete code directly.
 
 Respond in JSON:
 {
-  "hint": "string (encouraging tip)",
+  "hint": "string (helpful tip)",
   "conceptToReview": "string"
 }`;
 
     const parsed = await callPlatformAi({
-      cacheKeyPrefix: "hint",
+      cacheKeyPrefix: "hint_v2",
       prompt,
       responseType: "json",
-      maxTokens: 350,
+      maxTokens: 1000,
     });
+
+    if (typeof parsed.hint === "string") {
+      parsed.hint = stripDecorativeEmojis(parsed.hint);
+    }
 
     res.json({ success: true, ...parsed });
   } catch (error: any) {
@@ -1108,36 +1138,36 @@ Respond in JSON:
   }
 });
 
-// AI Endpoint: Chat Tutor
+// AI Endpoint: Chat Assistant (General-purpose + Python & Curriculum Specialist)
 app.post("/api/ai/chat", async (req, res) => {
   try {
     const { messages, code, currentCode, lessonContext, systemInstruction: customSystem } = req.body;
     const effectiveCode = code || currentCode || "";
-
-    const systemInstruction =
-      customSystem ||
-      `You are Milky, a helpful and encouraging Python programming tutor.
-The user is currently writing the following code:
-\`\`\`python
-${effectiveCode}
-\`\`\`
-${lessonContext ? `They are currently working on this lesson: ${lessonContext.title} - ${lessonContext.description}` : ""}
-
-Provide concise, encouraging, and educational responses. If you suggest code fixes, provide the complete updated code in a single \`\`\`python block.`;
-
-    const result = await callPlatformAi({
-      cacheKeyPrefix: "chat",
-      systemInstruction,
-      prompt: "",
-      messages: (messages || []).map((m: any) => ({
-        role: m.role === "assistant" || m.role === "model" ? "model" : "user",
-        text: m.text || "",
-      })),
-      responseType: "text",
-      maxTokens: 800,
+    const systemInstruction = buildMilkyChatSystemInstruction({
+      code: effectiveCode,
+      lessonContext,
+      customSystem,
     });
 
-    res.json({ success: true, text: result.text, reply: result.text });
+    const normalizedMessages = (messages || []).map((m: any) => ({
+      role: (m.role === "assistant" || m.role === "model" ? "model" : "user") as "user" | "model",
+      text: m.text || "",
+    }));
+
+    const result = await callPlatformAi({
+      cacheKeyPrefix: "chat_v2",
+      systemInstruction,
+      prompt: "",
+      messages: normalizedMessages,
+      responseType: "text",
+      maxTokens: 4096,
+    });
+
+    const lastUserMessage = [...normalizedMessages].reverse().find((m) => m.role === "user")?.text || "";
+    const allowEmojis = /emoji|unicode/i.test(lastUserMessage);
+    const cleanedText = allowEmojis ? result.text : stripDecorativeEmojis(result.text);
+
+    res.json({ success: true, text: cleanedText, reply: cleanedText });
   } catch (error: any) {
     console.error("AI Chat Error:", error);
     res.status(error?.missingApiKey ? 503 : 500).json({
@@ -1153,7 +1183,7 @@ app.post("/api/ai/quiz", async (req, res) => {
   try {
     const { lessonTitle, lessonConcept, difficulty } = req.body;
 
-    const systemInstruction = `You are a Python curriculum specialist creating randomized, engaging quiz questions.
+    const systemInstruction = `You are a Python curriculum specialist creating randomized, engaging quiz questions. Never use emojis.
 Generate a brand-new, unique multiple-choice question testing the specified Python concept.
 Never use generic or repeated presets. Include code snippets where appropriate.
 
@@ -1173,11 +1203,11 @@ Concept details: ${lessonConcept ? lessonConcept.slice(0, 500) : "Variables, typ
 Difficulty: ${difficulty || "intermediate"}`;
 
     const parsed = await callPlatformAi({
-      cacheKeyPrefix: "quiz",
+      cacheKeyPrefix: "quiz_v2",
       systemInstruction,
       prompt,
       responseType: "json",
-      maxTokens: 500,
+      maxTokens: 1500,
     });
 
     if (parsed && parsed.question && Array.isArray(parsed.options) && typeof parsed.correctIndex === "number") {

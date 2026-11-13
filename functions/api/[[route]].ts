@@ -1,4 +1,8 @@
 import firebaseConfig from "../../firebase-applet-config.json";
+import {
+  buildMilkyChatSystemInstruction,
+  stripDecorativeEmojis,
+} from "../../src/data/curriculum/aiCurriculumGuide.ts";
 
 interface CFContext {
   request: Request;
@@ -254,8 +258,8 @@ async function callGeminiEdge(options: {
   const contents = normalizeGeminiContentsEdge(options.messages, options.prompt);
 
   const candidates: Array<{ model: string; thinkingLevel: "LOW" | "MINIMAL"; timeoutMs: number }> = [
-    { model: "gemini-4-hydrogen", thinkingLevel: "LOW", timeoutMs: 12000 },
-    { model: "gemini-3.1-flash-lite", thinkingLevel: "MINIMAL", timeoutMs: 11000 },
+    { model: "gemini-4-hydrogen", thinkingLevel: "LOW", timeoutMs: 22000 },
+    { model: "gemini-3.1-flash-lite", thinkingLevel: "MINIMAL", timeoutMs: 18000 },
   ];
 
   let lastErr: Error | null = null;
@@ -369,15 +373,15 @@ async function callOpenAiEdge(options: {
   const payload: any = {
     model: options.model,
     messages: formattedMessages,
-    temperature: 0.25,
-    max_tokens: Math.min(options.maxTokens || 900, 2000),
+    temperature: 0.35,
+    max_tokens: Math.min(options.maxTokens || 4096, 8192),
   };
   if (options.responseType === "json") {
     payload.response_format = { type: "json_object" };
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 14000);
+  const timer = setTimeout(() => controller.abort(), 30000);
   let resp: Response;
   try {
     resp = await fetch(options.endpoint, {
@@ -721,7 +725,7 @@ export async function onRequest(context: CFContext): Promise<Response> {
     // AI: Debug
     if (apiPath === "ai/debug" && request.method === "POST") {
       if (!body.code) return jsonResponse({ error: "Code is required" }, 400);
-      const prompt = `You are a friendly, expert Python tutor for beginner and intermediate learners.
+      const prompt = `You are an expert Python tutor for beginner and intermediate learners. Never use emojis.
 Analyze this Python code and the execution error (if any):
 
 PYTHON CODE:
@@ -739,14 +743,18 @@ Respond ONLY in valid JSON matching this structure:
   "bugType": "string (e.g. IndentationError, TypeError, SyntaxError, LogicError)",
   "tips": ["string", "string"]
 }`;
-      const parsed = await callCloudflareAi(env, { prompt, responseType: "json", maxTokens: 700 });
+      const parsed = await callCloudflareAi(env, { prompt, responseType: "json", maxTokens: 4096 });
+      if (typeof parsed.explanation === "string") parsed.explanation = stripDecorativeEmojis(parsed.explanation);
+      if (Array.isArray(parsed.tips)) {
+        parsed.tips = parsed.tips.map((t: any) => (typeof t === "string" ? stripDecorativeEmojis(t) : t));
+      }
       return jsonResponse({ success: true, ...parsed });
     }
 
     // AI: Add comments
     if (apiPath === "ai/add-comments" && request.method === "POST") {
       if (!body.code) return jsonResponse({ error: "Code is required" }, 400);
-      const prompt = `You are a Python programming guide. Add concise, educational inline Python comments (# comments) to this code so a student can understand every part:
+      const prompt = `You are a Python programming guide. Add concise, educational inline Python comments (# comments) to this entire code so a student can understand every part. Preserve all functionality and never use emojis:
 
 PYTHON CODE:
 \`\`\`python
@@ -758,14 +766,15 @@ Respond ONLY in valid JSON with format:
   "commentedCode": "string (the full python code with added educational comments)",
   "summary": "string (brief sentence describing what this code achieves)"
 }`;
-      const parsed = await callCloudflareAi(env, { prompt, responseType: "json", maxTokens: 700 });
+      const parsed = await callCloudflareAi(env, { prompt, responseType: "json", maxTokens: 4096 });
+      if (typeof parsed.summary === "string") parsed.summary = stripDecorativeEmojis(parsed.summary);
       return jsonResponse({ success: true, ...parsed });
     }
 
     // AI: Explain
     if (apiPath === "ai/explain" && request.method === "POST") {
       if (!body.code) return jsonResponse({ error: "Code is required" }, 400);
-      const prompt = `Explain the following Python code step-by-step for a beginner learner:
+      const prompt = `Explain the following Python code step-by-step for a learner (do not use emojis):
 
 \`\`\`python
 ${body.code}
@@ -777,7 +786,11 @@ Respond in JSON format:
   "steps": ["string", "string"],
   "concepts": ["string", "string"]
 }`;
-      const parsed = await callCloudflareAi(env, { prompt, responseType: "json", maxTokens: 600 });
+      const parsed = await callCloudflareAi(env, { prompt, responseType: "json", maxTokens: 3000 });
+      if (typeof parsed.summary === "string") parsed.summary = stripDecorativeEmojis(parsed.summary);
+      if (Array.isArray(parsed.steps)) {
+        parsed.steps = parsed.steps.map((s: any) => (typeof s === "string" ? stripDecorativeEmojis(s) : s));
+      }
       return jsonResponse({ success: true, ...parsed });
     }
 
@@ -790,46 +803,48 @@ Student's current code:
 \`\`\`python
 ${body.currentCode || "# Empty"}
 \`\`\`
-Give a subtle, encouraging hint (2-3 sentences max). Respond in JSON:
+Give a clear, encouraging hint (2-3 sentences max, no emojis). Respond in JSON:
 {
-  "hint": "string (encouraging tip)",
+  "hint": "string (helpful tip)",
   "conceptToReview": "string"
 }`;
-      const parsed = await callCloudflareAi(env, { prompt, responseType: "json", maxTokens: 350 });
+      const parsed = await callCloudflareAi(env, { prompt, responseType: "json", maxTokens: 1000 });
+      if (typeof parsed.hint === "string") parsed.hint = stripDecorativeEmojis(parsed.hint);
       return jsonResponse({ success: true, ...parsed });
     }
 
-    // AI: Chat
+    // AI: Chat (General-purpose + Python & Curriculum Specialist)
     if (apiPath === "ai/chat" && request.method === "POST") {
       const effectiveCode = body.code || body.currentCode || "";
-      const systemInstruction =
-        body.systemInstruction ||
-        `You are Milky, a helpful and encouraging Python programming tutor.
-The user is currently writing the following code:
-\`\`\`python
-${effectiveCode}
-\`\`\`
-${body.lessonContext ? `They are currently working on this lesson: ${body.lessonContext.title} - ${body.lessonContext.description}` : ""}
+      const systemInstruction = buildMilkyChatSystemInstruction({
+        code: effectiveCode,
+        lessonContext: body.lessonContext,
+        customSystem: body.systemInstruction,
+      });
 
-Provide concise, encouraging, and educational responses. If you suggest code fixes, provide the complete updated code in a single \`\`\`python block.`;
+      const normalizedMessages = (body.messages || []).map((m: any) => ({
+        role: m.role === "assistant" || m.role === "model" ? "model" : "user",
+        text: m.text || "",
+      }));
 
       const result = await callCloudflareAi(env, {
         systemInstruction,
         prompt: "",
-        messages: (body.messages || []).map((m: any) => ({
-          role: m.role === "assistant" || m.role === "model" ? "model" : "user",
-          text: m.text || "",
-        })),
+        messages: normalizedMessages,
         responseType: "text",
-        maxTokens: 800,
+        maxTokens: 4096,
       });
 
-      return jsonResponse({ success: true, text: result.text, reply: result.text });
+      const lastUserMessage = [...normalizedMessages].reverse().find((m: any) => m.role === "user")?.text || "";
+      const allowEmojis = /emoji|unicode/i.test(lastUserMessage);
+      const cleanedText = allowEmojis ? result.text : stripDecorativeEmojis(result.text);
+
+      return jsonResponse({ success: true, text: cleanedText, reply: cleanedText });
     }
 
     // AI: Quiz
     if (apiPath === "ai/quiz" && request.method === "POST") {
-      const systemInstruction = `You are a Python curriculum specialist creating randomized, engaging quiz questions.
+      const systemInstruction = `You are a Python curriculum specialist creating randomized, engaging quiz questions. Never use emojis.
 Format your output strictly as a JSON object with this exact shape:
 {
   "question": "string",
@@ -848,7 +863,7 @@ Difficulty: ${body.difficulty || "intermediate"}`;
         systemInstruction,
         prompt,
         responseType: "json",
-        maxTokens: 500,
+        maxTokens: 1500,
       });
 
       if (parsed && parsed.question && Array.isArray(parsed.options) && typeof parsed.correctIndex === "number") {

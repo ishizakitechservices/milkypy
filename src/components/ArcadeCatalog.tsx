@@ -207,10 +207,21 @@ export const ArcadeCatalog: React.FC<ArcadeCatalogProps> = ({
                       onInspectCode(game);
                     }}
                     title="Inspect Python source code"
-                    className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors text-xs flex items-center gap-1.5"
+                    className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors text-xs flex items-center gap-1.5 cursor-pointer"
                   >
                     <Code2 className="w-3.5 h-3.5 text-purple-400" />
                     <span className="text-[11px] font-mono">Code</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      playSound("boost");
+                      onRemixInStudio(game);
+                    }}
+                    title="Open & edit this game's Python code in Playground"
+                    className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-cyan-400 hover:text-cyan-300 transition-colors text-xs flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Wrench className="w-3.5 h-3.5" />
+                    <span className="text-[11px] font-mono">Remix</span>
                   </button>
                 </div>
 
@@ -219,7 +230,7 @@ export const ArcadeCatalog: React.FC<ArcadeCatalogProps> = ({
                     playSound("boost");
                     onSelectGame(game);
                   }}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md hover:shadow-purple-600/30 transition-all flex items-center gap-1.5 active:scale-95"
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md hover:shadow-purple-600/30 transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
                   <span>Play</span>

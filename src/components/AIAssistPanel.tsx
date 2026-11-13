@@ -81,6 +81,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
   const [activeSessionTitle, setActiveSessionTitle] = useState<string>("New Conversation");
   const [savedSessions, setSavedSessions] = useState<AiChatSession[]>([]);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const [confirmClearHistory, setConfirmClearHistory] = useState(false);
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [copiedChat, setCopiedChat] = useState(false);
   const [applied, setApplied] = useState(false);
@@ -183,14 +184,17 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
   // Handler: Clear all conversation history
   const handleClearAllHistory = async () => {
-    if (window.confirm("Clear all Milky AI conversation history?")) {
-      try {
-        await clearAllAiChatSessions();
-        setSavedSessions([]);
-        handleNewChat();
-      } catch (err) {
-        console.warn("Failed to clear chat history:", err);
-      }
+    if (!confirmClearHistory) {
+      setConfirmClearHistory(true);
+      return;
+    }
+    try {
+      await clearAllAiChatSessions();
+      setSavedSessions([]);
+      setConfirmClearHistory(false);
+      handleNewChat();
+    } catch (err) {
+      console.warn("Failed to clear chat history:", err);
     }
   };
 
@@ -232,7 +236,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, errorMessage }),
-        timeoutMs: 18000,
+        timeoutMs: 45000,
         externalSignal: controller.signal,
       });
       const contentType = res.headers.get("content-type") || "";
@@ -287,7 +291,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
-        timeoutMs: 18000,
+        timeoutMs: 45000,
         externalSignal: controller.signal,
       });
       const contentType = res.headers.get("content-type") || "";
@@ -331,7 +335,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
-        timeoutMs: 18000,
+        timeoutMs: 45000,
         externalSignal: controller.signal,
       });
       const contentType = res.headers.get("content-type") || "";
@@ -383,7 +387,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           targetOutput: lessonContext?.expectedOutput,
           currentCode: code,
         }),
-        timeoutMs: 18000,
+        timeoutMs: 45000,
         externalSignal: controller.signal,
       });
       const contentType = res.headers.get("content-type") || "";
@@ -413,17 +417,16 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     }
   };
 
-  const handleChatSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!chatInput.trim() || loading) return;
+  const sendChatPrompt = async (promptText: string) => {
+    const userText = promptText.trim();
+    if (!userText || loading) return;
 
     if (activeAbortRef.current) activeAbortRef.current.abort();
     manualCancelRef.current = false;
     const controller = new AbortController();
     activeAbortRef.current = controller;
 
-    const userText = chatInput.trim();
-    const newMessages = [...chatMessages, { role: 'user' as const, text: userText }];
+    const newMessages = [...chatMessages, { role: "user" as const, text: userText }];
     setChatMessages(newMessages);
     setChatInput("");
     setLoading(true);
@@ -461,7 +464,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           code,
           lessonContext,
         }),
-        timeoutMs: 18000,
+        timeoutMs: 45000,
         externalSignal: controller.signal,
       });
       const contentType = res.headers.get("content-type") || "";
@@ -505,6 +508,11 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     }
   };
 
+  const handleChatSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    await sendChatPrompt(chatInput);
+  };
+
   const applyCodeFix = (newCode: string) => {
     onApplyCode(newCode);
     setApplied(true);
@@ -537,14 +545,11 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-[#F3F4F6] flex items-center gap-1.5">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-[#F3F4F6]">
                 Ask AI Assistant
-                <span className="text-[10px] font-medium text-blue-600 dark:text-[#8BBEFF] bg-blue-50 dark:bg-[#8BBEFF]/10 px-1.5 py-0.2 rounded-md border border-blue-200 dark:border-[#8BBEFF]/30">
-                  Sidebar
-                </span>
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-[#BFC4CE]">
-                Quick help, debugging & explanations
+                General assistant, Python specialist & curriculum tutor
               </p>
             </div>
           </div>
@@ -637,8 +642,16 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         {/* Main Content Area */}
         <div className="flex-1 p-4 overflow-y-auto space-y-4">
           {errorText && (
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-lg text-rose-700 dark:text-rose-300 text-xs font-mono">
-              Error: {errorText}
+            <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-lg text-amber-800 dark:text-amber-300 text-xs flex items-start justify-between gap-2">
+              <span className="font-mono leading-relaxed">{errorText}</span>
+              <button
+                type="button"
+                onClick={() => setErrorText(null)}
+                className="p-0.5 rounded hover:bg-amber-200/50 dark:hover:bg-amber-800/40 shrink-0 cursor-pointer"
+                aria-label="Dismiss notice"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
@@ -669,7 +682,10 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
                   {/* History Toggle Button */}
                   <button
-                    onClick={() => setShowHistoryDrawer(!showHistoryDrawer)}
+                    onClick={() => {
+                      setConfirmClearHistory(false);
+                      setShowHistoryDrawer(!showHistoryDrawer);
+                    }}
                     className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-bold shadow-2xs transition-colors cursor-pointer ${
                       showHistoryDrawer
                         ? "bg-blue-600 border-blue-600 text-white"
@@ -800,17 +816,40 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   </div>
 
                   {/* History Footer Actions */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 gap-2">
                     {savedSessions.length > 0 && (
-                      <button
-                        onClick={handleClearAllHistory}
-                        className="text-[11px] text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold transition-colors cursor-pointer"
-                      >
-                        Clear All History
-                      </button>
+                      confirmClearHistory ? (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={handleClearAllHistory}
+                            className="px-2 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold transition-colors cursor-pointer"
+                          >
+                            Confirm Clear All?
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmClearHistory(false)}
+                            className="px-2 py-1 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-semibold cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleClearAllHistory}
+                          className="text-[11px] text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-bold transition-colors cursor-pointer"
+                        >
+                          Clear All History
+                        </button>
+                      )
                     )}
                     <button
-                      onClick={() => setShowHistoryDrawer(false)}
+                      onClick={() => {
+                        setConfirmClearHistory(false);
+                        setShowHistoryDrawer(false);
+                      }}
                       className="ml-auto px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer"
                     >
                       Back to Chat
@@ -822,12 +861,33 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                 <>
                   <div className="flex-1 overflow-y-auto space-y-3 pb-2">
                     {chatMessages.length === 0 ? (
-                      <div className="text-center text-slate-500 dark:text-slate-400 text-xs py-8">
-                        <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p className="font-semibold">Ask me anything about your code or the lesson!</p>
-                        <p className="text-[11px] text-slate-400 mt-1">
-                          I will explain things simply and help you step-by-step!
-                        </p>
+                      <div className="text-center text-slate-500 dark:text-slate-400 text-xs py-6 space-y-4">
+                        <div>
+                          <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                          <p className="font-semibold text-slate-700 dark:text-slate-200">
+                            Ask me anything, from Python lessons to everyday questions
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-1">
+                            I know the full MilkyPy curriculum and can teach, debug, or chat normally.
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-2 px-2">
+                          {[
+                            "Teach me a lesson from the Python curriculum",
+                            "Explain what this code does step-by-step",
+                            "Find any bugs or edge cases in my code",
+                            "What should I learn next in Python?",
+                          ].map((starter) => (
+                            <button
+                              key={starter}
+                              type="button"
+                              onClick={() => sendChatPrompt(starter)}
+                              className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 dark:bg-slate-800/80 dark:hover:bg-blue-950/50 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 text-[11px] font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                            >
+                              {starter}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       chatMessages.map((msg, idx) => (
@@ -908,7 +968,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                     <textarea
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
-                      placeholder="Ask a question... (Enter to send, Shift+Enter for newline)"
+                      placeholder="Ask anything — Python, curriculum lessons, or general help... (Enter to send)"
                       className="flex-1 bg-transparent border-none focus:ring-0 resize-none text-xs text-slate-800 dark:text-slate-200 min-h-[40px] max-h-[120px]"
                       rows={2}
                       onKeyDown={(e) => {
@@ -1134,7 +1194,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   </div>
 
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
-                    <div className="font-semibold text-emerald-400">Execution Steps:</div>
+                    <div className="font-semibold text-emerald-700 dark:text-emerald-400">Execution Steps:</div>
                     <ol className="list-decimal list-inside space-y-1 text-slate-800 dark:text-slate-200">
                       {explainResult.steps.map((step, idx) => (
                         <li key={idx}>{step}</li>
@@ -1144,12 +1204,12 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
                   {explainResult.concepts && (
                     <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-1">
-                      <div className="font-semibold text-purple-300">Core Concepts Used:</div>
+                      <div className="font-semibold text-purple-700 dark:text-purple-300">Core Concepts Used:</div>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {explainResult.concepts.map((c, idx) => (
                           <span
                             key={idx}
-                            className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 font-mono text-[10px] border border-purple-500/20"
+                            className="px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-mono text-[10px] border border-purple-200 dark:border-purple-500/20"
                           >
                             {c}
                           </span>

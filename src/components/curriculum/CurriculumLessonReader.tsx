@@ -9,6 +9,7 @@ import {
   PanelLeftOpen,
   Menu,
   Clock,
+  Sparkles,
 } from "lucide-react";
 
 interface CurriculumLessonReaderProps {
@@ -34,6 +35,7 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
   onOpenMobileSidebar,
   onToggleSidebar,
   sidebarCollapsed,
+  onOpenAiAssist,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -124,13 +126,31 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
               )}
             </div>
 
-            {/* Read Time */}
-            {lesson.estimatedMinutes && (
-              <div className="text-xs text-slate-400 dark:text-[#BFC4CE]/70 flex items-center gap-1 font-mono">
-                <Clock className="w-3.5 h-3.5" />
-                <span>{lesson.estimatedMinutes} min read</span>
-              </div>
-            )}
+            {/* Read Time & Ask AI */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              {lesson.estimatedMinutes && (
+                <div className="text-xs text-slate-400 dark:text-[#BFC4CE]/70 flex items-center gap-1 font-mono">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{lesson.estimatedMinutes} min read</span>
+                </div>
+              )}
+              {onOpenAiAssist && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onOpenAiAssist("", undefined, {
+                      title: lesson.title,
+                      description: lesson.summary || module.title,
+                    })
+                  }
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-[#8BBEFF]/10 dark:hover:bg-[#8BBEFF]/20 border border-blue-200 dark:border-[#8BBEFF]/30 text-blue-700 dark:text-[#8BBEFF] text-xs font-bold transition-colors cursor-pointer touch-target"
+                  title="Ask AI Tutor about this lesson"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Ask AI</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Module Kicker & Lesson Number */}
@@ -221,8 +241,8 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               ) : (
-                <span className="text-xs font-medium text-emerald-600 dark:text-[#65D9D0] px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-[#65D9D0]/10 border border-emerald-200 dark:border-[#65D9D0]/30">
-                  🎉 Final Lesson
+                <span className="text-xs font-semibold text-emerald-700 dark:text-[#65D9D0] px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-[#65D9D0]/10 border border-emerald-200 dark:border-[#65D9D0]/30">
+                  Final Lesson Complete
                 </span>
               )}
             </div>

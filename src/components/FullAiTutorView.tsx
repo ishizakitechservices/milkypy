@@ -54,40 +54,40 @@ interface FullAiTutorViewProps {
 
 const TUTOR_PROMPT_SUGGESTIONS = [
   {
+    category: "Curriculum",
+    icon: BookOpen,
+    label: "Teach me Lesson 1.1 or recommend where to start",
+    prompt: "Can you walk me through the MilkyPy Python curriculum and teach me where to start based on Module 1?",
+  },
+  {
     category: "Concepts",
     icon: Lightbulb,
     label: "Explain variables with a real-life analogy",
-    prompt: "Can you explain what variables are in Python using a fun, real-world everyday analogy for a complete beginner? Please explain the concept clearly before showing any code.",
-  },
-  {
-    category: "Logic",
-    icon: Compass,
-    label: "How does if-elif-else make decisions?",
-    prompt: "Explain how Python makes decisions with if, elif, and else statements. Walk me through the concept step-by-step with an example like deciding what to wear based on weather.",
+    prompt: "Can you explain what variables are in Python using a clear real-world analogy, then show a simple example?",
   },
   {
     category: "Loops",
     icon: RotateCcw,
     label: "Difference between for loops and while loops",
-    prompt: "What is the difference between a for loop and a while loop in Python? When should a beginner use which one? Explain the concept before code.",
+    prompt: "What is the difference between a for loop and a while loop in Python, and when should I use each?",
   },
   {
     category: "Lists",
-    icon: BookOpen,
-    label: "How does list indexing and slicing work?",
-    prompt: "Can you teach me how list indexing (including 0-based and negative indexing) and slice syntax [start:stop:step] work in Python?",
+    icon: Compass,
+    label: "How do Python lists and dictionaries work?",
+    prompt: "Teach me Module 6 on Python lists and dictionaries with practical examples and a quick exercise.",
   },
   {
     category: "Practice",
     icon: Brain,
     label: "Give me a beginner practice challenge",
-    prompt: "Give me a bite-sized beginner Python practice problem to test my logic. Give me the problem description and hints first, but don't give away the solution immediately!",
+    prompt: "Give me a bite-sized Python practice problem to test my logic without giving away the answer right away.",
   },
   {
     category: "Debug",
     icon: Bug,
     label: "Explain why IndentationError happens",
-    prompt: "Why does Python care so much about spaces and indentation? What causes an IndentationError and how do I fix it easily?",
+    prompt: "Why does Python care about indentation, what causes IndentationError, and how do I fix it?",
   },
 ];
 
@@ -239,10 +239,8 @@ print(greet("Learner"))
             messages: newMessages.slice(-14),
             code: sandboxCode,
             currentCode: sandboxCode,
-            systemInstruction:
-              "You are Milky, an extraordinarily patient, friendly, and pedagogical Python tutor for beginners. Always explain concepts thoroughly in plain English using real-world intuition BEFORE introducing code syntax. Follow the Term-Before-Explanation rule. Break complex ideas down into clear steps. When you provide code, keep it clean and minimal, and walk through what each line does. Never use emojis.",
           }),
-          timeoutMs: 18000,
+          timeoutMs: 45000,
           externalSignal: controller.signal,
         });
         const contentType = res.headers.get("content-type") || "";
@@ -481,10 +479,10 @@ print(greet("Learner"))
 
               <div className="space-y-2">
                 <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                  Welcome to Your 1-on-1 AI Python Classroom
+                  Milky AI Assistant & Python Classroom
                 </h1>
                 <p className="text-sm text-slate-400 max-w-xl leading-relaxed">
-                  Ask anything about Python. I explain concepts with clear real-world intuition first, break down the logic step-by-step, and walk through code syntax whenever you are ready.
+                  Ask anything—general topics, coding help, debugging, or interactive lessons straight from the MilkyPy Python curriculum.
                 </p>
               </div>
 
@@ -670,7 +668,7 @@ print(greet("Learner"))
                       handleSendMessage();
                     }
                   }}
-                  placeholder="Ask Milky anything about Python concepts, syntax, or bugs... (Shift+Enter for newline)"
+                  placeholder="Ask anything — general questions, Python help, or curriculum lessons... (Shift+Enter for newline)"
                   rows={2}
                   className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-hidden resize-none p-1.5"
                 />
@@ -692,13 +690,13 @@ print(greet("Learner"))
                     className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer shrink-0"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Ask Tutor</span>
+                    <span className="hidden sm:inline">Send</span>
                   </button>
                 )}
               </form>
 
               <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
-                <span>Concepts explained first · Term-Before-Explanation rule</span>
+                <span>General AI assistant · Python & MilkyPy curriculum specialist</span>
                 <span>Press Enter to send</span>
               </div>
             </div>

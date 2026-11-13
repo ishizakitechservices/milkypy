@@ -17,6 +17,7 @@ interface GamesViewProps {
 
 export const GamesView: React.FC<GamesViewProps> = ({
   onOpenAiAssist,
+  onPracticeClick,
 }) => {
   const [selectedGame, setSelectedGame] = useState<PremadeGame | null>(() => {
     if (typeof window !== "undefined") {
@@ -51,6 +52,12 @@ export const GamesView: React.FC<GamesViewProps> = ({
 
   const handleInspectCode = (game: PremadeGame) => {
     setSelectedGame(game);
+  };
+
+  const handleRemixGame = (game: PremadeGame) => {
+    if (game?.code) {
+      onPracticeClick(game.code);
+    }
   };
 
   return (
@@ -98,7 +105,7 @@ export const GamesView: React.FC<GamesViewProps> = ({
           <ArcadePlayer
             game={selectedGame}
             onBack={() => setSelectedGame(null)}
-            onRemixInStudio={() => {}}
+            onRemixInStudio={handleRemixGame}
             onOpenAiAssist={onOpenAiAssist}
           />
         ) : (
@@ -106,7 +113,7 @@ export const GamesView: React.FC<GamesViewProps> = ({
             games={PREMADE_GAMES}
             onSelectGame={handleSelectGame}
             onInspectCode={handleInspectCode}
-            onRemixInStudio={() => {}}
+            onRemixInStudio={handleRemixGame}
           />
         )}
       </div>

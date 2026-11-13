@@ -10,23 +10,37 @@ interface WorkerEnv {
   [key: string]: unknown;
 }
 
+function withSecurityHeaders(response: Response): Response {
+  const headers = new Headers(response.headers);
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export default {
   async fetch(request: Request, env: WorkerEnv): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname.startsWith("/api/")) {
       const route = url.pathname.replace(/^\/api\/?/, "");
-      return onRequest({
+      const apiRes = await onRequest({
         request,
         env: env as unknown as Record<string, string | undefined>,
         params: { route },
       });
+      return withSecurityHeaders(apiRes);
     }
 
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+      const assetRes = await env.ASSETS.fetch(request);
+      return withSecurityHeaders(assetRes);
     }
 
-    return new Response("Not Found", { status: 404 });
+    return withSecurityHeaders(new Response("Not Found", { status: 404 }));
   },
 };

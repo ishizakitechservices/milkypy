@@ -14,6 +14,7 @@ import {
   Trash2,
   Code,
   UploadCloud,
+  BookOpen,
 } from "lucide-react";
 
 interface CodeEditorProps {
@@ -50,6 +51,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
 
   // Drag and Drop File Support
   const [isDragging, setIsDragging] = useState(false);
@@ -134,11 +136,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   }, [showAutocomplete, code]);
 
-  // Sync scroll between textarea and highlighted code pre
+  // Sync scroll between textarea, highlighted code pre, and line numbers gutter
   const handleScroll = () => {
     if (textareaRef.current && preRef.current) {
       preRef.current.scrollTop = textareaRef.current.scrollTop;
       preRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    }
+    if (textareaRef.current && lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
     }
     // Dismiss type hint overlay on scroll
     setTypeHintState(null);
@@ -506,6 +511,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
         <div className="flex items-center gap-1.5 shrink-0">
           <button
+            id="editor-btn-typehints"
+            type="button"
+            onClick={() => setShowTypeHintsModal(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#BFC4CE] hover:text-blue-600 dark:hover:text-[#8BBEFF] hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors cursor-pointer touch-target"
+            title="Python Built-ins & Type Hints Reference"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Built-ins</span>
+          </button>
+
+          <button
             id="editor-btn-copy"
             onClick={handleCopy}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6] hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors cursor-pointer touch-target"
@@ -541,7 +557,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       {/* Editor Body with Line Numbers & Code Canvas */}
       <div className="flex-1 relative font-mono text-sm leading-relaxed overflow-hidden flex bg-white dark:bg-[#08090D]">
         {/* Line Numbers Sidebar */}
-        <div className="w-11 py-3 bg-slate-50 dark:bg-[#08090D] border-r border-slate-200/80 dark:border-white/10 text-slate-400 dark:text-[#BFC4CE]/50 text-right pr-2.5 font-mono text-xs select-none shrink-0 overflow-hidden">
+        <div
+          ref={lineNumbersRef}
+          className="w-11 py-3 bg-slate-50 dark:bg-[#08090D] border-r border-slate-200/80 dark:border-white/10 text-slate-400 dark:text-[#BFC4CE]/50 text-right pr-2.5 font-mono text-xs select-none shrink-0 overflow-hidden"
+        >
           {lineNumbers.map((n) => (
             <div key={n} className="h-6 leading-6">
               {n}

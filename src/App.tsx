@@ -1,15 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { AppMode, ThemeMode, UserProgress, UserCloudFile } from "./types";
 import { Navbar } from "./components/Navbar";
-import { CurriculumView } from "./components/curriculum/CurriculumView";
 import { PlaygroundView } from "./components/PlaygroundView";
-import { GamesView } from "./components/GamesView";
-import { AIAssistPanel } from "./components/AIAssistPanel";
-import { StudentAuthModal } from "./components/StudentAuthModal";
 import { OfflineIndicator } from "./components/OfflineIndicator";
-import { initPyodide, getPyodideStatus } from "./lib/pyodideRunner";
+import { initPyodide } from "./lib/pyodideRunner";
 import { motion, AnimatePresence } from "motion/react";
-import { HelpCircle, Sparkles } from "lucide-react";
+
+const CurriculumView = lazy(() =>
+  import("./components/curriculum/CurriculumView").then((m) => ({
+    default: m.CurriculumView,
+  }))
+);
+const GamesView = lazy(() =>
+  import("./components/GamesView").then((m) => ({
+    default: m.GamesView,
+  }))
+);
+const AIAssistPanel = lazy(() =>
+  import("./components/AIAssistPanel").then((m) => ({
+    default: m.AIAssistPanel,
+  }))
+);
+const StudentAuthModal = lazy(() =>
+  import("./components/StudentAuthModal").then((m) => ({
+    default: m.StudentAuthModal,
+  }))
+);
 import {
   loadUserProgress,
   saveUserProgress,
@@ -336,7 +352,7 @@ export default function App() {
   }, [aiModalOpen, authModalOpen, mode]);
 
   return (
-    <div className={`min-h-screen font-sans ${theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
+    <div className={`min-h-screen flex flex-col font-sans ${theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
       {/* Navigation Header */}
       <Navbar
         mode={mode}
@@ -392,24 +408,40 @@ export default function App() {
           className="flex-1 flex flex-col min-h-0 pb-16 md:pb-0"
         >
           {mode === "study" ? (
-            <CurriculumView
-              progress={progress}
-              onUpdateProgress={handleUpdateProgress}
-              onOpenAiAssist={handleOpenAiAssist}
-              currentUser={currentUser}
-              onPracticeClick={(code: string) => {
-                setCurrentActiveCode(code);
-                setMode("playground");
-              }}
-            />
+            <Suspense
+              fallback={
+                <div className="flex-1 flex items-center justify-center p-8 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Loading Python curriculum...
+                </div>
+              }
+            >
+              <CurriculumView
+                progress={progress}
+                onUpdateProgress={handleUpdateProgress}
+                onOpenAiAssist={handleOpenAiAssist}
+                currentUser={currentUser}
+                onPracticeClick={(code: string) => {
+                  setCurrentActiveCode(code);
+                  setMode("playground");
+                }}
+              />
+            </Suspense>
           ) : mode === "games" ? (
-            <GamesView
-              onOpenAiAssist={handleOpenAiAssist}
-              onPracticeClick={(code: string) => {
-                setCurrentActiveCode(code);
-                setMode("playground");
-              }}
-            />
+            <Suspense
+              fallback={
+                <div className="flex-1 flex items-center justify-center p-8 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Loading Games Lab...
+                </div>
+              }
+            >
+              <GamesView
+                onOpenAiAssist={handleOpenAiAssist}
+                onPracticeClick={(code: string) => {
+                  setCurrentActiveCode(code);
+                  setMode("playground");
+                }}
+              />
+            </Suspense>
           ) : (
             <PlaygroundView
               activeCode={currentActiveCode}
@@ -429,21 +461,25 @@ export default function App() {
       </AnimatePresence>
 
       {/* Student Auth Modal */}
-      <StudentAuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        onLoginSuccess={handleLoginSuccess}
-      />
+      <Suspense fallback={null}>
+        <StudentAuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      </Suspense>
 
       {/* Slide-over Ask AI Assistant Sidebar Panel */}
-      <AIAssistPanel
-        isOpen={aiModalOpen}
-        onClose={() => setAiModalOpen(false)}
-        code={aiCode}
-        errorMessage={aiErrorMessage}
-        onApplyCode={handleApplyAiCode}
-        lessonContext={aiLessonContext}
-      />
+      <Suspense fallback={null}>
+        <AIAssistPanel
+          isOpen={aiModalOpen}
+          onClose={() => setAiModalOpen(false)}
+          code={aiCode}
+          errorMessage={aiErrorMessage}
+          onApplyCode={handleApplyAiCode}
+          lessonContext={aiLessonContext}
+        />
+      </Suspense>
 
       {/* Global Offline Network & Pyodide Cache Toast */}
       <OfflineIndicator />
