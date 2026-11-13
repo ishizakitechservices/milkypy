@@ -29,3 +29,40 @@ export function getApiUrl(path: string): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return base ? `${base}${normalizedPath}` : normalizedPath;
 }
+
+export async function fetchWithTimeout(
+  url: string,
+  options: RequestInit & { timeoutMs?: number; externalSignal?: AbortSignal } = {}
+): Promise<Response> {
+  const { timeoutMs = 18000, externalSignal, ...fetchOpts } = options;
+  const controller = new AbortController();
+  let timedOut = false;
+
+  const onExternalAbort = () => controller.abort();
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      controller.abort();
+    } else {
+      externalSignal.addEventListener("abort", onExternalAbort, { once: true });
+    }
+  }
+
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+
+  try {
+    return await fetch(url, { ...fetchOpts, signal: controller.signal });
+  } catch (err: any) {
+    if (timedOut) {
+      throw new Error(`AI request timed out after ${Math.round(timeoutMs / 1000)}s — using on-device tutor.`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+    if (externalSignal) {
+      externalSignal.removeEventListener("abort", onExternalAbort);
+    }
+  }
+}

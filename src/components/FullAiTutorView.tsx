@@ -39,7 +39,7 @@ import {
   clearAllAiChatSessions,
 } from "../lib/indexedDbStorage";
 import { getOfflineChatReply } from "../lib/offlineAiKnowledge";
-import { getApiUrl } from "../lib/apiConfig";
+import { getApiUrl, fetchWithTimeout } from "../lib/apiConfig";
 import { CodeEditor } from "./CodeEditor";
 import { runPythonCode, stopPythonExecution } from "../lib/pyodideRunner";
 import { ExecutionResult } from "../types";
@@ -129,6 +129,17 @@ print(greet("Learner"))
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const activeAbortRef = useRef<AbortController | null>(null);
+  const manualCancelRef = useRef(false);
+
+  const handleCancelAiRequest = () => {
+    manualCancelRef.current = true;
+    if (activeAbortRef.current) {
+      activeAbortRef.current.abort();
+      activeAbortRef.current = null;
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -199,6 +210,11 @@ print(greet("Learner"))
     const query = (textToSend || chatInput).trim();
     if (!query || loading) return;
 
+    if (activeAbortRef.current) activeAbortRef.current.abort();
+    manualCancelRef.current = false;
+    const controller = new AbortController();
+    activeAbortRef.current = controller;
+
     const userMsg = { role: "user" as const, text: query };
     const newMessages = [...chatMessages, userMsg];
     setChatMessages(newMessages);
@@ -216,16 +232,18 @@ print(greet("Learner"))
       if (!isOnline) {
         botResponse = getOfflineChatReply(query, sandboxCode);
       } else {
-        const res = await fetch(getApiUrl("/api/ai/chat"), {
+        const res = await fetchWithTimeout(getApiUrl("/api/ai/chat"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: newMessages,
+            messages: newMessages.slice(-14),
             code: sandboxCode,
             currentCode: sandboxCode,
             systemInstruction:
               "You are Milky, an extraordinarily patient, friendly, and pedagogical Python tutor for beginners. Always explain concepts thoroughly in plain English using real-world intuition BEFORE introducing code syntax. Follow the Term-Before-Explanation rule. Break complex ideas down into clear steps. When you provide code, keep it clean and minimal, and walk through what each line does. Never use emojis.",
           }),
+          timeoutMs: 18000,
+          externalSignal: controller.signal,
         });
         const contentType = res.headers.get("content-type") || "";
         if (!contentType.includes("application/json")) {
@@ -256,6 +274,7 @@ print(greet("Learner"))
       });
       loadChatSessions();
     } catch (err: any) {
+      if (manualCancelRef.current) return;
       const reason = err?.message ? `> **Note:** ${err.message}\n\n` : "";
       const fallback = reason + getOfflineChatReply(query, sandboxCode);
       const finalMessages = [
@@ -264,6 +283,7 @@ print(greet("Learner"))
       ];
       setChatMessages(finalMessages);
     } finally {
+      if (activeAbortRef.current === controller) activeAbortRef.current = null;
       setLoading(false);
     }
   };
@@ -607,11 +627,21 @@ print(greet("Learner"))
                   <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 mt-0.5 animate-pulse">
                     <Sparkles className="w-4 h-4 text-amber-300" />
                   </div>
-                  <div className="bg-slate-800 border border-slate-700 p-4 rounded-2xl rounded-tl-xs text-slate-400 flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" />
-                    <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:0.2s]" />
-                    <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:0.4s]" />
-                    <span className="text-xs ml-1">Milky is crafting a step-by-step explanation...</span>
+                  <div className="bg-slate-800 border border-slate-700 p-3.5 rounded-2xl rounded-tl-xs text-slate-300 flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" />
+                      <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:0.2s]" />
+                      <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:0.4s]" />
+                    </div>
+                    <span className="text-xs">Milky is crafting a step-by-step explanation...</span>
+                    <button
+                      type="button"
+                      onClick={handleCancelAiRequest}
+                      className="px-2.5 py-1 rounded-lg bg-rose-600/20 hover:bg-rose-600/35 text-rose-300 border border-rose-500/30 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    >
+                      <Square className="w-2.5 h-2.5 fill-current" />
+                      <span>Cancel</span>
+                    </button>
                   </div>
                 </div>
               )}
@@ -645,14 +675,26 @@ print(greet("Learner"))
                   className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-hidden resize-none p-1.5"
                 />
 
-                <button
-                  type="submit"
-                  disabled={loading || !chatInput.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer shrink-0"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Ask Tutor</span>
-                </button>
+                {loading ? (
+                  <button
+                    type="button"
+                    onClick={handleCancelAiRequest}
+                    className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer shrink-0"
+                    title="Stop AI response"
+                  >
+                    <Square className="w-3.5 h-3.5 fill-white" />
+                    <span className="hidden sm:inline">Stop</span>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!chatInput.trim()}
+                    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer shrink-0"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Ask Tutor</span>
+                  </button>
+                )}
               </form>
 
               <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">

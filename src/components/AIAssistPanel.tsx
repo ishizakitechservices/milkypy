@@ -23,6 +23,7 @@ import {
   Clock,
   WifiOff,
   Wifi,
+  Square,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "motion/react";
@@ -38,7 +39,7 @@ import {
   explainOfflineCode,
   getOfflineChatReply,
 } from "../lib/offlineAiKnowledge";
-import { getApiUrl } from "../lib/apiConfig";
+import { getApiUrl, fetchWithTimeout } from "../lib/apiConfig";
 
 interface AIAssistPanelProps {
   isOpen: boolean;
@@ -86,6 +87,26 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
   const [isOnline, setIsOnline] = useState<boolean>(() =>
     typeof navigator !== "undefined" ? navigator.onLine : true
   );
+  const activeAbortRef = useRef<AbortController | null>(null);
+  const manualCancelRef = useRef(false);
+
+  const handleCancelAiRequest = () => {
+    manualCancelRef.current = true;
+    if (activeAbortRef.current) {
+      activeAbortRef.current.abort();
+      activeAbortRef.current = null;
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (!isOpen && activeAbortRef.current) {
+      manualCancelRef.current = true;
+      activeAbortRef.current.abort();
+      activeAbortRef.current = null;
+      setLoading(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -192,10 +213,13 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
   // Trigger Debug Request
   const handleDebug = async () => {
+    if (activeAbortRef.current) activeAbortRef.current.abort();
+    manualCancelRef.current = false;
+    const controller = new AbortController();
+    activeAbortRef.current = controller;
     setLoading(true);
     setErrorText(null);
 
-    // If offline, use instant on-device Python error diagnoser
     if (!navigator.onLine) {
       const localResult = diagnoseOfflineError(code, errorMessage);
       setDebugResult(localResult);
@@ -204,10 +228,12 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     }
 
     try {
-      const res = await fetch(getApiUrl("/api/ai/debug"), {
+      const res = await fetchWithTimeout(getApiUrl("/api/ai/debug"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, errorMessage }),
+        timeoutMs: 18000,
+        externalSignal: controller.signal,
       });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
@@ -218,41 +244,51 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         setDebugResult(data);
       } else {
         setErrorText(data.error || "Cloud AI unavailable — showing on-device Python diagnoser.");
-        const localResult = diagnoseOfflineError(code, errorMessage);
-        setDebugResult(localResult);
+        setDebugResult(diagnoseOfflineError(code, errorMessage));
       }
     } catch (e: any) {
+      if (manualCancelRef.current) return;
       setErrorText(e?.message || "Cloud AI unavailable — showing on-device Python diagnoser.");
-      const localResult = diagnoseOfflineError(code, errorMessage);
-      setDebugResult(localResult);
+      setDebugResult(diagnoseOfflineError(code, errorMessage));
     } finally {
+      if (activeAbortRef.current === controller) activeAbortRef.current = null;
       setLoading(false);
     }
   };
 
   // Trigger Comment Addition
   const handleAddComments = async () => {
+    if (activeAbortRef.current) activeAbortRef.current.abort();
+    manualCancelRef.current = false;
+    const controller = new AbortController();
+    activeAbortRef.current = controller;
     setLoading(true);
     setErrorText(null);
 
-    if (!navigator.onLine) {
+    const buildOfflineComments = () => {
       const lines = code.split("\n");
       const commented = lines
         .map((l) => (l.trim() && !l.trim().startsWith("#") ? `  # Step: ${l.trim().slice(0, 36)}\n${l}` : l))
         .join("\n");
-      setCommentResult({
+      return {
         commentedCode: commented,
         summary: "[Offline Mode] Added Python structural comments locally.",
-      });
+      };
+    };
+
+    if (!navigator.onLine) {
+      setCommentResult(buildOfflineComments());
       setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch(getApiUrl("/api/ai/add-comments"), {
+      const res = await fetchWithTimeout(getApiUrl("/api/ai/add-comments"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
+        timeoutMs: 18000,
+        externalSignal: controller.signal,
       });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
@@ -263,47 +299,40 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         setCommentResult(data);
       } else {
         setErrorText(data.error || "Cloud AI unavailable — showing offline structural comments.");
-        const lines = code.split("\n");
-        const commented = lines
-          .map((l) => (l.trim() && !l.trim().startsWith("#") ? `  # Step: ${l.trim().slice(0, 36)}\n${l}` : l))
-          .join("\n");
-        setCommentResult({
-          commentedCode: commented,
-          summary: "[Offline Mode] Added Python structural comments locally.",
-        });
+        setCommentResult(buildOfflineComments());
       }
     } catch (e: any) {
+      if (manualCancelRef.current) return;
       setErrorText(e?.message || "Cloud AI unavailable — showing offline structural comments.");
-      const lines = code.split("\n");
-      const commented = lines
-        .map((l) => (l.trim() && !l.trim().startsWith("#") ? `  # Step: ${l.trim().slice(0, 36)}\n${l}` : l))
-        .join("\n");
-      setCommentResult({
-        commentedCode: commented,
-        summary: "[Offline Mode] Added Python structural comments locally.",
-      });
+      setCommentResult(buildOfflineComments());
     } finally {
+      if (activeAbortRef.current === controller) activeAbortRef.current = null;
       setLoading(false);
     }
   };
 
   // Trigger Code Explanation
   const handleExplain = async () => {
+    if (activeAbortRef.current) activeAbortRef.current.abort();
+    manualCancelRef.current = false;
+    const controller = new AbortController();
+    activeAbortRef.current = controller;
     setLoading(true);
     setErrorText(null);
 
     if (!navigator.onLine) {
-      const localResult = explainOfflineCode(code);
-      setExplainResult(localResult);
+      setExplainResult(explainOfflineCode(code));
       setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch(getApiUrl("/api/ai/explain"), {
+      const res = await fetchWithTimeout(getApiUrl("/api/ai/explain"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
+        timeoutMs: 18000,
+        externalSignal: controller.signal,
       });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
@@ -314,20 +343,24 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         setExplainResult(data);
       } else {
         setErrorText(data.error || "Cloud AI unavailable — showing offline explanation.");
-        const localResult = explainOfflineCode(code);
-        setExplainResult(localResult);
+        setExplainResult(explainOfflineCode(code));
       }
     } catch (e: any) {
+      if (manualCancelRef.current) return;
       setErrorText(e?.message || "Cloud AI unavailable — showing offline explanation.");
-      const localResult = explainOfflineCode(code);
-      setExplainResult(localResult);
+      setExplainResult(explainOfflineCode(code));
     } finally {
+      if (activeAbortRef.current === controller) activeAbortRef.current = null;
       setLoading(false);
     }
   };
 
   // Trigger Hint Generation
   const handleGetHint = async () => {
+    if (activeAbortRef.current) activeAbortRef.current.abort();
+    manualCancelRef.current = false;
+    const controller = new AbortController();
+    activeAbortRef.current = controller;
     setLoading(true);
     setErrorText(null);
 
@@ -341,7 +374,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     }
 
     try {
-      const res = await fetch(getApiUrl("/api/ai/hint"), {
+      const res = await fetchWithTimeout(getApiUrl("/api/ai/hint"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -350,6 +383,8 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           targetOutput: lessonContext?.expectedOutput,
           currentCode: code,
         }),
+        timeoutMs: 18000,
+        externalSignal: controller.signal,
       });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
@@ -366,12 +401,14 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         });
       }
     } catch (e: any) {
+      if (manualCancelRef.current) return;
       setErrorText(e?.message || "Cloud AI unavailable — showing offline hint.");
       setHintResult({
         hint: `[Offline Hint] Check the lesson description carefully: ${lessonContext?.description || "verify expected output"}.`,
         conceptToReview: lessonContext?.title || "Python Basics",
       });
     } finally {
+      if (activeAbortRef.current === controller) activeAbortRef.current = null;
       setLoading(false);
     }
   };
@@ -380,6 +417,11 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     if (e) e.preventDefault();
     if (!chatInput.trim() || loading) return;
 
+    if (activeAbortRef.current) activeAbortRef.current.abort();
+    manualCancelRef.current = false;
+    const controller = new AbortController();
+    activeAbortRef.current = controller;
+
     const userText = chatInput.trim();
     const newMessages = [...chatMessages, { role: 'user' as const, text: userText }];
     setChatMessages(newMessages);
@@ -387,7 +429,6 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     setLoading(true);
     setErrorText(null);
 
-    // If offline, use offline Python handbook reply
     if (!navigator.onLine) {
       const offlineReply = getOfflineChatReply(userText, code);
       const finalMessages = [...newMessages, { role: "model" as const, text: offlineReply }];
@@ -412,14 +453,16 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     }
 
     try {
-      const res = await fetch(getApiUrl("/api/ai/chat"), {
+      const res = await fetchWithTimeout(getApiUrl("/api/ai/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: newMessages,
+          messages: newMessages.slice(-14),
           code,
           lessonContext,
         }),
+        timeoutMs: 18000,
+        externalSignal: controller.signal,
       });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
@@ -431,14 +474,12 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         const finalMessages = [...newMessages, { role: "model" as const, text: replyText }];
         setChatMessages(finalMessages);
 
-        // Compute title if default
         let updatedTitle = activeSessionTitle;
         if (updatedTitle === "New Conversation" || !updatedTitle) {
           updatedTitle = userText.length > 36 ? userText.substring(0, 36) + "..." : userText;
           setActiveSessionTitle(updatedTitle);
         }
 
-        // Save to IndexedDB
         saveAiChatSession({
           id: activeSessionId,
           title: updatedTitle,
@@ -451,15 +492,15 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       } else {
         setErrorText(data.error || "Cloud AI unavailable — using on-device Python handbook.");
         const offlineReply = getOfflineChatReply(userText, code);
-        const finalMessages = [...newMessages, { role: "model" as const, text: offlineReply }];
-        setChatMessages(finalMessages);
+        setChatMessages([...newMessages, { role: "model" as const, text: offlineReply }]);
       }
     } catch (e: any) {
+      if (manualCancelRef.current) return;
       setErrorText(e?.message || "Cloud AI unavailable — using on-device Python handbook.");
       const offlineReply = getOfflineChatReply(userText, code);
-      const finalMessages = [...newMessages, { role: "model" as const, text: offlineReply }];
-      setChatMessages(finalMessages);
+      setChatMessages([...newMessages, { role: "model" as const, text: offlineReply }]);
     } finally {
+      if (activeAbortRef.current === controller) activeAbortRef.current = null;
       setLoading(false);
     }
   };
@@ -842,9 +883,19 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                       ))
                     )}
                     {loading && (
-                      <div className="flex items-center gap-2 text-slate-500 text-xs ml-2">
-                        <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Milky is thinking...</span>
+                      <div className="flex items-center justify-between gap-2 text-slate-500 text-xs ml-2 p-2 rounded-lg bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+                        <div className="flex items-center gap-2">
+                          <RotateCcw className="w-3.5 h-3.5 animate-spin text-blue-500" />
+                          <span>Milky is thinking...</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCancelAiRequest}
+                          className="px-2 py-1 rounded-md bg-rose-600/15 hover:bg-rose-600/25 text-rose-600 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Square className="w-2.5 h-2.5 fill-current" />
+                          <span>Cancel</span>
+                        </button>
                       </div>
                     )}
                     <div ref={chatEndRef} />
@@ -867,13 +918,24 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                         }
                       }}
                     />
-                    <button
-                      type="submit"
-                      disabled={loading || !chatInput.trim()}
-                      className="p-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:opacity-50 text-white transition-colors cursor-pointer shrink-0"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
+                    {loading ? (
+                      <button
+                        type="button"
+                        onClick={handleCancelAiRequest}
+                        className="p-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer shrink-0"
+                        title="Cancel AI response"
+                      >
+                        <Square className="w-4 h-4 fill-white" />
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        disabled={!chatInput.trim()}
+                        className="p-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:opacity-50 text-white transition-colors cursor-pointer shrink-0"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    )}
                   </form>
                 </>
               )}
@@ -895,18 +957,33 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   </div>
                 )}
 
-                <button
-                  onClick={handleDebug}
-                  disabled={loading}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                >
-                  {loading ? (
-                    <RotateCcw className="w-4 h-4 animate-spin" />
-                  ) : (
+                {loading ? (
+                  <div className="flex gap-2">
+                    <button
+                      disabled
+                      className="flex-1 py-2 bg-blue-500/80 text-white rounded-lg font-bold flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4 animate-spin" />
+                      <span>Analyzing Code...</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelAiRequest}
+                      className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Square className="w-3.5 h-3.5 fill-white" />
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleDebug}
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                  >
                     <Bug className="w-4 h-4" />
-                  )}
-                  <span>{loading ? "Analyzing Code..." : "Run AI Debugger"}</span>
-                </button>
+                    <span>Run AI Debugger</span>
+                  </button>
+                )}
               </div>
 
               {debugResult && (
@@ -956,18 +1033,33 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   Adds line-by-line educational Python <span className="font-mono text-blue-600 dark:text-blue-400"># comments</span> to guide learners step-by-step.
                 </p>
 
-                <button
-                  onClick={handleAddComments}
-                  disabled={loading}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                >
-                  {loading ? (
-                    <RotateCcw className="w-4 h-4 animate-spin" />
-                  ) : (
+                {loading ? (
+                  <div className="flex gap-2">
+                    <button
+                      disabled
+                      className="flex-1 py-2 bg-blue-500/80 text-white rounded-lg font-bold flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4 animate-spin" />
+                      <span>Generating Comments...</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelAiRequest}
+                      className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Square className="w-3.5 h-3.5 fill-white" />
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleAddComments}
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                  >
                     <MessageSquare className="w-4 h-4" />
-                  )}
-                  <span>{loading ? "Generating Comments..." : "Add Educational Comments"}</span>
-                </button>
+                    <span>Add Educational Comments</span>
+                  </button>
+                )}
               </div>
 
               {commentResult && (
@@ -1005,18 +1097,33 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   Translates code logic into beginner-friendly plain English breakdown.
                 </p>
 
-                <button
-                  onClick={handleExplain}
-                  disabled={loading}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-400 dark:disabled:bg-slate-700 text-white rounded font-medium flex items-center justify-center gap-2 transition-colors"
-                >
-                  {loading ? (
-                    <RotateCcw className="w-4 h-4 animate-spin" />
-                  ) : (
+                {loading ? (
+                  <div className="flex gap-2">
+                    <button
+                      disabled
+                      className="flex-1 py-2 bg-blue-500/80 text-white rounded font-medium flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4 animate-spin" />
+                      <span>Explaining Code...</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelAiRequest}
+                      className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Square className="w-3.5 h-3.5 fill-white" />
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleExplain}
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
                     <HelpCircle className="w-4 h-4" />
-                  )}
-                  <span>{loading ? "Explaining Code..." : "Explain Code"}</span>
-                </button>
+                    <span>Explain Code</span>
+                  </button>
+                )}
               </div>
 
               {explainResult && (
@@ -1064,18 +1171,33 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   Get a helpful nudge on your current lesson exercise without spoiling the answer.
                 </p>
 
-                <button
-                  onClick={handleGetHint}
-                  disabled={loading}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-400 dark:disabled:bg-slate-700 text-white rounded font-medium flex items-center justify-center gap-2 transition-colors"
-                >
-                  {loading ? (
-                    <RotateCcw className="w-4 h-4 animate-spin" />
-                  ) : (
+                {loading ? (
+                  <div className="flex gap-2">
+                    <button
+                      disabled
+                      className="flex-1 py-2 bg-blue-500/80 text-white rounded font-medium flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4 animate-spin" />
+                      <span>Thinking...</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelAiRequest}
+                      className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Square className="w-3.5 h-3.5 fill-white" />
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleGetHint}
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
                     <Lightbulb className="w-4 h-4" />
-                  )}
-                  <span>{loading ? "Thinking..." : "Ask AI for Hint"}</span>
-                </button>
+                    <span>Ask AI for Hint</span>
+                  </button>
+                )}
               </div>
 
               {hintResult && (

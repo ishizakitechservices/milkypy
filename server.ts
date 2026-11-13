@@ -9,7 +9,7 @@ import { spawn } from "child_process";
 import { createServer as createViteServer } from "vite";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where } from "firebase/firestore";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 const app = express();
 const PORT = 3000;
@@ -127,7 +127,78 @@ function cleanAndParseJson(text: string): any {
     clean = clean.replace(/^```(?:json)?\n?/i, "");
     clean = clean.replace(/\n?```$/, "");
   }
-  return JSON.parse(clean.trim());
+  clean = clean.trim();
+  try {
+    return JSON.parse(clean);
+  } catch {
+    const objStart = clean.indexOf("{");
+    const objEnd = clean.lastIndexOf("}");
+    if (objStart !== -1 && objEnd > objStart) {
+      return JSON.parse(clean.slice(objStart, objEnd + 1));
+    }
+    const arrStart = clean.indexOf("[");
+    const arrEnd = clean.lastIndexOf("]");
+    if (arrStart !== -1 && arrEnd > arrStart) {
+      return JSON.parse(clean.slice(arrStart, arrEnd + 1));
+    }
+    throw new Error("Invalid JSON response from AI.");
+  }
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${Math.round(ms / 1000)}s.`));
+    }, ms);
+    promise.then(
+      (val) => {
+        clearTimeout(timer);
+        resolve(val);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
+function normalizeGeminiContents(
+  messages?: Array<{ role: string; text: string }>,
+  prompt?: string
+): Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> {
+  const raw: Array<{ role: "user" | "model"; text: string }> = [];
+  const recentMessages = (messages || []).slice(-14);
+  for (const m of recentMessages) {
+    const text = (m?.text || "").trim();
+    if (!text) continue;
+    const role: "user" | "model" =
+      m.role === "assistant" || m.role === "model" ? "model" : "user";
+    raw.push({ role, text });
+  }
+  if (prompt && prompt.trim()) {
+    raw.push({ role: "user", text: prompt.trim() });
+  }
+
+  // Gemini requires contents to start with a user turn and alternate cleanly
+  while (raw.length > 0 && raw[0].role !== "user") {
+    raw.shift();
+  }
+
+  const merged: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
+  for (const item of raw) {
+    const prev = merged[merged.length - 1];
+    if (prev && prev.role === item.role) {
+      prev.parts[0].text = `${prev.parts[0].text}\n\n${item.text}`;
+    } else {
+      merged.push({ role: item.role, parts: [{ text: item.text }] });
+    }
+  }
+
+  if (merged.length === 0) {
+    merged.push({ role: "user", parts: [{ text: "Hello" }] });
+  }
+  return merged;
 }
 
 // Smart In-Memory Cache for zero-cost repeated queries
@@ -166,49 +237,52 @@ async function callGeminiDirect(options: {
     },
   });
 
-  const contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
-  if (options.messages && options.messages.length > 0) {
-    for (const m of options.messages) {
-      if (!m.text) continue;
-      contents.push({
-        role: m.role === "assistant" || m.role === "model" ? "model" : "user",
-        parts: [{ text: m.text }],
-      });
+  const contents = normalizeGeminiContents(options.messages, options.prompt);
+
+  const modelCandidates: Array<{ model: string; thinkingLevel: ThinkingLevel; timeoutMs: number }> = [
+    { model: "gemini-4-hydrogen", thinkingLevel: ThinkingLevel.LOW, timeoutMs: 14000 },
+    { model: "gemini-3.1-flash-lite", thinkingLevel: ThinkingLevel.MINIMAL, timeoutMs: 12000 },
+  ];
+
+  let lastErr: Error | null = null;
+  for (const candidate of modelCandidates) {
+    const controller = new AbortController();
+    try {
+      const response = await withTimeout(
+        ai.models.generateContent({
+          model: candidate.model,
+          contents,
+          config: {
+            abortSignal: controller.signal,
+            ...(options.systemInstruction ? { systemInstruction: options.systemInstruction } : {}),
+            thinkingConfig: { thinkingLevel: candidate.thinkingLevel },
+            ...(options.responseType === "json" ? { responseMimeType: "application/json" } : {}),
+          },
+        }),
+        candidate.timeoutMs,
+        `Gemini (${candidate.model})`
+      );
+
+      const content = response.text || "";
+      if (!content.trim()) {
+        throw new Error(`Empty response returned from Gemini (${candidate.model}).`);
+      }
+
+      if (options.responseType === "json") {
+        return cleanAndParseJson(content);
+      }
+      return { text: content };
+    } catch (err: any) {
+      controller.abort();
+      lastErr = err instanceof Error ? err : new Error(String(err));
+      console.warn(`[Gemini ${candidate.model} fallback]:`, lastErr.message);
     }
   }
-  if (options.prompt) {
-    contents.push({
-      role: "user",
-      parts: [{ text: options.prompt }],
-    });
-  }
-  if (contents.length === 0) {
-    contents.push({ role: "user", parts: [{ text: "Hello" }] });
-  }
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
-    contents,
-    config: {
-      ...(options.systemInstruction ? { systemInstruction: options.systemInstruction } : {}),
-      temperature: 0.3,
-      maxOutputTokens: Math.min(options.maxTokens || 800, 2048),
-      ...(options.responseType === "json" ? { responseMimeType: "application/json" } : {}),
-    },
-  });
-
-  const content = response.text || "";
-  if (!content) {
-    throw new Error("Empty response returned from Gemini API.");
-  }
-
-  if (options.responseType === "json") {
-    return cleanAndParseJson(content);
-  }
-  return { text: content };
+  throw lastErr || new Error("Gemini API request failed.");
 }
 
-// OpenAI-Compatible Caller (DeepSeek / Groq fallback)
+// OpenAI-Compatible Caller (DeepSeek primary / Groq fallback)
 async function callOpenAiCompatible(options: {
   endpoint: string;
   model: string;
@@ -220,19 +294,29 @@ async function callOpenAiCompatible(options: {
   maxTokens?: number;
 }): Promise<any> {
   const formattedMessages: Array<{ role: string; content: string }> = [];
-  if (options.systemInstruction) {
-    formattedMessages.push({ role: "system", content: options.systemInstruction });
+  let systemContent = options.systemInstruction || "";
+  if (
+    options.responseType === "json" &&
+    !systemContent.toLowerCase().includes("json") &&
+    !options.prompt.toLowerCase().includes("json")
+  ) {
+    systemContent = `${systemContent ? systemContent + "\n" : ""}Respond ONLY in valid JSON.`;
+  }
+  if (systemContent) {
+    formattedMessages.push({ role: "system", content: systemContent });
   }
   if (options.messages && options.messages.length > 0) {
-    for (const m of options.messages) {
+    for (const m of options.messages.slice(-14)) {
+      const text = (m.text || "").trim();
+      if (!text) continue;
       formattedMessages.push({
         role: m.role === "model" || m.role === "assistant" ? "assistant" : "user",
-        content: m.text,
+        content: text,
       });
     }
   }
-  if (options.prompt) {
-    formattedMessages.push({ role: "user", content: options.prompt });
+  if (options.prompt && options.prompt.trim()) {
+    formattedMessages.push({ role: "user", content: options.prompt.trim() });
   }
   if (formattedMessages.length === 0) {
     formattedMessages.push({ role: "user", content: "Hello" });
@@ -242,21 +326,29 @@ async function callOpenAiCompatible(options: {
     model: options.model,
     messages: formattedMessages,
     temperature: 0.25,
-    max_tokens: Math.min(options.maxTokens || 700, 1500),
+    max_tokens: Math.min(options.maxTokens || 900, 2000),
   };
 
   if (options.responseType === "json") {
     payload.response_format = { type: "json_object" };
   }
 
-  const resp = await fetch(options.endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${options.apiKey}`,
-    },
-    body: JSON.stringify(payload),
-  });
+  const controller = new AbortController();
+  const timeoutTimer = setTimeout(() => controller.abort(), 15000);
+  let resp: Response;
+  try {
+    resp = await fetch(options.endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${options.apiKey}`,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutTimer);
+  }
 
   if (!resp.ok) {
     const errText = await resp.text();
@@ -265,13 +357,16 @@ async function callOpenAiCompatible(options: {
 
   const data = await resp.json();
   const content = data.choices?.[0]?.message?.content || "";
+  if (!content.trim()) {
+    throw new Error(`Empty response returned from ${options.model}.`);
+  }
   if (options.responseType === "json") {
     return cleanAndParseJson(content);
   }
   return { text: content };
 }
 
-// Unified AI Engine (Gemini primary, with DeepSeek and Groq support)
+// Unified AI Engine (DeepSeek primary when DEEPSEEK_API_KEY is set, with Gemini & Groq fallback)
 async function callPlatformAi(options: {
   cacheKeyPrefix: string;
   systemInstruction?: string;
@@ -291,25 +386,11 @@ async function callPlatformAi(options: {
     return { ...cached.data, _fromCache: true };
   }
 
-  const geminiKey = (process.env.GEMINI_API_KEY || "").trim();
   const deepseekKey = (process.env.DEEPSEEK_API_KEY || "").trim();
+  const geminiKey = (process.env.GEMINI_API_KEY || "").trim();
   const groqKey = (process.env.GROQ_API_KEY || "").trim();
 
   const errors: string[] = [];
-
-  if (geminiKey && geminiKey !== "your_gemini_api_key_here") {
-    try {
-      const result = await callGeminiDirect({
-        ...options,
-        apiKey: geminiKey,
-      });
-      aiResponseCache.set(cacheKey, { data: result, timestamp: Date.now() });
-      return { ...result, _engine: "gemini" };
-    } catch (err: any) {
-      console.warn("[Gemini AI Error]:", err?.message || err);
-      errors.push(`Gemini: ${err?.message || err}`);
-    }
-  }
 
   if (deepseekKey && deepseekKey !== "your_deepseek_api_key_here") {
     try {
@@ -324,6 +405,20 @@ async function callPlatformAi(options: {
     } catch (err: any) {
       console.warn("[DeepSeek AI Error]:", err?.message || err);
       errors.push(`DeepSeek: ${err?.message || err}`);
+    }
+  }
+
+  if (geminiKey && geminiKey !== "your_gemini_api_key_here") {
+    try {
+      const result = await callGeminiDirect({
+        ...options,
+        apiKey: geminiKey,
+      });
+      aiResponseCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return { ...result, _engine: "gemini" };
+    } catch (err: any) {
+      console.warn("[Gemini AI Error]:", err?.message || err);
+      errors.push(`Gemini: ${err?.message || err}`);
     }
   }
 
@@ -345,7 +440,7 @@ async function callPlatformAi(options: {
 
   if (errors.length === 0) {
     const missingErr: any = new Error(
-      "No AI API key configured on the server. Set GEMINI_API_KEY (or DEEPSEEK_API_KEY / GROQ_API_KEY) in environment variables."
+      "No AI API key configured on the server. Set DEEPSEEK_API_KEY (or GEMINI_API_KEY / GROQ_API_KEY) in environment variables."
     );
     missingErr.missingApiKey = true;
     throw missingErr;
@@ -465,12 +560,12 @@ app.post("/api/py/run", (req, res) => {
 
 // API Routes
 app.get("/api/health", (_req, res) => {
-  const aiConfigured = Boolean(
-    (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "your_gemini_api_key_here") ||
-      (process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_API_KEY !== "your_deepseek_api_key_here") ||
-      (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== "your_groq_api_key_here")
-  );
-  res.json({ status: "ok", runtime: "node-express", aiConfigured, timestamp: Date.now() });
+  const hasDeepseek = Boolean(process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_API_KEY !== "your_deepseek_api_key_here");
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "your_gemini_api_key_here");
+  const hasGroq = Boolean(process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== "your_groq_api_key_here");
+  const aiConfigured = hasDeepseek || hasGemini || hasGroq;
+  const primaryProvider = hasDeepseek ? "deepseek" : hasGemini ? "gemini" : hasGroq ? "groq" : "none";
+  res.json({ status: "ok", runtime: "node-express", aiConfigured, primaryProvider, timestamp: Date.now() });
 });
 
 async function getUserFilesFromFirestore(userId: string): Promise<StoredCloudFile[]> {

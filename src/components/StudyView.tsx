@@ -41,7 +41,7 @@ import { runPythonCode, stopPythonExecution } from "../lib/pyodideRunner";
 import { CodeEditor } from "./CodeEditor";
 import { motion, AnimatePresence } from "motion/react";
 import { DynamicQuizQuestion, generateRandomQuiz } from "../lib/quizGenerator";
-import { getApiUrl } from "../lib/apiConfig";
+import { getApiUrl, fetchWithTimeout } from "../lib/apiConfig";
 
 interface StudyViewProps {
   progress: UserProgress;
@@ -416,7 +416,7 @@ export const StudyView: React.FC<StudyViewProps> = ({
 
     try {
       if (typeof navigator !== "undefined" && navigator.onLine) {
-        const res = await fetch(getApiUrl("/api/ai/quiz"), {
+        const res = await fetchWithTimeout(getApiUrl("/api/ai/quiz"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -425,6 +425,7 @@ export const StudyView: React.FC<StudyViewProps> = ({
             lessonConcept: lesson.concept || lesson.plainEnglish,
             difficulty: diffParam,
           }),
+          timeoutMs: 12000,
         });
         const ct = res.headers.get("content-type") || "";
         if (ct.includes("application/json")) {

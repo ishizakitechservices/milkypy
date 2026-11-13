@@ -46,7 +46,56 @@ function cleanAndParseJson(text: string): any {
     clean = clean.replace(/^```(?:json)?\n?/i, "");
     clean = clean.replace(/\n?```$/, "");
   }
-  return JSON.parse(clean.trim());
+  clean = clean.trim();
+  try {
+    return JSON.parse(clean);
+  } catch {
+    const objStart = clean.indexOf("{");
+    const objEnd = clean.lastIndexOf("}");
+    if (objStart !== -1 && objEnd > objStart) {
+      return JSON.parse(clean.slice(objStart, objEnd + 1));
+    }
+    const arrStart = clean.indexOf("[");
+    const arrEnd = clean.lastIndexOf("]");
+    if (arrStart !== -1 && arrEnd > arrStart) {
+      return JSON.parse(clean.slice(arrStart, arrEnd + 1));
+    }
+    throw new Error("Invalid JSON response returned from AI.");
+  }
+}
+
+function normalizeGeminiContentsEdge(
+  messages?: Array<{ role: string; text: string }>,
+  prompt?: string
+): Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> {
+  const raw: Array<{ role: "user" | "model"; text: string }> = [];
+  for (const m of (messages || []).slice(-14)) {
+    const text = (m?.text || "").trim();
+    if (!text) continue;
+    raw.push({
+      role: m.role === "assistant" || m.role === "model" ? "model" : "user",
+      text,
+    });
+  }
+  if (prompt && prompt.trim()) {
+    raw.push({ role: "user", text: prompt.trim() });
+  }
+  while (raw.length > 0 && raw[0].role !== "user") {
+    raw.shift();
+  }
+  const merged: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
+  for (const item of raw) {
+    const prev = merged[merged.length - 1];
+    if (prev && prev.role === item.role) {
+      prev.parts[0].text = `${prev.parts[0].text}\n\n${item.text}`;
+    } else {
+      merged.push({ role: item.role, parts: [{ text: item.text }] });
+    }
+  }
+  if (merged.length === 0) {
+    merged.push({ role: "user", parts: [{ text: "Hello" }] });
+  }
+  return merged;
 }
 
 // =====================================================================
@@ -191,7 +240,7 @@ async function fsQueryFilesByUser(userId: string): Promise<any[]> {
 }
 
 // =====================================================================
-// Edge AI Providers (Gemini primary + DeepSeek & Groq fallback)
+// Edge AI Providers (DeepSeek primary + Gemini & Groq fallback)
 // =====================================================================
 
 async function callGeminiEdge(options: {
@@ -202,65 +251,80 @@ async function callGeminiEdge(options: {
   responseType?: "json" | "text";
   maxTokens?: number;
 }): Promise<any> {
-  const contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
-  if (options.messages && options.messages.length > 0) {
-    for (const m of options.messages) {
-      if (!m.text) continue;
-      contents.push({
-        role: m.role === "assistant" || m.role === "model" ? "model" : "user",
-        parts: [{ text: m.text }],
-      });
+  const contents = normalizeGeminiContentsEdge(options.messages, options.prompt);
+
+  const candidates: Array<{ model: string; thinkingLevel: "LOW" | "MINIMAL"; timeoutMs: number }> = [
+    { model: "gemini-4-hydrogen", thinkingLevel: "LOW", timeoutMs: 12000 },
+    { model: "gemini-3.1-flash-lite", thinkingLevel: "MINIMAL", timeoutMs: 11000 },
+  ];
+
+  let lastErr: Error | null = null;
+  for (const candidate of candidates) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), candidate.timeoutMs);
+    try {
+      const body: any = {
+        contents,
+        generationConfig: {
+          thinkingConfig: { thinkingLevel: candidate.thinkingLevel },
+          ...(options.responseType === "json" ? { responseMimeType: "application/json" } : {}),
+        },
+      };
+
+      if (options.systemInstruction) {
+        body.systemInstruction = { parts: [{ text: options.systemInstruction }] };
+      }
+
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${candidate.model}:generateContent?key=${encodeURIComponent(
+          options.apiKey
+        )}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "aistudio-build",
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        }
+      );
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(`Gemini API (${candidate.model} ${resp.status}): ${errText}`);
+      }
+
+      const data: any = await resp.json();
+      const parts: any[] = data?.candidates?.[0]?.content?.parts || [];
+      const content =
+        parts
+          .filter((p) => typeof p?.text === "string" && !p?.thought)
+          .map((p) => p.text)
+          .join("") ||
+        parts.map((p) => p?.text || "").join("") ||
+        "";
+
+      if (!content.trim()) {
+        throw new Error(`Empty response returned from Gemini API (${candidate.model}).`);
+      }
+
+      if (options.responseType === "json") {
+        return cleanAndParseJson(content);
+      }
+      return { text: content };
+    } catch (err: any) {
+      if (err?.name === "AbortError") {
+        lastErr = new Error(`Gemini (${candidate.model}) timed out.`);
+      } else {
+        lastErr = err instanceof Error ? err : new Error(String(err));
+      }
+    } finally {
+      clearTimeout(timer);
     }
   }
-  if (options.prompt) {
-    contents.push({ role: "user", parts: [{ text: options.prompt }] });
-  }
-  if (contents.length === 0) {
-    contents.push({ role: "user", parts: [{ text: "Hello" }] });
-  }
 
-  const body: any = {
-    contents,
-    generationConfig: {
-      temperature: 0.3,
-      maxOutputTokens: Math.min(options.maxTokens || 800, 2048),
-      ...(options.responseType === "json" ? { responseMimeType: "application/json" } : {}),
-    },
-  };
-
-  if (options.systemInstruction) {
-    body.systemInstruction = { parts: [{ text: options.systemInstruction }] };
-  }
-
-  const resp = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(
-      options.apiKey
-    )}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "aistudio-build",
-      },
-      body: JSON.stringify(body),
-    }
-  );
-
-  if (!resp.ok) {
-    const errText = await resp.text();
-    throw new Error(`Gemini API (${resp.status}): ${errText}`);
-  }
-
-  const data: any = await resp.json();
-  const content = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  if (!content) {
-    throw new Error("Empty response returned from Gemini API.");
-  }
-
-  if (options.responseType === "json") {
-    return cleanAndParseJson(content);
-  }
-  return { text: content };
+  throw lastErr || new Error("Gemini Edge request failed.");
 }
 
 async function callOpenAiEdge(options: {
@@ -274,39 +338,60 @@ async function callOpenAiEdge(options: {
   maxTokens?: number;
 }): Promise<any> {
   const formattedMessages: Array<{ role: string; content: string }> = [];
-  if (options.systemInstruction) {
-    formattedMessages.push({ role: "system", content: options.systemInstruction });
+  let systemContent = options.systemInstruction || "";
+  if (
+    options.responseType === "json" &&
+    !systemContent.toLowerCase().includes("json") &&
+    !options.prompt.toLowerCase().includes("json")
+  ) {
+    systemContent = `${systemContent ? systemContent + "\n" : ""}Respond ONLY in valid JSON.`;
+  }
+  if (systemContent) {
+    formattedMessages.push({ role: "system", content: systemContent });
   }
   if (options.messages && options.messages.length > 0) {
-    for (const m of options.messages) {
+    for (const m of options.messages.slice(-14)) {
+      const text = (m.text || "").trim();
+      if (!text) continue;
       formattedMessages.push({
         role: m.role === "model" || m.role === "assistant" ? "assistant" : "user",
-        content: m.text || "",
+        content: text,
       });
     }
   }
-  if (options.prompt) {
-    formattedMessages.push({ role: "user", content: options.prompt });
+  if (options.prompt && options.prompt.trim()) {
+    formattedMessages.push({ role: "user", content: options.prompt.trim() });
+  }
+  if (formattedMessages.length === 0) {
+    formattedMessages.push({ role: "user", content: "Hello" });
   }
 
   const payload: any = {
     model: options.model,
     messages: formattedMessages,
     temperature: 0.25,
-    max_tokens: Math.min(options.maxTokens || 700, 1500),
+    max_tokens: Math.min(options.maxTokens || 900, 2000),
   };
   if (options.responseType === "json") {
     payload.response_format = { type: "json_object" };
   }
 
-  const resp = await fetch(options.endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${options.apiKey}`,
-    },
-    body: JSON.stringify(payload),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 14000);
+  let resp: Response;
+  try {
+    resp = await fetch(options.endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${options.apiKey}`,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!resp.ok) {
     const errText = await resp.text();
@@ -315,6 +400,9 @@ async function callOpenAiEdge(options: {
 
   const data: any = await resp.json();
   const content = data?.choices?.[0]?.message?.content || "";
+  if (!content.trim()) {
+    throw new Error(`Empty response returned from ${options.model}.`);
+  }
   if (options.responseType === "json") {
     return cleanAndParseJson(content);
   }
@@ -331,20 +419,11 @@ async function callCloudflareAi(
     maxTokens?: number;
   }
 ): Promise<any> {
-  const geminiKey = (env.GEMINI_API_KEY || "").trim();
   const deepseekKey = (env.DEEPSEEK_API_KEY || "").trim();
+  const geminiKey = (env.GEMINI_API_KEY || "").trim();
   const groqKey = (env.GROQ_API_KEY || "").trim();
 
   const errors: string[] = [];
-
-  if (geminiKey && geminiKey !== "your_gemini_api_key_here") {
-    try {
-      const res = await callGeminiEdge({ apiKey: geminiKey, ...options });
-      return { ...res, _engine: "gemini" };
-    } catch (e: any) {
-      errors.push(e?.message || String(e));
-    }
-  }
 
   if (deepseekKey && deepseekKey !== "your_deepseek_api_key_here") {
     try {
@@ -356,7 +435,16 @@ async function callCloudflareAi(
       });
       return { ...res, _engine: "deepseek" };
     } catch (e: any) {
-      errors.push(e?.message || String(e));
+      errors.push(`DeepSeek: ${e?.message || String(e)}`);
+    }
+  }
+
+  if (geminiKey && geminiKey !== "your_gemini_api_key_here") {
+    try {
+      const res = await callGeminiEdge({ apiKey: geminiKey, ...options });
+      return { ...res, _engine: "gemini" };
+    } catch (e: any) {
+      errors.push(`Gemini: ${e?.message || String(e)}`);
     }
   }
 
@@ -370,13 +458,13 @@ async function callCloudflareAi(
       });
       return { ...res, _engine: "groq" };
     } catch (e: any) {
-      errors.push(e?.message || String(e));
+      errors.push(`Groq: ${e?.message || String(e)}`);
     }
   }
 
   if (errors.length === 0) {
     const err: any = new Error(
-      "AI API key is not configured in Cloudflare Pages. Add GEMINI_API_KEY (or DEEPSEEK_API_KEY / GROQ_API_KEY) in Cloudflare Pages -> Settings -> Variables and Secrets, then redeploy."
+      "AI API key is not configured in Cloudflare Pages. Add DEEPSEEK_API_KEY (or GEMINI_API_KEY / GROQ_API_KEY) in Cloudflare Pages -> Settings -> Variables and Secrets, then redeploy."
     );
     err.missingApiKey = true;
     throw err;
@@ -402,15 +490,16 @@ export async function onRequest(context: CFContext): Promise<Response> {
   try {
     // Health check
     if (apiPath === "health" && request.method === "GET") {
-      const aiConfigured = Boolean(
-        (env.GEMINI_API_KEY && env.GEMINI_API_KEY !== "your_gemini_api_key_here") ||
-          (env.DEEPSEEK_API_KEY && env.DEEPSEEK_API_KEY !== "your_deepseek_api_key_here") ||
-          (env.GROQ_API_KEY && env.GROQ_API_KEY !== "your_groq_api_key_here")
-      );
+      const hasDeepseek = Boolean(env.DEEPSEEK_API_KEY && env.DEEPSEEK_API_KEY !== "your_deepseek_api_key_here");
+      const hasGemini = Boolean(env.GEMINI_API_KEY && env.GEMINI_API_KEY !== "your_gemini_api_key_here");
+      const hasGroq = Boolean(env.GROQ_API_KEY && env.GROQ_API_KEY !== "your_groq_api_key_here");
+      const aiConfigured = hasDeepseek || hasGemini || hasGroq;
+      const primaryProvider = hasDeepseek ? "deepseek" : hasGemini ? "gemini" : hasGroq ? "groq" : "none";
       return jsonResponse({
         status: "ok",
         runtime: "cloudflare-pages",
         aiConfigured,
+        primaryProvider,
         timestamp: Date.now(),
       });
     }
