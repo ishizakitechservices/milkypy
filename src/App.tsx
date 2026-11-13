@@ -65,9 +65,13 @@ export default function App() {
       const snippetId = params.get("snippet") || params.get("share");
       if (snippetId) {
         fetch(getApiUrl(`/api/snippets/${snippetId}`))
-          .then((res) => res.json())
+          .then(async (res) => {
+            const ct = res.headers.get("content-type") || "";
+            if (!ct.includes("application/json")) return null;
+            return res.json();
+          })
           .then((data) => {
-            if (data.success && data.snippet?.code) {
+            if (data && data.success && data.snippet?.code) {
               setCurrentActiveCode(data.snippet.code);
               setMode("playground");
               setSharedToast({
@@ -112,7 +116,9 @@ export default function App() {
   // Fetch Cloud Files for Current User
   const loadUserCloudFiles = async (userId: string) => {
     try {
-      const res = await fetch(getApiUrl(`/api/user/files/${userId}`));
+      const res = await fetch(getApiUrl(`/api/user/files/${encodeURIComponent(userId)}`));
+      const ct = res.headers.get("content-type") || "";
+      if (!ct.includes("application/json")) return;
       const data = await res.json();
       if (data.success && Array.isArray(data.files)) {
         setUserFiles(data.files);

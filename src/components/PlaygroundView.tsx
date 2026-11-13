@@ -4,7 +4,7 @@ import { CodeEditor } from "./CodeEditor";
 import { TerminalOutput } from "./TerminalOutput";
 import { CloudFileManager } from "./CloudFileManager";
 import { ShareModal } from "./ShareModal";
-import { runPythonCode } from "../lib/pyodideRunner";
+import { runPythonCode, stopPythonExecution } from "../lib/pyodideRunner";
 import { savePlaygroundCode, loadPlaygroundCode } from "../lib/cacheStorage";
 import { formatPythonCode } from "../lib/pythonFormatter";
 import { getApiUrl } from "../lib/apiConfig";
@@ -17,6 +17,7 @@ import {
   Check,
   Wand2,
   Play,
+  Square,
   ArrowUp,
   Terminal as TerminalIcon,
   Code as CodeIcon,
@@ -279,6 +280,13 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
     }
   };
 
+  const handleStop = () => {
+    stopPythonExecution();
+    setIsRunning(false);
+    setIsWaitingInput(false);
+    setStdinResolver(null);
+  };
+
   // Scroll Helpers
   const scrollToEditor = () => {
     editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -438,18 +446,29 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             </AnimatePresence>
           </div>
 
-          {/* Icon-Based Primary Run Code Navigation */}
-          <button
-            id="btn-run-code"
-            onClick={handleRun}
-            disabled={isRunning}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#65D9D0] dark:hover:bg-[#65D9D0]/90 text-white dark:text-[#050608] text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 touch-target"
-            title="Run Python code (Ctrl+Enter)"
-          >
-            <Play className="w-4 h-4 fill-current shrink-0" />
-            <span className="font-bold">{isRunning ? "Running..." : "Run"}</span>
-            <span className="hidden xl:inline font-mono opacity-80 text-[10px]">(Ctrl+Enter)</span>
-          </button>
+          {/* Icon-Based Primary Run / Stop Code Navigation */}
+          {isRunning ? (
+            <button
+              id="btn-stop-code"
+              onClick={handleStop}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 touch-target"
+              title="Stop running Python code"
+            >
+              <Square className="w-4 h-4 fill-current shrink-0" />
+              <span className="font-bold">Stop</span>
+            </button>
+          ) : (
+            <button
+              id="btn-run-code"
+              onClick={handleRun}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#65D9D0] dark:hover:bg-[#65D9D0]/90 text-white dark:text-[#050608] text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 touch-target"
+              title="Run Python code (Ctrl+Enter)"
+            >
+              <Play className="w-4 h-4 fill-current shrink-0" />
+              <span className="font-bold">Run</span>
+              <span className="hidden xl:inline font-mono opacity-80 text-[10px]">(Ctrl+Enter)</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -492,6 +511,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             streamingOutput={streamingOutput}
             isWaitingInput={isWaitingInput}
             onSendStdin={handleSendStdin}
+            onStop={handleStop}
             history={consoleHistory}
             onClearHistory={handleClearHistory}
             onRestoreCode={handleRestoreCode}

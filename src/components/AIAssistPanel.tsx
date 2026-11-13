@@ -117,9 +117,12 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      setErrorText(null);
+      setActiveTab(errorMessage ? "debug" : "chat");
+      setDebugResult(null);
       reloadChatHistory();
     }
-  }, [isOpen]);
+  }, [isOpen, errorMessage]);
 
   // Handler: Start a new conversation
   const handleNewChat = () => {
@@ -206,16 +209,20 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, errorMessage }),
       });
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("AI endpoint did not return JSON (check Cloudflare Pages Functions or VITE_SERVER_URL).");
+      }
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setDebugResult(data);
       } else {
-        // Fallback to local diagnoser if cloud AI model limits or quota reached
+        setErrorText(data.error || "Cloud AI unavailable — showing on-device Python diagnoser.");
         const localResult = diagnoseOfflineError(code, errorMessage);
         setDebugResult(localResult);
       }
     } catch (e: any) {
-      // Network or offline failure: execute local diagnoser
+      setErrorText(e?.message || "Cloud AI unavailable — showing on-device Python diagnoser.");
       const localResult = diagnoseOfflineError(code, errorMessage);
       setDebugResult(localResult);
     } finally {
@@ -247,10 +254,15 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
       });
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("AI endpoint did not return JSON (check Cloudflare Pages Functions or VITE_SERVER_URL).");
+      }
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setCommentResult(data);
       } else {
+        setErrorText(data.error || "Cloud AI unavailable — showing offline structural comments.");
         const lines = code.split("\n");
         const commented = lines
           .map((l) => (l.trim() && !l.trim().startsWith("#") ? `  # Step: ${l.trim().slice(0, 36)}\n${l}` : l))
@@ -261,6 +273,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         });
       }
     } catch (e: any) {
+      setErrorText(e?.message || "Cloud AI unavailable — showing offline structural comments.");
       const lines = code.split("\n");
       const commented = lines
         .map((l) => (l.trim() && !l.trim().startsWith("#") ? `  # Step: ${l.trim().slice(0, 36)}\n${l}` : l))
@@ -292,14 +305,20 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
       });
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("AI endpoint did not return JSON (check Cloudflare Pages Functions or VITE_SERVER_URL).");
+      }
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setExplainResult(data);
       } else {
+        setErrorText(data.error || "Cloud AI unavailable — showing offline explanation.");
         const localResult = explainOfflineCode(code);
         setExplainResult(localResult);
       }
     } catch (e: any) {
+      setErrorText(e?.message || "Cloud AI unavailable — showing offline explanation.");
       const localResult = explainOfflineCode(code);
       setExplainResult(localResult);
     } finally {
@@ -332,16 +351,22 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           currentCode: code,
         }),
       });
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("AI endpoint did not return JSON (check Cloudflare Pages Functions or VITE_SERVER_URL).");
+      }
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setHintResult(data);
       } else {
+        setErrorText(data.error || "Cloud AI unavailable — showing offline hint.");
         setHintResult({
           hint: `[Offline Hint] Check the lesson description carefully: ${lessonContext?.description || "verify expected output"}.`,
           conceptToReview: lessonContext?.title || "Python Basics",
         });
       }
     } catch (e: any) {
+      setErrorText(e?.message || "Cloud AI unavailable — showing offline hint.");
       setHintResult({
         hint: `[Offline Hint] Check the lesson description carefully: ${lessonContext?.description || "verify expected output"}.`,
         conceptToReview: lessonContext?.title || "Python Basics",
@@ -396,9 +421,14 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           lessonContext,
         }),
       });
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("AI endpoint did not return JSON (check Cloudflare Pages Functions or VITE_SERVER_URL).");
+      }
       const data = await res.json();
-      if (data.success && data.text) {
-        const finalMessages = [...newMessages, { role: "model" as const, text: data.text }];
+      const replyText = data.text || data.reply;
+      if (res.ok && data.success && replyText) {
+        const finalMessages = [...newMessages, { role: "model" as const, text: replyText }];
         setChatMessages(finalMessages);
 
         // Compute title if default
@@ -419,12 +449,13 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           reloadChatHistory();
         }).catch((err) => console.warn("Failed to save chat to IndexedDB:", err));
       } else {
-        // Fallback to local offline handbook if cloud AI error
+        setErrorText(data.error || "Cloud AI unavailable — using on-device Python handbook.");
         const offlineReply = getOfflineChatReply(userText, code);
         const finalMessages = [...newMessages, { role: "model" as const, text: offlineReply }];
         setChatMessages(finalMessages);
       }
     } catch (e: any) {
+      setErrorText(e?.message || "Cloud AI unavailable — using on-device Python handbook.");
       const offlineReply = getOfflineChatReply(userText, code);
       const finalMessages = [...newMessages, { role: "model" as const, text: offlineReply }];
       setChatMessages(finalMessages);

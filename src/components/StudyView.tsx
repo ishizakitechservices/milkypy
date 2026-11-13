@@ -28,7 +28,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Layers,
-  ChevronLeft
+  ChevronLeft,
+  Square
 } from "lucide-react";
 import Markdown from "react-markdown";
 import { PYTHON_MODULES } from "../data/pythonLessons";
@@ -36,7 +37,7 @@ import { GLOSSARY_TERMS, getGlossaryEntry } from "../data/glossary";
 import { GlossaryModal, TermPopover } from "./GlossaryModal";
 import { SeedsTrackerModal, PlantedSeed } from "./SeedsTrackerModal";
 import { translatePythonError, FriendlyErrorTranslation } from "../lib/errorTranslator";
-import { runPythonCode } from "../lib/pyodideRunner";
+import { runPythonCode, stopPythonExecution } from "../lib/pyodideRunner";
 import { CodeEditor } from "./CodeEditor";
 import { motion, AnimatePresence } from "motion/react";
 import { DynamicQuizQuestion, generateRandomQuiz } from "../lib/quizGenerator";
@@ -316,6 +317,11 @@ export const StudyView: React.FC<StudyViewProps> = ({
     }
   };
 
+  const handleStopSandbox = () => {
+    stopPythonExecution();
+    setIsRunning(false);
+  };
+
   // Automated Verification Engine for the Your Turn Challenge
   const handleVerifyChallenge = async () => {
     setIsRunning(true);
@@ -420,11 +426,14 @@ export const StudyView: React.FC<StudyViewProps> = ({
             difficulty: diffParam,
           }),
         });
-        const data = await res.json();
-        if (data.success && data.quiz) {
-          setCurrentQuiz(data.quiz);
-          setIsGeneratingQuiz(false);
-          return;
+        const ct = res.headers.get("content-type") || "";
+        if (ct.includes("application/json")) {
+          const data = await res.json();
+          if (res.ok && data.success && data.quiz) {
+            setCurrentQuiz(data.quiz);
+            setIsGeneratingQuiz(false);
+            return;
+          }
         }
       }
     } catch (err) {
@@ -1509,24 +1518,35 @@ export const StudyView: React.FC<StudyViewProps> = ({
 
           {rightStageTab === "sandbox" && (
             <div className="flex items-center gap-1.5">
-              <button
-                onClick={handleVerifyChallenge}
-                disabled={isRunning}
-                title="Run test validation on your code"
-                className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <Check className="w-3.5 h-3.5" />
-                <span>Verify</span>
-              </button>
+              {isRunning ? (
+                <button
+                  onClick={handleStopSandbox}
+                  title="Stop running code"
+                  className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black uppercase tracking-wider shadow-md flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Square className="w-3.5 h-3.5 fill-white" />
+                  <span>Stop</span>
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleVerifyChallenge}
+                    title="Run test validation on your code"
+                    className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Verify</span>
+                  </button>
 
-              <button
-                onClick={handleRunSandbox}
-                disabled={isRunning}
-                className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-wider shadow-md hover:shadow-blue-500/20 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <Play className={`w-3.5 h-3.5 fill-white ${isRunning ? "animate-spin" : ""}`} />
-                <span>{isRunning ? "Running..." : "Run"}</span>
-              </button>
+                  <button
+                    onClick={handleRunSandbox}
+                    className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-wider shadow-md hover:shadow-blue-500/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-white" />
+                    <span>Run</span>
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Play, RotateCcw, Lightbulb, Check, Terminal, AlertCircle } from "lucide-react";
-import { runPythonCode } from "../../lib/pyodideRunner";
+import { Play, RotateCcw, Lightbulb, Check, Terminal, AlertCircle, Square } from "lucide-react";
+import { runPythonCode, stopPythonExecution } from "../../lib/pyodideRunner";
 import { ExecutionResult } from "../../types";
 import { translatePythonError } from "../../lib/errorTranslator";
 
@@ -43,6 +43,11 @@ export const CurriculumInlineEditor: React.FC<CurriculumInlineEditorProps> = ({
     }
   };
 
+  const handleStop = () => {
+    stopPythonExecution();
+    setIsRunning(false);
+  };
+
   const handleReset = () => {
     setCode(starterCode);
     setResult(null);
@@ -79,14 +84,24 @@ export const CurriculumInlineEditor: React.FC<CurriculumInlineEditorProps> = ({
       {/* Action Toolbar */}
       <div className="px-4 py-2.5 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleRun}
-            disabled={isRunning}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold shadow-xs disabled:opacity-50 transition-colors cursor-pointer"
-          >
-            <Play className={`w-3.5 h-3.5 fill-current ${isRunning ? "animate-spin" : ""}`} />
-            <span>{isRunning ? "Running..." : "Run Code »"}</span>
-          </button>
+          {isRunning ? (
+            <button
+              onClick={handleStop}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold shadow-xs transition-colors cursor-pointer"
+              title="Stop running code"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+              <span>Stop Code</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleRun}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold shadow-xs transition-colors cursor-pointer"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>Run Code »</span>
+            </button>
+          )}
 
           <button
             onClick={handleReset}

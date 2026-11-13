@@ -26,7 +26,8 @@ import {
   ChevronRight,
   Split,
   PanelRightClose,
-  PanelRightOpen
+  PanelRightOpen,
+  Square
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "motion/react";
@@ -40,7 +41,7 @@ import {
 import { getOfflineChatReply } from "../lib/offlineAiKnowledge";
 import { getApiUrl } from "../lib/apiConfig";
 import { CodeEditor } from "./CodeEditor";
-import { runPythonCode } from "../lib/pyodideRunner";
+import { runPythonCode, stopPythonExecution } from "../lib/pyodideRunner";
 import { ExecutionResult } from "../types";
 import { translatePythonError, FriendlyErrorTranslation } from "../lib/errorTranslator";
 
@@ -220,18 +221,23 @@ print(greet("Learner"))
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: newMessages,
+            code: sandboxCode,
             currentCode: sandboxCode,
             systemInstruction:
               "You are Milky, an extraordinarily patient, friendly, and pedagogical Python tutor for beginners. Always explain concepts thoroughly in plain English using real-world intuition BEFORE introducing code syntax. Follow the Term-Before-Explanation rule. Break complex ideas down into clear steps. When you provide code, keep it clean and minimal, and walk through what each line does. Never use emojis.",
           }),
         });
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          throw new Error("AI endpoint returned non-JSON response.");
+        }
         const data = await res.json();
-        if (data.success && data.reply) {
-          botResponse = data.reply;
+        const replyText = data.text || data.reply;
+        if (res.ok && data.success && replyText) {
+          botResponse = replyText;
         } else {
-          botResponse =
-            data.message ||
-            getOfflineChatReply(query, sandboxCode);
+          const reason = data.error ? `> **Note:** ${data.error}\n\n` : "";
+          botResponse = reason + getOfflineChatReply(query, sandboxCode);
         }
       }
 
@@ -250,7 +256,8 @@ print(greet("Learner"))
       });
       loadChatSessions();
     } catch (err: any) {
-      const fallback = getOfflineChatReply(query, sandboxCode);
+      const reason = err?.message ? `> **Note:** ${err.message}\n\n` : "";
+      const fallback = reason + getOfflineChatReply(query, sandboxCode);
       const finalMessages = [
         ...newMessages,
         { role: "model" as const, text: fallback },
@@ -283,6 +290,11 @@ print(greet("Learner"))
     } finally {
       setIsRunning(false);
     }
+  };
+
+  const handleStopCode = () => {
+    stopPythonExecution();
+    setIsRunning(false);
   };
 
   // Extract code from message to sandbox
@@ -672,14 +684,24 @@ print(greet("Learner"))
                   Full Playground
                 </button>
 
-                <button
-                  onClick={handleRunCode}
-                  disabled={isRunning}
-                  className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  <Play className={`w-3 h-3 fill-white ${isRunning ? "animate-spin" : ""}`} />
-                  <span>{isRunning ? "Running..." : "Run"}</span>
-                </button>
+                {isRunning ? (
+                  <button
+                    onClick={handleStopCode}
+                    className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                    title="Stop running code"
+                  >
+                    <Square className="w-3 h-3 fill-white" />
+                    <span>Stop</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleRunCode}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                  >
+                    <Play className="w-3 h-3 fill-white" />
+                    <span>Run</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => setShowSandbox(false)}

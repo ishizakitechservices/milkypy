@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { PracticeQuestion } from "../../data/curriculum/schema";
-import { Check, X, Lightbulb, Play, RotateCcw } from "lucide-react";
-import { runPythonCode } from "../../lib/pyodideRunner";
+import { Check, X, Lightbulb, Play, RotateCcw, Square } from "lucide-react";
+import { runPythonCode, stopPythonExecution } from "../../lib/pyodideRunner";
 
 interface CurriculumPracticeCardProps {
   question: PracticeQuestion;
@@ -101,6 +101,11 @@ export const CurriculumPracticeCard: React.FC<CurriculumPracticeCardProps> = ({
     } finally {
       setIsFixRunning(false);
     }
+  };
+
+  const handleStopCodeFix = () => {
+    stopPythonExecution();
+    setIsFixRunning(false);
   };
 
   return (
@@ -273,14 +278,23 @@ export const CurriculumPracticeCard: React.FC<CurriculumPracticeCardProps> = ({
 
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleRunCodeFix}
-                disabled={isFixRunning}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs cursor-pointer"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>{isFixRunning ? "Testing..." : "Test Fix"}</span>
-              </button>
+              {isFixRunning ? (
+                <button
+                  onClick={handleStopCodeFix}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs shadow-xs cursor-pointer"
+                >
+                  <Square className="w-3.5 h-3.5 fill-current" />
+                  <span>Stop</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleRunCodeFix}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Test Fix</span>
+                </button>
+              )}
               <button
                 onClick={() => {
                   setFixCode(question.brokenCode || "");

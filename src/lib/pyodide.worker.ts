@@ -1,4 +1,4 @@
-// Pyodide Web Worker with granular download progress reporting
+// Pyodide Web Worker with granular download progress reporting & safe Python error handling
 
 declare var self: any;
 
@@ -8,7 +8,7 @@ const CACHE_NAME = "pyodide-cdn-cache-v0.25.1";
 const originalFetch = self.fetch;
 self.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
   const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-  
+
   if (url.includes("cdn.jsdelivr.net/pyodide")) {
     try {
       const cache = await caches.open(CACHE_NAME);
@@ -16,7 +16,7 @@ self.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
       if (cachedResponse) {
         return cachedResponse;
       }
-      
+
       const networkResponse = await originalFetch(input, init);
       if (networkResponse && networkResponse.status === 200) {
         await cache.put(url, networkResponse.clone());
@@ -26,7 +26,7 @@ self.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
       try {
         const fallbackMatch = await caches.match(url, { ignoreSearch: true });
         if (fallbackMatch) return fallbackMatch;
-      } catch (cacheErr) {
+      } catch {
         // ignore
       }
       console.warn("Cache API matching/writing failed, falling back to network:", err);
@@ -37,10 +37,11 @@ self.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
 
 let pyodide: any = null;
 let sessionId = "";
+let preloadedInputs: string[] = [];
 
 self.onmessage = async (event: MessageEvent) => {
   const data = event.data;
-  
+
   if (data.type === "INIT") {
     sessionId = data.sessionId;
     try {
@@ -71,7 +72,6 @@ self.onmessage = async (event: MessageEvent) => {
         stage: "Loading Python WebAssembly runtime...",
       });
 
-      // Attempt local bundled assets first (offline native APK & local serving)
       let loadPyodideFn: any = null;
       let effectiveIndexURL = "/pyodide/";
 
@@ -109,33 +109,57 @@ self.onmessage = async (event: MessageEvent) => {
         progress: 95,
         stage: "Configuring IO channels & streams...",
       });
-      
+
       pyodide.setStdout({
         batched: (str: string) => self.postMessage({ type: "STDOUT", text: str + "\n" }),
       });
       pyodide.setStderr({
         batched: (str: string) => self.postMessage({ type: "STDERR", text: str + "\n" }),
       });
-      
-      // Override input
+
+      // Override input: consumes preloaded inputs first, then falls back to server wait-input
       pyodide.globals.set("js_input_fn", (promptText: string) => {
         if (promptText) {
           self.postMessage({ type: "STDOUT", text: promptText });
         }
+
+        if (preloadedInputs.length > 0) {
+          const val = preloadedInputs.shift() ?? "";
+          self.postMessage({ type: "STDOUT", text: val + "\n" });
+          return val;
+        }
+
         self.postMessage({ type: "INPUT_REQUEST" });
-        
-        // Sync XHR to wait for input
+
         const xhr = new XMLHttpRequest();
-        xhr.open("GET", `/api/pyodide/wait-input?sessionId=${sessionId}`, false);
+        xhr.open("GET", `/api/pyodide/wait-input?sessionId=${encodeURIComponent(sessionId)}`, false);
         try {
           xhr.send(null);
-          const response = xhr.responseText;
-          return response;
-        } catch (e) {
+          const contentType = xhr.getResponseHeader("content-type") || "";
+          if (xhr.status !== 200 || contentType.includes("text/html")) {
+            return "";
+          }
+          return xhr.responseText || "";
+        } catch {
           return "";
         }
       });
-      
+
+      await pyodide.runPythonAsync(`
+import builtins
+def _milky_input(prompt=""):
+    p_str = str(prompt) if prompt is not None else ""
+    val = js_input_fn(p_str)
+    if val is None:
+        return ""
+    val_str = str(val)
+    if val_str.endswith("\\n"):
+        val_str = val_str[:-1]
+    return val_str
+
+builtins.input = _milky_input
+`);
+
       self.postMessage({
         type: "PROGRESS",
         progress: 100,
@@ -144,42 +168,31 @@ self.onmessage = async (event: MessageEvent) => {
 
       self.postMessage({ type: "READY" });
     } catch (e: any) {
-      self.postMessage({ type: "ERROR", error: e.message });
+      self.postMessage({ type: "ERROR", error: e?.message || "Failed to initialize Pyodide." });
     }
   } else if (data.type === "RUN") {
     if (!pyodide) {
-      self.postMessage({ type: "ERROR", error: "Pyodide not initialized" });
+      self.postMessage({
+        type: "STDERR",
+        text: "Python WebAssembly runtime is not initialized yet.",
+      });
+      self.postMessage({ type: "DONE" });
       return;
     }
-    const code = data.code;
-    const wrappedCode = `
-import sys
-import builtins
-import traceback
 
-def _custom_input(prompt=""):
-    p_str = str(prompt) if prompt is not None else ""
-    val = js_input_fn(p_str)
-    if val is None:
-        val = ""
-    val_str = str(val)
-    if val_str.endswith("\\n"):
-        val_str = val_str[:-1]
-    return val_str
+    preloadedInputs = Array.isArray(data.preloadedInputs) ? [...data.preloadedInputs] : [];
+    const code = String(data.code || "");
 
-builtins.input = _custom_input
-
-try:
-${code.split("\n").map((line: string) => "    " + line).join("\n")}
-    pass
-except Exception as e:
-    traceback.print_exc()
-`;
     try {
-      await pyodide.runPythonAsync(wrappedCode);
+      await pyodide.runPythonAsync(code);
       self.postMessage({ type: "DONE" });
     } catch (e: any) {
-      self.postMessage({ type: "ERROR", error: e.message });
+      const msg = e?.message || String(e);
+      self.postMessage({
+        type: "STDERR",
+        text: msg.endsWith("\n") ? msg : msg + "\n",
+      });
+      self.postMessage({ type: "DONE" });
     }
   }
 };

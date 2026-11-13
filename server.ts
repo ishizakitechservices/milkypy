@@ -4,11 +4,12 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import { spawn } from "child_process";
 import { createServer as createViteServer } from "vite";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where } from "firebase/firestore";
-
+import { GoogleGenAI } from "@google/genai";
 
 const app = express();
 const PORT = 3000;
@@ -27,15 +28,28 @@ app.use((req, res, next) => {
   next();
 });
 
+// Enable CORS for Cloudflare Pages / custom domain frontends & Capacitor mobile clients
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    res.status(204).end();
+    return;
+  }
+  next();
+});
+
 app.use(express.json({ limit: "5mb" }));
 
-// Persistent JSON Storage Path
+// Persistent JSON Storage Path (local backup / legacy support)
 const DB_FILE = path.join(process.cwd(), "user_cloud_db.json");
 
 interface StoredUser {
   userId: string;
   passwordHash: string;
   createdAt: number;
+  updatedAt?: number;
 }
 
 interface StoredCloudFile {
@@ -60,7 +74,6 @@ interface DBData {
   sharedSnippets?: Record<string, StoredSharedSnippet>;
 }
 
-// Load or Initialize DB
 const loadDB = (): DBData => {
   try {
     if (fs.existsSync(DB_FILE)) {
@@ -93,9 +106,23 @@ const firebaseApp = initializeApp({
 });
 const firestore = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 
+// Password Hashing Helper (SHA-256 hex)
+function hashPassword(password: string): string {
+  return crypto.createHash("sha256").update(`milkypy:${password}`).digest("hex");
+}
+
+function verifyPassword(password: string, storedHash: string): boolean {
+  if (!storedHash) return false;
+  const computed = hashPassword(password);
+  return storedHash === computed || storedHash === password;
+}
+
+function isValidUserId(userId: string): boolean {
+  return /^[a-zA-Z0-9_-]{2,32}$/.test(userId);
+}
 
 function cleanAndParseJson(text: string): any {
-  let clean = text.trim();
+  let clean = (text || "").trim();
   if (clean.startsWith("```")) {
     clean = clean.replace(/^```(?:json)?\n?/i, "");
     clean = clean.replace(/\n?```$/, "");
@@ -103,7 +130,7 @@ function cleanAndParseJson(text: string): any {
   return JSON.parse(clean.trim());
 }
 
-// Smart In-Memory Cache for $0.00 zero-cost repeated queries
+// Smart In-Memory Cache for zero-cost repeated queries
 interface AICacheEntry {
   data: any;
   timestamp: number;
@@ -121,65 +148,59 @@ function getCacheKey(type: string, prompt: string, extra?: string): string {
   return `${type}_${Math.abs(hash)}`;
 }
 
-// DeepSeek Direct API Caller (Lowest-Cost LLM Model)
-async function callDeepSeekDirect(options: {
+// Gemini SDK Caller (@google/genai)
+async function callGeminiDirect(options: {
   systemInstruction?: string;
   prompt: string;
-  messages?: Array<{ role: "user" | "assistant"; text: string }>;
+  messages?: Array<{ role: "user" | "assistant" | "model"; text: string }>;
   responseType?: "json" | "text";
   maxTokens?: number;
-  apiKey?: string;
+  apiKey: string;
 }): Promise<any> {
-  const apiKey = options.apiKey || process.env.DEEPSEEK_API_KEY || "";
-  if (!apiKey) {
-    throw new Error("No DeepSeek API key provided or found in DEEPSEEK_API_KEY.");
-  }
+  const ai = new GoogleGenAI({
+    apiKey: options.apiKey,
+    httpOptions: {
+      headers: {
+        "User-Agent": "aistudio-build",
+      },
+    },
+  });
 
-  const formattedMessages: Array<{ role: string; content: string }> = [];
-  if (options.systemInstruction) {
-    formattedMessages.push({ role: "system", content: options.systemInstruction });
-  }
+  const contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
   if (options.messages && options.messages.length > 0) {
     for (const m of options.messages) {
-      formattedMessages.push({ role: m.role, content: m.text });
+      if (!m.text) continue;
+      contents.push({
+        role: m.role === "assistant" || m.role === "model" ? "model" : "user",
+        parts: [{ text: m.text }],
+      });
     }
   }
   if (options.prompt) {
-    formattedMessages.push({ role: "user", content: options.prompt });
+    contents.push({
+      role: "user",
+      parts: [{ text: options.prompt }],
+    });
+  }
+  if (contents.length === 0) {
+    contents.push({ role: "user", parts: [{ text: "Hello" }] });
   }
 
-  if (formattedMessages.length === 0) {
-    formattedMessages.push({ role: "user", content: "Hello" });
-  }
-
-  // DeepSeek-V3 ultra-low cost model (~$0.14/1M input tokens)
-  const payload: any = {
-    model: "deepseek-chat",
-    messages: formattedMessages,
-    temperature: 0.2,
-    max_tokens: Math.min(options.maxTokens || 500, 1000),
-  };
-
-  if (options.responseType === "json") {
-    payload.response_format = { type: "json_object" };
-  }
-
-  const resp = await fetch("https://api.deepseek.com/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+  const response = await ai.models.generateContent({
+    model: "gemini-3.8-flash",
+    contents,
+    config: {
+      ...(options.systemInstruction ? { systemInstruction: options.systemInstruction } : {}),
+      temperature: 0.3,
+      maxOutputTokens: Math.min(options.maxTokens || 800, 2048),
+      ...(options.responseType === "json" ? { responseMimeType: "application/json" } : {}),
     },
-    body: JSON.stringify(payload),
   });
 
-  if (!resp.ok) {
-    const errText = await resp.text();
-    throw new Error(`DeepSeek API returned error ${resp.status}: ${errText}`);
+  const content = response.text || "";
+  if (!content) {
+    throw new Error("Empty response returned from Gemini API.");
   }
-
-  const data = await resp.json();
-  const content = data.choices?.[0]?.message?.content || "";
 
   if (options.responseType === "json") {
     return cleanAndParseJson(content);
@@ -187,48 +208,150 @@ async function callDeepSeekDirect(options: {
   return { text: content };
 }
 
-// Pure Full DeepSeek AI Engine (100% DeepSeek, No Gemini)
-async function callDeepSeekAi(options: {
+// OpenAI-Compatible Caller (DeepSeek / Groq fallback)
+async function callOpenAiCompatible(options: {
+  endpoint: string;
+  model: string;
+  apiKey: string;
+  systemInstruction?: string;
+  prompt: string;
+  messages?: Array<{ role: "user" | "assistant" | "model"; text: string }>;
+  responseType?: "json" | "text";
+  maxTokens?: number;
+}): Promise<any> {
+  const formattedMessages: Array<{ role: string; content: string }> = [];
+  if (options.systemInstruction) {
+    formattedMessages.push({ role: "system", content: options.systemInstruction });
+  }
+  if (options.messages && options.messages.length > 0) {
+    for (const m of options.messages) {
+      formattedMessages.push({
+        role: m.role === "model" || m.role === "assistant" ? "assistant" : "user",
+        content: m.text,
+      });
+    }
+  }
+  if (options.prompt) {
+    formattedMessages.push({ role: "user", content: options.prompt });
+  }
+  if (formattedMessages.length === 0) {
+    formattedMessages.push({ role: "user", content: "Hello" });
+  }
+
+  const payload: any = {
+    model: options.model,
+    messages: formattedMessages,
+    temperature: 0.25,
+    max_tokens: Math.min(options.maxTokens || 700, 1500),
+  };
+
+  if (options.responseType === "json") {
+    payload.response_format = { type: "json_object" };
+  }
+
+  const resp = await fetch(options.endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${options.apiKey}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(`AI API (${options.model}) returned error ${resp.status}: ${errText}`);
+  }
+
+  const data = await resp.json();
+  const content = data.choices?.[0]?.message?.content || "";
+  if (options.responseType === "json") {
+    return cleanAndParseJson(content);
+  }
+  return { text: content };
+}
+
+// Unified AI Engine (Gemini primary, with DeepSeek and Groq support)
+async function callPlatformAi(options: {
   cacheKeyPrefix: string;
   systemInstruction?: string;
   prompt: string;
-  messages?: Array<{ role: "user" | "assistant"; text: string }>;
+  messages?: Array<{ role: "user" | "assistant" | "model"; text: string }>;
   responseType?: "json" | "text";
   maxTokens?: number;
-  apiKey?: string;
-  fallbackGenerator?: () => any;
 }): Promise<any> {
-  // 1. Check Smart In-Memory Cache (Instant $0.00 cost)
-  const fullText = options.prompt + (options.messages ? options.messages.map(m => m.text).join("|") : "");
+  const fullText =
+    options.prompt +
+    (options.systemInstruction || "") +
+    (options.messages ? options.messages.map((m) => `${m.role}:${m.text}`).join("|") : "");
   const cacheKey = getCacheKey(options.cacheKeyPrefix, fullText);
   const cached = aiResponseCache.get(cacheKey);
 
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return { ...cached.data, _fromCache: true, _engine: "deepseek" };
+    return { ...cached.data, _fromCache: true };
   }
 
-  // 2. Pure DeepSeek Direct API
-  try {
-    const result = await callDeepSeekDirect({
-      systemInstruction: options.systemInstruction,
-      prompt: options.prompt,
-      messages: options.messages,
-      responseType: options.responseType,
-      maxTokens: options.maxTokens,
-      apiKey: options.apiKey,
-    });
+  const geminiKey = (process.env.GEMINI_API_KEY || "").trim();
+  const deepseekKey = (process.env.DEEPSEEK_API_KEY || "").trim();
+  const groqKey = (process.env.GROQ_API_KEY || "").trim();
 
-    aiResponseCache.set(cacheKey, { data: result, timestamp: Date.now() });
-    return { ...result, _engine: "deepseek" };
-  } catch (deepseekError: any) {
-    console.error("[DeepSeek AI Error]:", deepseekError.message);
+  const errors: string[] = [];
 
-    // 3. Fallback generator if provided
-    if (options.fallbackGenerator) {
-      return options.fallbackGenerator();
+  if (geminiKey && geminiKey !== "your_gemini_api_key_here") {
+    try {
+      const result = await callGeminiDirect({
+        ...options,
+        apiKey: geminiKey,
+      });
+      aiResponseCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return { ...result, _engine: "gemini" };
+    } catch (err: any) {
+      console.warn("[Gemini AI Error]:", err?.message || err);
+      errors.push(`Gemini: ${err?.message || err}`);
     }
-    throw deepseekError;
   }
+
+  if (deepseekKey && deepseekKey !== "your_deepseek_api_key_here") {
+    try {
+      const result = await callOpenAiCompatible({
+        endpoint: "https://api.deepseek.com/chat/completions",
+        model: "deepseek-chat",
+        apiKey: deepseekKey,
+        ...options,
+      });
+      aiResponseCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return { ...result, _engine: "deepseek" };
+    } catch (err: any) {
+      console.warn("[DeepSeek AI Error]:", err?.message || err);
+      errors.push(`DeepSeek: ${err?.message || err}`);
+    }
+  }
+
+  if (groqKey && groqKey !== "your_groq_api_key_here") {
+    try {
+      const result = await callOpenAiCompatible({
+        endpoint: "https://api.groq.com/openai/v1/chat/completions",
+        model: "llama-3.3-70b-versatile",
+        apiKey: groqKey,
+        ...options,
+      });
+      aiResponseCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return { ...result, _engine: "groq" };
+    } catch (err: any) {
+      console.warn("[Groq AI Error]:", err?.message || err);
+      errors.push(`Groq: ${err?.message || err}`);
+    }
+  }
+
+  if (errors.length === 0) {
+    const missingErr: any = new Error(
+      "No AI API key configured on the server. Set GEMINI_API_KEY (or DEEPSEEK_API_KEY / GROQ_API_KEY) in environment variables."
+    );
+    missingErr.missingApiKey = true;
+    throw missingErr;
+  }
+
+  throw new Error(errors.join(" | "));
 }
 
 // Pyodide Sync Input store
@@ -237,7 +360,7 @@ const pendingInputs = new Map<string, (text: string) => void>();
 app.get("/api/pyodide/wait-input", (req, res) => {
   const sessionId = req.query.sessionId as string;
   if (!sessionId) return res.status(400).send("");
-  
+
   const timeout = setTimeout(() => {
     pendingInputs.delete(sessionId);
     res.send("");
@@ -275,7 +398,6 @@ app.post("/api/py/run", (req, res) => {
     let stderr = "";
     let finished = false;
 
-    // Execute with python3 unbuffered (-u)
     const pyProcess = spawn("python3", ["-u", "-c", code], {
       timeout: 10000,
       env: { ...process.env, PYTHONUNBUFFERED: "1" },
@@ -343,17 +465,128 @@ app.post("/api/py/run", (req, res) => {
 
 // API Routes
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: Date.now() });
+  const aiConfigured = Boolean(
+    (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "your_gemini_api_key_here") ||
+      (process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_API_KEY !== "your_deepseek_api_key_here") ||
+      (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== "your_groq_api_key_here")
+  );
+  res.json({ status: "ok", runtime: "node-express", aiConfigured, timestamp: Date.now() });
 });
 
-// User Auth Endpoint (Support simple user IDs like m162, k234, m2, l23)
-app.post("/api/auth/login", (req, res) => {
+async function getUserFilesFromFirestore(userId: string): Promise<StoredCloudFile[]> {
   try {
-    const rawUserId = (req.body.userId || "").trim().toLowerCase();
-    const password = req.body.password || "";
+    const q = query(collection(firestore, "files"), where("userId", "==", userId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((d) => d.data() as StoredCloudFile);
+  } catch (e) {
+    console.warn("Firestore files read fallback to local store:", e);
+    return db.files[userId] || [];
+  }
+}
 
-    if (!rawUserId) {
-      res.status(400).json({ error: "User ID is required (e.g. m162, k234, l23)." });
+async function ensureStarterFileForUser(userId: string): Promise<StoredCloudFile[]> {
+  let files = await getUserFilesFromFirestore(userId);
+  if (files.length === 0) {
+    const localFiles = db.files[userId];
+    if (localFiles && localFiles.length > 0) {
+      files = localFiles;
+    } else {
+      files = [
+        {
+          id: `file-${userId}-1`,
+          userId,
+          name: "main.py",
+          code: `# Welcome ${userId}! Your Python files auto-save in the cloud.\nprint("Hello, ${userId}!")\n`,
+          updatedAt: Date.now(),
+        },
+      ];
+    }
+    for (const f of files) {
+      try {
+        await setDoc(doc(firestore, "files", f.id), f);
+      } catch (fsErr) {
+        console.warn("Firestore starter file sync warning:", fsErr);
+      }
+    }
+    db.files[userId] = files;
+    saveDB(db);
+  }
+  return files;
+}
+
+// Student Sign Up Endpoint (Firestore backed + local backup)
+app.post("/api/auth/signup", async (req, res) => {
+  try {
+    const rawUserId = (req.body.userId || "").toString().trim().toLowerCase();
+    const password = (req.body.password || "").toString();
+
+    if (!rawUserId || !isValidUserId(rawUserId)) {
+      res.status(400).json({ error: "User ID must be 2-32 characters (letters, numbers, _ or -)." });
+      return;
+    }
+    if (!password || password.length < 4) {
+      res.status(400).json({ error: "Password must be at least 4 characters long." });
+      return;
+    }
+
+    // Check Firestore first
+    let existingUser: StoredUser | null = null;
+    try {
+      const snap = await getDoc(doc(firestore, "student_accounts", rawUserId));
+      if (snap.exists()) {
+        existingUser = snap.data() as StoredUser;
+      }
+    } catch (fsErr) {
+      console.warn("Firestore signup lookup fallback:", fsErr);
+    }
+
+    if (!existingUser && db.users[rawUserId]) {
+      existingUser = db.users[rawUserId];
+    }
+
+    if (existingUser) {
+      res.status(409).json({ error: `Student ID "${rawUserId}" is already registered. Please log in instead.` });
+      return;
+    }
+
+    const now = Date.now();
+    const newUser: StoredUser = {
+      userId: rawUserId,
+      passwordHash: hashPassword(password),
+      createdAt: now,
+    };
+
+    try {
+      await setDoc(doc(firestore, "student_accounts", rawUserId), newUser);
+    } catch (fsErr) {
+      console.warn("Firestore account write warning:", fsErr);
+    }
+
+    db.users[rawUserId] = newUser;
+    saveDB(db);
+
+    const files = await ensureStarterFileForUser(rawUserId);
+
+    res.json({
+      success: true,
+      userId: rawUserId,
+      files,
+      message: `Account "${rawUserId}" created!`,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Sign up failed" });
+  }
+});
+
+// Student Login Endpoint (supports Firestore + legacy local DB accounts)
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const rawUserId = (req.body.userId || "").toString().trim().toLowerCase();
+    const password = (req.body.password || "").toString();
+    const allowAutoCreate = Boolean(req.body.autoCreate);
+
+    if (!rawUserId || !isValidUserId(rawUserId)) {
+      res.status(400).json({ error: "Enter a valid Student ID (2-32 chars, letters/numbers/_/-)." });
       return;
     }
 
@@ -362,36 +595,57 @@ app.post("/api/auth/login", (req, res) => {
       return;
     }
 
-    // Check if user exists
-    let user = db.users[rawUserId];
-
-    if (!user) {
-      // Auto-register new student user ID if valid
-      user = {
-        userId: rawUserId,
-        passwordHash: password,
-        createdAt: Date.now(),
-      };
-      db.users[rawUserId] = user;
-      db.files[rawUserId] = [
-        {
-          id: `file-${rawUserId}-1`,
-          userId: rawUserId,
-          name: "main.py",
-          code: `# Write your Python code here\n`,
-          updatedAt: Date.now(),
-        },
-      ];
-      saveDB(db);
-    } else {
-      // Verify password
-      if (user.passwordHash !== password) {
-        res.status(401).json({ error: "Incorrect password for user " + rawUserId });
-        return;
+    let user: StoredUser | null = null;
+    try {
+      const snap = await getDoc(doc(firestore, "student_accounts", rawUserId));
+      if (snap.exists()) {
+        user = snap.data() as StoredUser;
       }
+    } catch (fsErr) {
+      console.warn("Firestore login lookup fallback:", fsErr);
     }
 
-    const userFiles = db.files[rawUserId] || [];
+    if (!user && db.users[rawUserId]) {
+      user = db.users[rawUserId];
+      // Migrate legacy user silently to Firestore if possible
+      try {
+        await setDoc(doc(firestore, "student_accounts", rawUserId), {
+          userId: rawUserId,
+          passwordHash: user.passwordHash.length === 64 ? user.passwordHash : hashPassword(user.passwordHash),
+          createdAt: user.createdAt || Date.now(),
+        });
+      } catch {}
+    }
+
+    if (!user) {
+      if (allowAutoCreate) {
+        if (password.length < 4) {
+          res.status(400).json({ error: "Password must be at least 4 characters long." });
+          return;
+        }
+        const now = Date.now();
+        user = {
+          userId: rawUserId,
+          passwordHash: hashPassword(password),
+          createdAt: now,
+        };
+        try {
+          await setDoc(doc(firestore, "student_accounts", rawUserId), user);
+        } catch {}
+        db.users[rawUserId] = user;
+        saveDB(db);
+      } else {
+        res.status(404).json({
+          error: `No account found for "${rawUserId}". Switch to Sign Up to create it.`,
+        });
+        return;
+      }
+    } else if (!verifyPassword(password, user.passwordHash)) {
+      res.status(401).json({ error: `Incorrect password for Student ID "${rawUserId}".` });
+      return;
+    }
+
+    const userFiles = await ensureStarterFileForUser(rawUserId);
     res.json({
       success: true,
       userId: rawUserId,
@@ -407,9 +661,7 @@ app.post("/api/auth/login", (req, res) => {
 app.get("/api/user/files/:userId", async (req, res) => {
   try {
     const userId = (req.params.userId || "").trim().toLowerCase();
-    const q = query(collection(firestore, "files"), where("userId", "==", userId));
-    const snapshot = await getDocs(q);
-    const files = snapshot.docs.map(doc => doc.data() as StoredCloudFile);
+    const files = await getUserFilesFromFirestore(userId);
     res.json({ success: true, userId, files });
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to fetch cloud files" });
@@ -429,12 +681,10 @@ app.post("/api/user/files/save", async (req, res) => {
       return;
     }
 
-    // Check if name exists
-    const q = query(collection(firestore, "files"), where("userId", "==", userId));
-    const snapshot = await getDocs(q);
-    const existingFiles = snapshot.docs.map(d => d.data() as StoredCloudFile);
-    
-    const existingFile = existingFiles.find(f => f.id === fileId || f.name.toLowerCase() === name.toLowerCase());
+    const existingFiles = await getUserFilesFromFirestore(userId);
+    const existingFile = existingFiles.find(
+      (f) => f.id === fileId || f.name.toLowerCase() === name.toLowerCase()
+    );
     if (existingFile) {
       fileId = existingFile.id;
     } else if (!fileId) {
@@ -449,15 +699,25 @@ app.post("/api/user/files/save", async (req, res) => {
       updatedAt: Date.now(),
     };
 
-    await setDoc(doc(firestore, "files", fileId), updatedFile);
+    try {
+      await setDoc(doc(firestore, "files", fileId), updatedFile);
+    } catch (fsErr) {
+      console.warn("Firestore save file fallback:", fsErr);
+    }
 
-    const newSnapshot = await getDocs(q);
-    const files = newSnapshot.docs.map(d => d.data() as StoredCloudFile);
+    // Update local backup too
+    const localList = db.files[userId] || [];
+    const idx = localList.findIndex((f) => f.id === fileId);
+    if (idx >= 0) localList[idx] = updatedFile;
+    else localList.push(updatedFile);
+    db.files[userId] = localList;
+    saveDB(db);
 
+    const files = await getUserFilesFromFirestore(userId);
     res.json({
       success: true,
       file: updatedFile,
-      files,
+      files: files.length > 0 ? files : localList,
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to save cloud file" });
@@ -475,12 +735,18 @@ app.post("/api/user/files/delete", async (req, res) => {
       return;
     }
 
-    await deleteDoc(doc(firestore, "files", fileId));
+    try {
+      await deleteDoc(doc(firestore, "files", fileId));
+    } catch (fsErr) {
+      console.warn("Firestore delete file warning:", fsErr);
+    }
 
-    const q = query(collection(firestore, "files"), where("userId", "==", userId));
-    const snapshot = await getDocs(q);
-    const files = snapshot.docs.map(d => d.data() as StoredCloudFile);
+    if (db.files[userId]) {
+      db.files[userId] = db.files[userId].filter((f) => f.id !== fileId);
+      saveDB(db);
+    }
 
+    const files = await getUserFilesFromFirestore(userId);
     res.json({ success: true, files });
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to delete cloud file" });
@@ -508,18 +774,16 @@ app.post("/api/snippets/share", async (req, res) => {
       createdAt: Date.now(),
     };
 
-    // Save to Firestore permanent shared_snippets collection
     try {
       await setDoc(doc(firestore, "shared_snippets", snippetId), snippetData);
     } catch (fsErr) {
       console.warn("Firestore save warning, falling back to local store:", fsErr);
     }
 
-    // Save to local backup store
-    const db = loadDB();
-    if (!db.sharedSnippets) db.sharedSnippets = {};
-    db.sharedSnippets[snippetId] = snippetData;
-    saveDB(db);
+    const localDb = loadDB();
+    if (!localDb.sharedSnippets) localDb.sharedSnippets = {};
+    localDb.sharedSnippets[snippetId] = snippetData;
+    saveDB(localDb);
 
     const proto = (req.headers["x-forwarded-proto"] as string) || "https";
     const host = (req.headers["x-forwarded-host"] as string) || req.headers.host || "localhost:3000";
@@ -545,7 +809,6 @@ app.get("/api/snippets/:id", async (req, res) => {
       return;
     }
 
-    // 1. Try Firestore first
     try {
       const snap = await getDoc(doc(firestore, "shared_snippets", snippetId));
       if (snap.exists()) {
@@ -556,9 +819,8 @@ app.get("/api/snippets/:id", async (req, res) => {
       console.warn("Firestore snippet read fallback:", fsErr);
     }
 
-    // 2. Fallback to local DB store
-    const db = loadDB();
-    const localSnippet = db.sharedSnippets?.[snippetId];
+    const localDb = loadDB();
+    const localSnippet = localDb.sharedSnippets?.[snippetId];
     if (localSnippet) {
       res.json({ success: true, snippet: localSnippet });
       return;
@@ -570,7 +832,7 @@ app.get("/api/snippets/:id", async (req, res) => {
   }
 });
 
-// Groq Endpoint: Debug & Fix Code
+// AI Endpoint: Debug & Fix Code
 app.post("/api/ai/debug", async (req, res) => {
   try {
     const { code, errorMessage } = req.body;
@@ -603,21 +865,25 @@ Respond ONLY in valid JSON matching this structure:
   "tips": ["string", "string"]
 }`;
 
-    const parsed = await callDeepSeekAi({
+    const parsed = await callPlatformAi({
       cacheKeyPrefix: "debug",
       prompt,
       responseType: "json",
-      maxTokens: 500,
+      maxTokens: 700,
     });
 
     res.json({ success: true, ...parsed });
   } catch (error: any) {
-    console.error("AI Debug Error (DeepSeek):", error);
-    res.status(500).json({ error: error.message || "Failed to process AI debugging request with DeepSeek." });
+    console.error("AI Debug Error:", error);
+    res.status(error?.missingApiKey ? 503 : 500).json({
+      success: false,
+      missingApiKey: Boolean(error?.missingApiKey),
+      error: error.message || "Failed to process AI debugging request.",
+    });
   }
 });
 
-// DeepSeek Endpoint: Add Guided Comments
+// AI Endpoint: Add Guided Comments
 app.post("/api/ai/add-comments", async (req, res) => {
   try {
     const { code } = req.body;
@@ -644,21 +910,25 @@ Respond ONLY in valid JSON with format:
   "summary": "string (brief sentence describing what this code achieves)"
 }`;
 
-    const parsed = await callDeepSeekAi({
+    const parsed = await callPlatformAi({
       cacheKeyPrefix: "comment",
       prompt,
       responseType: "json",
-      maxTokens: 500,
+      maxTokens: 700,
     });
 
     res.json({ success: true, ...parsed });
   } catch (error: any) {
-    console.error("AI Comment Error (DeepSeek):", error);
-    res.status(500).json({ error: error.message || "Failed to generate comments with DeepSeek." });
+    console.error("AI Comment Error:", error);
+    res.status(error?.missingApiKey ? 503 : 500).json({
+      success: false,
+      missingApiKey: Boolean(error?.missingApiKey),
+      error: error.message || "Failed to generate comments.",
+    });
   }
 });
 
-// DeepSeek Endpoint: Explain Code
+// AI Endpoint: Explain Code
 app.post("/api/ai/explain", async (req, res) => {
   try {
     const { code } = req.body;
@@ -685,27 +955,31 @@ Respond in JSON format:
   "concepts": ["string", "string"]
 }`;
 
-    const parsed = await callDeepSeekAi({
+    const parsed = await callPlatformAi({
       cacheKeyPrefix: "explain",
       prompt,
       responseType: "json",
-      maxTokens: 400,
+      maxTokens: 600,
     });
 
     res.json({ success: true, ...parsed });
   } catch (error: any) {
-    console.error("AI Explain Error (DeepSeek):", error);
-    res.status(500).json({ error: error.message || "Failed to explain code with DeepSeek." });
+    console.error("AI Explain Error:", error);
+    res.status(error?.missingApiKey ? 503 : 500).json({
+      success: false,
+      missingApiKey: Boolean(error?.missingApiKey),
+      error: error.message || "Failed to explain code.",
+    });
   }
 });
 
-// DeepSeek Endpoint: Progressive Lesson Hint
+// AI Endpoint: Progressive Lesson Hint
 app.post("/api/ai/hint", async (req, res) => {
   try {
     const { lessonTitle, lessonDescription, currentCode, targetOutput } = req.body;
 
     const prompt = `A student is working on the lesson "${lessonTitle || "Python Exercise"}".
-Lesson task: ${lessonDescription}
+Lesson task: ${lessonDescription || "Practice Python"}
 Expected output/goal: ${targetOutput || "Correct solution"}
 
 Student's current code:
@@ -721,54 +995,65 @@ Respond in JSON:
   "conceptToReview": "string"
 }`;
 
-    const parsed = await callDeepSeekAi({
+    const parsed = await callPlatformAi({
       cacheKeyPrefix: "hint",
       prompt,
       responseType: "json",
-      maxTokens: 250,
+      maxTokens: 350,
     });
 
     res.json({ success: true, ...parsed });
   } catch (error: any) {
-    console.error("AI Hint Error (DeepSeek):", error);
-    res.status(500).json({ error: error.message || "Failed to generate hint with DeepSeek." });
+    console.error("AI Hint Error:", error);
+    res.status(error?.missingApiKey ? 503 : 500).json({
+      success: false,
+      missingApiKey: Boolean(error?.missingApiKey),
+      error: error.message || "Failed to generate hint.",
+    });
   }
 });
 
-// DeepSeek Endpoint: Chat Tutor
+// AI Endpoint: Chat Tutor
 app.post("/api/ai/chat", async (req, res) => {
   try {
-    const { messages, code, lessonContext } = req.body;
+    const { messages, code, currentCode, lessonContext, systemInstruction: customSystem } = req.body;
+    const effectiveCode = code || currentCode || "";
 
-    const systemInstruction = `You are a helpful Python programming tutor. 
+    const systemInstruction =
+      customSystem ||
+      `You are Milky, a helpful and encouraging Python programming tutor.
 The user is currently writing the following code:
 \`\`\`python
-${code}
+${effectiveCode}
 \`\`\`
 ${lessonContext ? `They are currently working on this lesson: ${lessonContext.title} - ${lessonContext.description}` : ""}
 
 Provide concise, encouraging, and educational responses. If you suggest code fixes, provide the complete updated code in a single \`\`\`python block.`;
 
-    const result = await callDeepSeekAi({
+    const result = await callPlatformAi({
       cacheKeyPrefix: "chat",
       systemInstruction,
       prompt: "",
       messages: (messages || []).map((m: any) => ({
-        role: m.role === "assistant" || m.role === "model" ? "assistant" : "user",
+        role: m.role === "assistant" || m.role === "model" ? "model" : "user",
         text: m.text || "",
       })),
       responseType: "text",
-      maxTokens: 500,
+      maxTokens: 800,
     });
 
-    res.json({ success: true, text: result.text });
+    res.json({ success: true, text: result.text, reply: result.text });
   } catch (error: any) {
-    console.error("AI Chat Error (DeepSeek):", error);
-    res.status(500).json({ error: error.message || "Failed to generate chat response with DeepSeek." });
+    console.error("AI Chat Error:", error);
+    res.status(error?.missingApiKey ? 503 : 500).json({
+      success: false,
+      missingApiKey: Boolean(error?.missingApiKey),
+      error: error.message || "Failed to generate chat response.",
+    });
   }
 });
 
-// DeepSeek Endpoint: Dynamic Randomized AI Quiz Generator
+// AI Endpoint: Dynamic Randomized AI Quiz Generator
 app.post("/api/ai/quiz", async (req, res) => {
   try {
     const { lessonTitle, lessonConcept, difficulty } = req.body;
@@ -792,12 +1077,12 @@ Topic: ${lessonTitle || "Python Fundamentals"}
 Concept details: ${lessonConcept ? lessonConcept.slice(0, 500) : "Variables, types, control flow, functions, or data structures"}
 Difficulty: ${difficulty || "intermediate"}`;
 
-    const parsed = await callDeepSeekAi({
+    const parsed = await callPlatformAi({
       cacheKeyPrefix: "quiz",
       systemInstruction,
       prompt,
       responseType: "json",
-      maxTokens: 350,
+      maxTokens: 500,
     });
 
     if (parsed && parsed.question && Array.isArray(parsed.options) && typeof parsed.correctIndex === "number") {
@@ -821,8 +1106,12 @@ Difficulty: ${difficulty || "intermediate"}`;
       throw new Error("Invalid quiz JSON structure received from model");
     }
   } catch (error: any) {
-    console.warn("AI Quiz generation error (DeepSeek):", error.message);
-    res.status(500).json({ error: error.message || "Failed to generate AI quiz with DeepSeek" });
+    console.warn("AI Quiz generation error:", error.message);
+    res.status(error?.missingApiKey ? 503 : 500).json({
+      success: false,
+      missingApiKey: Boolean(error?.missingApiKey),
+      error: error.message || "Failed to generate AI quiz",
+    });
   }
 });
 

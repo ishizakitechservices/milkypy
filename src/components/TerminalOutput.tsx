@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Send,
   History,
+  Square,
 } from "lucide-react";
 
 interface TerminalOutputProps {
@@ -17,6 +18,7 @@ interface TerminalOutputProps {
   streamingOutput?: string;
   isWaitingInput?: boolean;
   onClear: () => void;
+  onStop?: () => void;
   onSendStdin?: (input: string) => void;
   history?: ConsoleHistoryEntry[];
   onClearHistory?: () => void;
@@ -29,6 +31,7 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
   streamingOutput,
   isWaitingInput,
   onClear,
+  onStop,
   onSendStdin,
   history = [],
   onClearHistory = () => {},
@@ -117,6 +120,16 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {isRunning && onStop && (
+            <button
+              onClick={onStop}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer touch-target"
+              title="Stop Running Code"
+            >
+              <Square className="w-3 h-3 fill-current" />
+              <span>Stop</span>
+            </button>
+          )}
           {activeTab === "output" && (
             <>
               <button

@@ -1,29 +1,77 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User cloud files
-    match /files/{fileId} {
-      allow read, write: if true;
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    // Permanent shared Python code snippets
-    match /shared_snippets/{snippetId} {
-      allow read: if true;
-      allow create: if request.resource.data.code is string 
-                    && request.resource.data.code.size() <= 100000
-                    && request.resource.data.id == snippetId;
-      allow update, delete: if false;
-    }
-
-    // Real-time community chat messages
-    match /chat_messages/{messageId} {
-      allow read, create: if true;
-      allow update, delete: if false;
+    function incoming() {
+      return request.resource.data;
     }
 
     // Default safety catch-all
     match /{document=**} {
       allow read, write: if false;
+    }
+
+    // Student login accounts (no collection listing allowed; immutable once created)
+    match /student_accounts/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+                    && incoming().keys().hasAll(['userId', 'passwordHash', 'createdAt'])
+                    && incoming().keys().hasOnly(['userId', 'passwordHash', 'createdAt', 'updatedAt'])
+                    && incoming().userId == userId
+                    && incoming().userId.size() >= 2
+                    && incoming().userId.size() <= 32
+                    && incoming().passwordHash is string
+                    && incoming().passwordHash.size() >= 4
+                    && incoming().passwordHash.size() <= 128
+                    && incoming().createdAt is number;
+      allow update, delete: if false;
+    }
+
+    // User cloud files
+    match /files/{fileId} {
+      allow read: if true;
+      allow create, update: if isValidId(fileId)
+                            && incoming().keys().hasAll(['id', 'userId', 'name', 'code', 'updatedAt'])
+                            && incoming().keys().hasOnly(['id', 'userId', 'name', 'code', 'updatedAt'])
+                            && incoming().id == fileId
+                            && isValidId(incoming().userId)
+                            && incoming().name is string
+                            && incoming().name.size() >= 1
+                            && incoming().name.size() <= 120
+                            && incoming().code is string
+                            && incoming().code.size() <= 200000
+                            && incoming().updatedAt is number;
+      allow delete: if isValidId(fileId);
+    }
+
+    // Permanent shared Python code snippets
+    match /shared_snippets/{snippetId} {
+      allow get: if isValidId(snippetId);
+      allow list: if false;
+      allow create: if isValidId(snippetId)
+                    && incoming().keys().hasAll(['id', 'code', 'createdAt'])
+                    && incoming().keys().hasOnly(['id', 'title', 'code', 'createdAt', 'author'])
+                    && incoming().id == snippetId
+                    && incoming().code is string
+                    && incoming().code.size() >= 1
+                    && incoming().code.size() <= 100000
+                    && incoming().createdAt is number;
+      allow update, delete: if false;
+    }
+
+    // Real-time community chat messages
+    match /chat_messages/{messageId} {
+      allow read: if true;
+      allow create: if isValidId(messageId)
+                    && incoming().keys().hasAll(['id', 'userId', 'content', 'channel', 'createdAt'])
+                    && incoming().keys().hasOnly(['id', 'userId', 'content', 'channel', 'codeSnippet', 'createdAt'])
+                    && incoming().content is string
+                    && incoming().content.size() <= 4000;
+      allow update, delete: if false;
     }
   }
 }
