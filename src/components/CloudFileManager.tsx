@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { UserCloudFile } from "../types";
-import { motion, AnimatePresence } from "motion/react";
 import {
   Save,
   Plus,
@@ -303,21 +302,10 @@ export const CloudFileManager: React.FC<CloudFileManagerProps> = ({
         </button>
       )}
 
-      {/* New File Modal - Clean, friendly, simple */}
-      <AnimatePresence>
-        {showNewFileModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-2xl text-slate-800 dark:text-slate-100"
-            >
+      {/* New File Modal */}
+      {showNewFileModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-2xl text-slate-800 dark:text-slate-100">
               <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
                 <h4 className="text-sm font-bold flex items-center gap-2">
                   <FileCode className="w-4 h-4 text-blue-500 dark:text-blue-400" />
@@ -362,10 +350,9 @@ export const CloudFileManager: React.FC<CloudFileManagerProps> = ({
                   </button>
                 </div>
               </form>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
     </div>
   );
 };

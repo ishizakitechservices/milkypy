@@ -244,10 +244,79 @@ export function explainOfflineCode(code: string): AIExplainResult {
   };
 }
 
-export function getOfflineChatReply(query: string, code: string): string {
+export function getOfflineChatReply(
+  query: string,
+  code: string,
+  lessonContext?: {
+    title?: string;
+    description?: string;
+    quizQuestion?: {
+      question: string;
+      userChoice?: string;
+      correctAnswer: string;
+      explanation?: string;
+      isCorrect?: boolean;
+    };
+  }
+): string {
   const q = query.toLowerCase();
+  const qCtx = lessonContext?.quizQuestion;
 
-  if (q.includes("loop") || q.includes("for") || q.includes("repeat")) {
+  if (qCtx && (q.includes("why") || q.includes("wrong") || q.includes("right") || q.includes("walk") || q.includes("fix") || q.includes("explain"))) {
+    const snippetBlock = code?.trim()
+      ? `\n\n**Code from the question:**\n\`\`\`python\n${code.trim()}\n\`\`\``
+      : "";
+    const choiceNote =
+      qCtx.userChoice !== undefined && !qCtx.isCorrect
+        ? `- **Your choice:** \`${qCtx.userChoice}\`\n- **Correct answer:** \`${qCtx.correctAnswer}\``
+        : `- **Correct answer:** \`${qCtx.correctAnswer}\``;
+
+    return `### Quiz Breakdown: ${lessonContext?.title || "Python Check"}
+
+**Question:** ${qCtx.question}
+${choiceNote}
+
+**Why this happens:**
+${qCtx.explanation || lessonContext?.description || "Trace each line carefully from top to bottom."}${snippetBlock}
+
+Try editing the code in the quiz sandbox or Playground to compare both versions live.`;
+  }
+
+  if (q.includes("f-string") || q.includes("f string") || q.includes("format") || q.includes("{") || code.includes("{") && q.includes("print")) {
+    return `### F-Strings in Python (Offline Guide)
+
+Put an \`f\` directly before the opening quote (\`f"..."\`) so Python replaces \`{variable}\` with its real value:
+
+\`\`\`python
+points = 100
+
+# Without leading f: prints literal "{points}"
+print("{points}")
+
+# With leading f: substitutes the variable value (100)
+print(f"{points}")
+print(f"Score: {points + 50}")
+\`\`\`
+
+Without the leading \`f\`, Python treats curly braces \`{...}\` as ordinary text characters.`;
+  }
+
+  if (q.includes("return") || q.includes("print(")) {
+    return `### return vs print() in Python (Offline Guide)
+
+- \`print()\` only shows text on the screen and gives back \`None\`.
+- \`return\` sends a value back from a function so you can save it in a variable or calculate with it.
+
+\`\`\`python
+def double(n):
+    return n * 2
+
+result = double(5)
+print(f"Double is {result}")  # 10
+\`\`\``;
+  }
+
+  if (q.includes("loop") || q.includes("for") || q.includes("while") || q.includes("repeat")) {
     return `### For Loops in Python (Offline Guide)
 
 Use a \`for\` loop when you want to repeat code a specific number of times:
@@ -290,10 +359,10 @@ total = add(15, 25)  # 40
 \`\`\``;
   }
 
-  if (q.includes("if") || q.includes("condition") || q.includes("else")) {
+  if (q.includes("if") || q.includes("condition") || q.includes("else") || q.includes("==")) {
     return `### If / Elif / Else Statements (Offline Guide)
 
-Python evaluates conditional expressions sequentially:
+Python evaluates conditional expressions sequentially (and uses \`==\` to compare, \`=\` to assign):
 
 \`\`\`python
 score = 85
@@ -311,10 +380,10 @@ else:
 *Comparison operators:* \`==\` (equal), \`!=\` (not equal), \`>\`, \`<\`, \`>=\`, \`<=\`.`;
   }
 
-  if (q.includes("list") || q.includes("array")) {
-    return `### Lists in Python (Offline Guide)
+  if (q.includes("list") || q.includes("slice") || q.includes("index") || q.includes("array")) {
+    return `### Lists & Indexing in Python (Offline Guide)
 
-Lists store ordered sequences of items:
+Lists use 0-based indexing (\`0\` is the first item, \`-1\` is the last item):
 
 \`\`\`python
 inventory = ["sword", "shield", "potion"]
@@ -323,14 +392,11 @@ inventory = ["sword", "shield", "potion"]
 inventory.append("magic ring")
 
 # Access by index (0-based)
-print(inventory[0])  # "sword"
+print(inventory[0])   # "sword"
+print(inventory[-1])  # "magic ring"
 
 # Check length
 print(f"Items count: {len(inventory)}")
-
-# Check if item exists
-if "potion" in inventory:
-    print("You have a healing potion!")
 \`\`\``;
   }
 
@@ -384,7 +450,7 @@ Use \`input(prompt)\` to receive typed input from the terminal:
 
 \`\`\`python
 user_name = input("What is your name? ")
-print(f"Welcome to Milky AI Tutor, {user_name}!")
+print(f"Welcome, {user_name}!")
 
 # Remember: input() returns a string! Convert to int if needed:
 age = int(input("Enter your age: "))
@@ -402,21 +468,18 @@ print(f"Next year you will be {next_year} years old.")
     q.includes("where should i start") ||
     q.includes("roadmap")
   ) {
-    return `### MilkyPy Python Curriculum Roadmap (Offline Reference)\n\n${MILKY_CURRICULUM_OUTLINE}\n\nAsk about any topic above (for example: variables, f-strings, if/else, loops, lists, dictionaries, or functions) to study offline, or reconnect for interactive AI tutoring.`;
+    return `### MilkyPy Python Curriculum Roadmap (Offline Reference)\n\n${MILKY_CURRICULUM_OUTLINE}\n\nAsk about any topic above (for example: variables, f-strings, if/else, loops, lists, dictionaries, or functions) to study offline.`;
   }
 
-  return `### Milky AI Tutor Offline Python Knowledge Base
+  return `### Offline Python Guide
 
-You are currently in **Offline Standalone Mode**. Code execution, arcade games, lessons, and syntax verification are running locally on your device.
+You are currently in **Offline Mode**. Code execution, lessons, quizzes, and syntax checks all work locally on your device.
 
-**Quick Topics You Can Ask About:**
-- *Curriculum Roadmap* (all 7 modules and 24 lessons)
-- *Loops* (for, while, range)
-- *Functions* (def, return, parameters)
-- *Conditionals* (if, elif, else)
-- *Lists & Dictionaries*
-- *User Input & Print formatting*
-- *Random numbers & Games logic*
-
-*(When connected to the internet, the full Milky AI chatbot automatically handles general questions, Python help, and interactive curriculum teaching.)*`;
+**Topics you can ask about offline:**
+- *F-strings & formatting* (\`f"{var}"\`)
+- *Curriculum roadmap* (all 7 modules and 24 lessons)
+- *Loops* (\`for\`, \`while\`, \`range\`)
+- *Functions & return vs print*
+- *Conditionals* (\`if\`, \`elif\`, \`else\`, \`==\`)
+- *Lists, indexing & dictionaries*`;
 }

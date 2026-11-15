@@ -1,105 +1,149 @@
-import React, { useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Sparkles, X, Award, CheckCircle } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { X, CheckCircle2, HardDrive, Award, RotateCcw, ArrowRight } from "lucide-react";
 import { LearnerBadge } from "../data/badges";
 
+export interface LessonSavedNotification {
+  lessonId: string;
+  lessonTitle: string;
+  xpEarned: number;
+  badge?: LearnerBadge | null;
+  currentUser?: string | null;
+}
+
 interface BadgeCelebrationToastProps {
-  notification: {
-    badge?: LearnerBadge | null;
-    lessonTitle: string;
-    xpEarned: number;
-  } | null;
+  notification: LessonSavedNotification | null;
   onClose: () => void;
+  onUndo?: (lessonId: string) => void;
+  onNextLesson?: () => void;
+  onOpenBadges?: () => void;
 }
 
 export const BadgeCelebrationToast: React.FC<BadgeCelebrationToastProps> = ({
   notification,
   onClose,
+  onUndo,
+  onNextLesson,
+  onOpenBadges,
 }) => {
+  const [paused, setPaused] = useState(false);
+
   useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification, onClose]);
+    if (!notification || paused) return;
+    const timer = window.setTimeout(() => {
+      onClose();
+    }, 5500);
+    return () => window.clearTimeout(timer);
+  }, [notification, paused, onClose]);
 
   if (!notification) return null;
 
   const isNewBadge = Boolean(notification.badge);
 
   return (
-    <AnimatePresence>
-      <div className="fixed bottom-6 right-4 sm:right-6 z-50 pointer-events-auto max-w-sm w-full">
-        <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 350, damping: 25 }}
-          className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border-2 border-amber-300 dark:border-amber-500/60 shadow-2xl p-4 sm:p-5"
-        >
-          {/* Confetti Glow Background Effect */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-amber-400/20 dark:bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+    <div
+      role="status"
+      aria-live="polite"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      className="fixed bottom-20 md:bottom-5 right-4 sm:right-5 z-50 pointer-events-auto max-w-sm w-[calc(100vw-2rem)] sm:w-full"
+    >
+      <div className="relative overflow-hidden rounded-xl bg-white/95 dark:bg-[#15171E]/95 backdrop-blur-md border border-slate-200 dark:border-[#252933] shadow-lg p-3.5 sm:p-4">
+        {/* Top subtle status bar */}
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-center shrink-0 mt-0.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
 
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-2.5 right-2.5 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Dismiss"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          <div className="flex items-start gap-3.5">
-            {/* Badge or Trophy Icon Circle */}
-            <div
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-md shrink-0 bg-linear-to-br ${
-                notification.badge
-                  ? notification.badge.gradient
-                  : "from-emerald-400 to-teal-500"
-              }`}
-            >
-              <span className="select-none animate-bounce">
-                {notification.badge ? notification.badge.icon : "★"}
+          <div className="flex-1 min-w-0 pr-5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-slate-900 dark:text-[#F3F4F6]">
+                Lesson completed
+              </span>
+              <span className="text-[11px] font-mono font-semibold text-emerald-700 dark:text-[#65D9D0] tabular-nums">
+                +{notification.xpEarned} XP
               </span>
             </div>
 
-            {/* Notification Text */}
-            <div className="flex-1 pr-4">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                {isNewBadge ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/60">
-                    <Sparkles className="w-2.5 h-2.5 text-amber-500" />
-                    New Badge Unlocked!
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300/60">
-                    <CheckCircle className="w-2.5 h-2.5 text-emerald-500" />
-                    Lesson Completed!
-                  </span>
-                )}
-                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
-                  +{notification.xpEarned} XP
-                </span>
-              </div>
+            <p className="text-xs text-slate-700 dark:text-slate-200 font-medium truncate mt-0.5">
+              {notification.lessonTitle}
+            </p>
 
-              <h4 className="text-sm font-black text-slate-900 dark:text-slate-100 leading-snug">
-                {isNewBadge
-                  ? notification.badge?.title
-                  : notification.lessonTitle}
-              </h4>
-
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                {isNewBadge
-                  ? notification.badge?.description
-                  : "Awesome work! Keep coding and unlock more badges!"}
-              </p>
+            {/* Explicit local storage confirmation */}
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-[#BFC4CE] mt-1.5">
+              <HardDrive className="w-3 h-3 text-slate-400 dark:text-slate-400 shrink-0" />
+              <span>
+                Progress saved locally on this device
+                {notification.currentUser ? ` · ${notification.currentUser}` : " (offline ready)"}
+              </span>
             </div>
+
+            {/* Milestone badge line (subtle inline row if unlocked) */}
+            {isNewBadge && notification.badge && (
+              <div className="mt-2 px-2.5 py-1.5 rounded-lg bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 flex items-center justify-between gap-2 text-[11px]">
+                <span className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 font-medium min-w-0 truncate">
+                  <Award className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Unlocked: {notification.badge.title}</span>
+                </span>
+                {onOpenBadges && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenBadges();
+                      onClose();
+                    }}
+                    className="font-semibold text-amber-700 dark:text-amber-300 hover:underline shrink-0 cursor-pointer"
+                  >
+                    View
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Quick follow-up actions */}
+            {(onUndo || onNextLesson) && (
+              <div className="flex items-center gap-2 mt-2.5 pt-2 border-t border-slate-100 dark:border-[#252933]">
+                {onUndo && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUndo(notification.lessonId);
+                      onClose();
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:text-[#BFC4CE] dark:hover:text-white cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Undo</span>
+                  </button>
+                )}
+                {onNextLesson && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onNextLesson();
+                      onClose();
+                    }}
+                    className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-[#8BBEFF] hover:underline cursor-pointer"
+                  >
+                    <span>Next lesson</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-        </motion.div>
+        </div>
+
+        {/* Dismiss button */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-2.5 right-2.5 p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#252933] transition-colors cursor-pointer"
+          aria-label="Dismiss notification"
+          title="Dismiss"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
-    </AnimatePresence>
+    </div>
   );
 };

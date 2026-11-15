@@ -5,7 +5,6 @@ import {
   AIExplainResult,
 } from "../types";
 import {
-  Sparkles,
   X,
   Bug,
   MessageSquare,
@@ -22,11 +21,11 @@ import {
   Search,
   Clock,
   WifiOff,
-  Wifi,
   Square,
+  ChevronDown,
+  Code2,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { motion, AnimatePresence } from "motion/react";
 import {
   AiChatSession,
   saveAiChatSession,
@@ -40,6 +39,7 @@ import {
   getOfflineChatReply,
 } from "../lib/offlineAiKnowledge";
 import { getApiUrl, fetchWithTimeout } from "../lib/apiConfig";
+import { CopyCodeButton } from "./CopyCodeButton";
 
 interface AIAssistPanelProps {
   isOpen: boolean;
@@ -47,7 +47,20 @@ interface AIAssistPanelProps {
   code: string;
   errorMessage?: string;
   onApplyCode: (newCode: string) => void;
-  lessonContext?: { title: string; description: string; expectedOutput?: string };
+  lessonContext?: {
+    title: string;
+    description: string;
+    expectedOutput?: string;
+    learningObjectives?: string[];
+    starterCode?: string;
+    quizQuestion?: {
+      question: string;
+      userChoice?: string;
+      correctAnswer: string;
+      explanation?: string;
+      isCorrect?: boolean;
+    };
+  };
 }
 
 type TabType = "chat" | "debug" | "comments" | "explain" | "hint";
@@ -88,6 +101,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
   const [isOnline, setIsOnline] = useState<boolean>(() =>
     typeof navigator !== "undefined" ? navigator.onLine : true
   );
+  const [showObjectives, setShowObjectives] = useState(false);
   const activeAbortRef = useRef<AbortController | null>(null);
   const manualCancelRef = useRef(false);
 
@@ -241,7 +255,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
-        throw new Error("AI endpoint did not return JSON (check Cloudflare Pages Functions or VITE_SERVER_URL).");
+        throw new Error("AI endpoint did not return JSON (check Cloudflare Workers API deployment or VITE_SERVER_URL).");
       }
       const data = await res.json();
       if (res.ok && data.success) {
@@ -296,7 +310,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
-        throw new Error("AI endpoint did not return JSON (check Cloudflare Pages Functions or VITE_SERVER_URL).");
+        throw new Error("AI endpoint did not return JSON (check Cloudflare Workers API deployment or VITE_SERVER_URL).");
       }
       const data = await res.json();
       if (res.ok && data.success) {
@@ -340,7 +354,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
-        throw new Error("AI endpoint did not return JSON (check Cloudflare Pages Functions or VITE_SERVER_URL).");
+        throw new Error("AI endpoint did not return JSON (check Cloudflare Workers API deployment or VITE_SERVER_URL).");
       }
       const data = await res.json();
       if (res.ok && data.success) {
@@ -392,7 +406,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
-        throw new Error("AI endpoint did not return JSON (check Cloudflare Pages Functions or VITE_SERVER_URL).");
+        throw new Error("AI endpoint did not return JSON (check Cloudflare Workers API deployment or VITE_SERVER_URL).");
       }
       const data = await res.json();
       if (res.ok && data.success) {
@@ -433,7 +447,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     setErrorText(null);
 
     if (!navigator.onLine) {
-      const offlineReply = getOfflineChatReply(userText, code);
+      const offlineReply = getOfflineChatReply(userText, code, lessonContext);
       const finalMessages = [...newMessages, { role: "model" as const, text: offlineReply }];
       setChatMessages(finalMessages);
 
@@ -469,7 +483,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       });
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
-        throw new Error("AI endpoint did not return JSON (check Cloudflare Pages Functions or VITE_SERVER_URL).");
+        throw new Error("AI endpoint did not return JSON (check Cloudflare Workers API deployment or VITE_SERVER_URL).");
       }
       const data = await res.json();
       const replyText = data.text || data.reply;
@@ -493,14 +507,14 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           reloadChatHistory();
         }).catch((err) => console.warn("Failed to save chat to IndexedDB:", err));
       } else {
-        setErrorText(data.error || "Cloud AI unavailable — using on-device Python handbook.");
-        const offlineReply = getOfflineChatReply(userText, code);
+        setErrorText(data.error || "Cloud AI unavailable — using on-device Python guide.");
+        const offlineReply = getOfflineChatReply(userText, code, lessonContext);
         setChatMessages([...newMessages, { role: "model" as const, text: offlineReply }]);
       }
     } catch (e: any) {
       if (manualCancelRef.current) return;
-      setErrorText(e?.message || "Cloud AI unavailable — using on-device Python handbook.");
-      const offlineReply = getOfflineChatReply(userText, code);
+      setErrorText(e?.message || "Cloud AI unavailable — using on-device Python guide.");
+      const offlineReply = getOfflineChatReply(userText, code, lessonContext);
       setChatMessages([...newMessages, { role: "model" as const, text: offlineReply }]);
     } finally {
       if (activeAbortRef.current === controller) activeAbortRef.current = null;
@@ -522,34 +536,23 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     }, 1000);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-slate-900/40 flex justify-end"
-        >
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="w-full max-w-lg bg-white dark:bg-[#08090D] border-l border-slate-200 dark:border-[#252933] h-full flex flex-col shadow-xl overflow-hidden select-none"
-          >
-            {/* Panel Header */}
+    <div className="fixed inset-0 z-50 bg-slate-900/40 flex justify-end">
+      <div className="w-full max-w-lg bg-white dark:bg-[#08090D] border-l border-slate-200 dark:border-[#252933] h-full flex flex-col shadow-xl overflow-hidden select-none">
+        {/* Panel Header */}
         <div className="p-3.5 border-b border-slate-200 dark:border-[#252933] bg-slate-100 dark:bg-[#15171E] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-blue-600 dark:bg-[#8BBEFF] text-white dark:text-[#08090D] shadow-xs">
-              <Sparkles className="w-4 h-4" />
+              <MessageSquare className="w-4 h-4" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-[#F3F4F6]">
-                Ask AI Assistant
+                Code Help
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-[#BFC4CE]">
-                General assistant, Python specialist & curriculum tutor
+                Fix errors, explain code, or ask questions
               </p>
             </div>
           </div>
@@ -570,9 +573,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           <div className="bg-amber-500/10 dark:bg-amber-500/15 border-b border-amber-500/20 px-3.5 py-1.5 flex items-center justify-between text-xs text-amber-700 dark:text-amber-300 font-medium">
             <div className="flex items-center gap-1.5">
               <WifiOff className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              <span>Offline Standalone Mode: Local Python Handbook active</span>
+              <span>Offline Mode: Built-in Python guide active</span>
             </div>
-            <span className="text-[10px] bg-amber-500/20 text-amber-800 dark:text-amber-200 px-1.5 py-0.5 rounded font-mono font-semibold">100% On-Device</span>
+            <span className="text-[10px] bg-amber-500/20 text-amber-800 dark:text-amber-200 px-1.5 py-0.5 rounded font-mono font-semibold">Offline</span>
           </div>
         )}
 
@@ -586,7 +589,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                 : "text-slate-600 dark:text-[#BFC4CE] hover:bg-slate-200 dark:hover:bg-[#252933]"
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300 dark:text-amber-400" />
+            <MessageCircle className="w-3.5 h-3.5" />
             <span>Chat</span>
           </button>
           
@@ -639,22 +642,82 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           </button>
         </div>
 
-        {/* Active Curriculum Lesson Context Banner */}
-        {lessonContext?.title && (
-          <div className="bg-blue-50 dark:bg-blue-950/40 border-b border-blue-200 dark:border-blue-800/60 px-3.5 py-2.5 space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                Current Lesson: {lessonContext.title}
+        {/* Active Curriculum Lesson or Quiz Context Banner */}
+        {(lessonContext?.title || lessonContext?.quizQuestion) && (
+          <div className="bg-blue-50 dark:bg-blue-950/40 border-b border-blue-200 dark:border-blue-800/60 px-3.5 py-2.5 space-y-2">
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5 min-w-0 truncate">
+                <Code2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                <span className="truncate">
+                  {lessonContext.quizQuestion ? "Quiz Help: " : "Lesson: "}
+                  {lessonContext.title}
+                </span>
               </span>
-              <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded font-mono font-semibold">
-                Curriculum Mode
-              </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {lessonContext.learningObjectives && lessonContext.learningObjectives.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowObjectives((prev) => !prev)}
+                    className="flex items-center gap-1 text-[10px] font-bold text-blue-700 dark:text-blue-300 hover:underline cursor-pointer"
+                  >
+                    <span>Objectives ({lessonContext.learningObjectives.length})</span>
+                    <ChevronDown className={`w-3 h-3 transition-transform ${showObjectives ? "rotate-180" : ""}`} />
+                  </button>
+                )}
+              </div>
             </div>
-            {lessonContext.description && (
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-normal">
-                {lessonContext.description}
-              </p>
+
+            {lessonContext.quizQuestion ? (
+              <div className="rounded-lg bg-white/80 dark:bg-[#08090D]/80 border border-blue-200/80 dark:border-blue-900/60 p-2.5 text-[11px] space-y-1.5">
+                <p className="font-semibold text-slate-800 dark:text-slate-100 leading-snug">
+                  {lessonContext.quizQuestion.question}
+                </p>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+                  {lessonContext.quizQuestion.userChoice !== undefined && (
+                    <span className={lessonContext.quizQuestion.isCorrect ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}>
+                      <strong>Your pick:</strong> {lessonContext.quizQuestion.userChoice}
+                    </span>
+                  )}
+                  <span className="text-emerald-700 dark:text-emerald-300">
+                    <strong>Answer:</strong> {lessonContext.quizQuestion.correctAnswer}
+                  </span>
+                </div>
+                {!showHistoryDrawer && activeTab === "chat" && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {[
+                      lessonContext.quizQuestion.isCorrect
+                        ? `Explain why "${lessonContext.quizQuestion.correctAnswer}" works here`
+                        : `Why is "${lessonContext.quizQuestion.correctAnswer}" right instead of "${lessonContext.quizQuestion.userChoice}"?`,
+                      "Walk through what this code runs line by line",
+                      "Show me a fixed version and a similar example",
+                    ].map((prompt) => (
+                      <button
+                        key={prompt}
+                        type="button"
+                        disabled={loading}
+                        onClick={() => sendChatPrompt(prompt)}
+                        className="px-2 py-1 rounded-md bg-blue-100/80 hover:bg-blue-200/80 dark:bg-[#8BBEFF]/15 dark:hover:bg-[#8BBEFF]/25 text-blue-800 dark:text-[#8BBEFF] font-semibold text-[10px] transition-colors cursor-pointer disabled:opacity-50 text-left"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              lessonContext.description && (
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-normal line-clamp-2">
+                  {lessonContext.description}
+                </p>
+              )
+            )}
+
+            {showObjectives && lessonContext.learningObjectives && lessonContext.learningObjectives.length > 0 && (
+              <ul className="pt-1 border-t border-blue-200/70 dark:border-blue-800/50 space-y-0.5 list-disc list-inside text-[11px] text-slate-700 dark:text-slate-300">
+                {lessonContext.learningObjectives.map((obj, idx) => (
+                  <li key={idx}>{obj}</li>
+                ))}
+              </ul>
             )}
           </div>
         )}
@@ -684,8 +747,8 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   <MessageCircle className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                   <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
                     {showHistoryDrawer
-                      ? "Milky AI Tutor History"
-                      : activeSessionTitle || "Milky AI Tutor"}
+                      ? "Chat History"
+                      : activeSessionTitle || "Code Help"}
                   </span>
                 </div>
 
@@ -942,17 +1005,20 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                                         <pre className={className} {...props}>
                                           <code>{children}</code>
                                         </pre>
-                                        <button
-                                          onClick={() => applyCodeFix(codeString)}
-                                          className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-sans text-[10px] font-bold flex items-center gap-1 w-full justify-center cursor-pointer"
-                                        >
-                                          {applied ? (
-                                            <Check className="w-3 h-3" />
-                                          ) : (
-                                            <Sparkles className="w-3 h-3" />
-                                          )}
-                                          <span>{applied ? "Applied" : "Apply Code"}</span>
-                                        </button>
+                                        <div className="flex items-center gap-1.5">
+                                          <CopyCodeButton code={codeString} compact />
+                                          <button
+                                            onClick={() => applyCodeFix(codeString)}
+                                            className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-sans text-[10px] font-bold flex items-center gap-1 flex-1 justify-center cursor-pointer"
+                                          >
+                                            {applied ? (
+                                              <Check className="w-3 h-3" />
+                                            ) : (
+                                              <Code2 className="w-3 h-3" />
+                                            )}
+                                            <span>{applied ? "Applied" : "Apply Code"}</span>
+                                          </button>
+                                        </div>
                                       </div>
                                     );
                                   }
@@ -974,7 +1040,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                       <div className="flex items-center justify-between gap-2 text-slate-500 text-xs ml-2 p-2 rounded-lg bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
                         <div className="flex items-center gap-2">
                           <RotateCcw className="w-3.5 h-3.5 animate-spin text-blue-500" />
-                          <span>Milky is thinking...</span>
+                          <span>Thinking...</span>
                         </div>
                         <button
                           type="button"
@@ -1069,7 +1135,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                     className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
                   >
                     <Bug className="w-4 h-4" />
-                    <span>Run AI Debugger</span>
+                    <span>Find Fix</span>
                   </button>
                 )}
               </div>
@@ -1099,7 +1165,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                         onClick={() => applyCodeFix(debugResult.fixedCode)}
                         className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-sans text-xs font-bold flex items-center gap-1 shadow-sm"
                       >
-                        {applied ? <Check className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
+                        {applied ? <Check className="w-3.5 h-3.5" /> : <Code2 className="w-3.5 h-3.5" />}
                         <span>{applied ? "Applied!" : "Apply Fix to Code"}</span>
                       </button>
                     </div>
@@ -1116,9 +1182,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           {activeTab === "comments" && (
             <div className="space-y-4">
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-xs space-y-2">
-                <div className="text-slate-800 dark:text-slate-200 font-bold">Inject Guided Line Comments</div>
+                <div className="text-slate-800 dark:text-slate-200 font-bold">Add Code Comments</div>
                 <p className="text-slate-500 dark:text-slate-400 text-[11px]">
-                  Adds line-by-line educational Python <span className="font-mono text-blue-600 dark:text-blue-400"># comments</span> to guide learners step-by-step.
+                  Adds clear <span className="font-mono text-blue-600 dark:text-blue-400"># comments</span> to explain what each part of your code does.
                 </p>
 
                 {loading ? (
@@ -1128,7 +1194,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                       className="flex-1 py-2 bg-blue-500/80 text-white rounded-lg font-bold flex items-center justify-center gap-2"
                     >
                       <RotateCcw className="w-4 h-4 animate-spin" />
-                      <span>Generating Comments...</span>
+                      <span>Adding Comments...</span>
                     </button>
                     <button
                       type="button"
@@ -1145,7 +1211,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                     className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
                   >
                     <MessageSquare className="w-4 h-4" />
-                    <span>Add Educational Comments</span>
+                    <span>Add Comments</span>
                   </button>
                 )}
               </div>
@@ -1158,13 +1224,13 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center text-xs font-mono text-slate-700 dark:text-slate-300">
-                      <span>Commented Python Script</span>
+                      <span>Commented Python Code</span>
                       <button
                         onClick={() => applyCodeFix(commentResult.commentedCode)}
                         className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-sans text-xs font-bold flex items-center gap-1"
                       >
-                        {applied ? <Check className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
-                        <span>{applied ? "Applied!" : "Apply Commented Code"}</span>
+                        {applied ? <Check className="w-3.5 h-3.5" /> : <Code2 className="w-3.5 h-3.5" />}
+                        <span>{applied ? "Applied!" : "Apply Comments"}</span>
                       </button>
                     </div>
                     <pre className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-xs text-slate-800 dark:text-slate-100 overflow-x-auto whitespace-pre-wrap">
@@ -1180,9 +1246,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           {activeTab === "explain" && (
             <div className="space-y-4">
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 text-xs space-y-2">
-                <div className="text-slate-800 dark:text-slate-200 font-medium">Explain Python Execution</div>
+                <div className="text-slate-800 dark:text-slate-200 font-medium">Explain Code</div>
                 <p className="text-slate-600 dark:text-slate-400 text-[11px]">
-                  Translates code logic into beginner-friendly plain English breakdown.
+                  Explains what your Python code does in simple, plain words.
                 </p>
 
                 {loading ? (
@@ -1215,14 +1281,14 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
               </div>
 
               {explainResult && (
-                <div className="space-y-3 animate-fadeIn text-xs">
+                <div className="space-y-3 text-xs">
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-1">
                     <div className="font-semibold text-blue-600 dark:text-blue-400">Summary:</div>
                     <p className="text-slate-800 dark:text-slate-200">{explainResult.summary}</p>
                   </div>
 
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
-                    <div className="font-semibold text-emerald-700 dark:text-emerald-400">Execution Steps:</div>
+                    <div className="font-semibold text-emerald-700 dark:text-emerald-400">Steps:</div>
                     <ol className="list-decimal list-inside space-y-1 text-slate-800 dark:text-slate-200">
                       {explainResult.steps.map((step, idx) => (
                         <li key={idx}>{step}</li>
@@ -1232,7 +1298,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
                   {explainResult.concepts && (
                     <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-1">
-                      <div className="font-semibold text-purple-700 dark:text-purple-300">Core Concepts Used:</div>
+                      <div className="font-semibold text-purple-700 dark:text-purple-300">Topics Used:</div>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {explainResult.concepts.map((c, idx) => (
                           <span
@@ -1254,9 +1320,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           {activeTab === "hint" && (
             <div className="space-y-4">
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 text-xs space-y-2">
-                <div className="text-slate-800 dark:text-slate-200 font-medium">Get Progressive Hint</div>
+                <div className="text-slate-800 dark:text-slate-200 font-medium">Get a Hint</div>
                 <p className="text-slate-600 dark:text-slate-400 text-[11px]">
-                  Get a helpful nudge on your current lesson exercise without spoiling the answer.
+                  Get a small hint for your current task without giving away the full answer.
                 </p>
 
                 {loading ? (
@@ -1283,16 +1349,16 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                     className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
                     <Lightbulb className="w-4 h-4" />
-                    <span>Ask AI for Hint</span>
+                    <span>Show Hint</span>
                   </button>
                 )}
               </div>
 
               {hintResult && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg text-xs space-y-2 text-amber-800 dark:text-amber-200 animate-fadeIn">
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg text-xs space-y-2 text-amber-800 dark:text-amber-200">
                   <div className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                     <Lightbulb className="w-4 h-4" />
-                    <span>AI Tutor Hint</span>
+                    <span>Hint</span>
                   </div>
                   <p>{hintResult.hint}</p>
                   {hintResult.conceptToReview && (
@@ -1305,9 +1371,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
             </div>
           )}
         </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      </div>
+    </div>
   );
 };

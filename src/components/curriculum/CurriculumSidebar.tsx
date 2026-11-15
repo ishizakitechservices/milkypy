@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { CurriculumModule } from "../../data/curriculum/schema";
-import { ChevronDown, ChevronRight, CheckCircle2, Circle, Search, X, PanelLeftClose, FileCode, BookmarkCheck, Play } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle2, Circle, Search, X, PanelLeftClose, FileCode, BookmarkCheck, Play, BookMarked, Award } from "lucide-react";
 
 interface CurriculumSidebarProps {
   modules: CurriculumModule[];
@@ -11,6 +11,10 @@ interface CurriculumSidebarProps {
   onCloseMobile?: () => void;
   onToggleDesktopCollapse?: () => void;
   onOpenFormatGuide?: () => void;
+  onOpenGlossary?: () => void;
+  onOpenBadges?: () => void;
+  earnedBadgesCount?: number;
+  totalXp?: number;
   isMobileDrawer?: boolean;
   currentUser?: string | null;
   lastActiveLessonId?: string;
@@ -25,6 +29,10 @@ export const CurriculumSidebar: React.FC<CurriculumSidebarProps> = ({
   onCloseMobile,
   onToggleDesktopCollapse,
   onOpenFormatGuide,
+  onOpenGlossary,
+  onOpenBadges,
+  earnedBadgesCount = 0,
+  totalXp = 0,
   isMobileDrawer = false,
   currentUser = null,
   lastActiveLessonId,
@@ -249,16 +257,50 @@ export const CurriculumSidebar: React.FC<CurriculumSidebarProps> = ({
         })}
       </div>
 
-      {/* Footer: Curriculum Schema Guide */}
-      {onOpenFormatGuide && (
-        <div className="p-2.5 border-t border-slate-200 dark:border-[#252933] bg-slate-100/50 dark:bg-[#15171E]/50">
-          <button
-            onClick={onOpenFormatGuide}
-            className="w-full flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs text-slate-500 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-white transition-colors touch-target"
-          >
-            <FileCode className="w-3.5 h-3.5" />
-            <span>Format Guide</span>
-          </button>
+      {/* Footer: Glossary, Badges, & Curriculum Format Guide */}
+      {(onOpenGlossary || onOpenBadges || onOpenFormatGuide) && (
+        <div className="p-2.5 border-t border-slate-200 dark:border-[#252933] bg-slate-100/50 dark:bg-[#15171E]/50 space-y-1.5">
+          {(onOpenGlossary || onOpenBadges) && (
+            <div className="grid grid-cols-2 gap-1.5">
+              {onOpenGlossary && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenGlossary();
+                    if (isOpenOnMobile && onCloseMobile) onCloseMobile();
+                  }}
+                  className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-white dark:bg-[#08090D] hover:bg-slate-50 dark:hover:bg-[#252933] border border-slate-200 dark:border-[#252933] text-xs font-semibold text-slate-700 dark:text-[#F3F4F6] transition-colors cursor-pointer touch-target"
+                >
+                  <BookMarked className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
+                  <span>Glossary</span>
+                </button>
+              )}
+              {onOpenBadges && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenBadges();
+                    if (isOpenOnMobile && onCloseMobile) onCloseMobile();
+                  }}
+                  className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-white dark:bg-[#08090D] hover:bg-slate-50 dark:hover:bg-[#252933] border border-slate-200 dark:border-[#252933] text-xs font-semibold text-slate-700 dark:text-[#F3F4F6] transition-colors cursor-pointer touch-target"
+                  title={`${totalXp} XP earned`}
+                >
+                  <Award className="w-3.5 h-3.5 text-amber-500 dark:text-[#F2BC72]" />
+                  <span>Badges ({earnedBadgesCount})</span>
+                </button>
+              )}
+            </div>
+          )}
+          {onOpenFormatGuide && (
+            <button
+              type="button"
+              onClick={onOpenFormatGuide}
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[11px] text-slate-500 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              <FileCode className="w-3.5 h-3.5" />
+              <span>Format Guide</span>
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -67,7 +67,7 @@ export const ArcadePlayer: React.FC<ArcadePlayerProps> = ({
             className="p-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-all flex items-center gap-1.5 text-xs font-bold"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Arcade Hall</span>
+            <span className="hidden sm:inline">All Games</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export const ArcadePlayer: React.FC<ArcadePlayerProps> = ({
             >
               <div className="flex items-center gap-2">
                 <TerminalIcon className="w-3.5 h-3.5 text-purple-400" />
-                <span>Python Standard Output Stream</span>
+                <span>Game Log</span>
                 {terminalLogs.length > 0 && (
                   <span className="px-1.5 py-0.2 rounded-full bg-purple-950 border border-purple-800 text-purple-300 text-[10px]">
                     {terminalLogs.length} events
@@ -159,10 +159,10 @@ export const ArcadePlayer: React.FC<ArcadePlayerProps> = ({
             {showTerminal && (
               <div className="h-32 bg-slate-950 p-3 overflow-y-auto font-mono text-xs text-slate-300 space-y-1 border-t border-slate-800/80">
                 {terminalLogs.length === 0 ? (
-                  <p className="text-slate-500 italic">Terminal is silent. Execute game controls to trigger events.</p>
+                  <p className="text-slate-500 italic">No game events yet.</p>
                 ) : (
                   terminalLogs.map((log, i) => (
-                    <p key={i} className="leading-relaxed border-l-2 border-slate-800 pl-2">
+                    <p key={i} className="leading-relaxed pl-2">
                       <span className="text-purple-400 font-bold mr-1.5">&gt;_</span>
                       {log}
                     </p>
@@ -300,49 +300,61 @@ const PacmanGameStage: React.FC<{
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [pacman, isRunning, isGameOver, isWon]);
 
+  const dirRef = useRef(dir);
+  dirRef.current = dir;
+  const pacmanRef = useRef(pacman);
+  pacmanRef.current = pacman;
+  const scoreRef = useRef(score);
+  scoreRef.current = score;
+  const onUpdateScoreRef = useRef(onUpdateScore);
+  onUpdateScoreRef.current = onUpdateScore;
+  const onLogRef = useRef(onLog);
+  onLogRef.current = onLog;
+
   useEffect(() => {
     if (!isRunning || isGameOver || isWon) return;
 
     const timer = setInterval(() => {
-      setPacman((prevPac) => {
-        if (dir[0] === 0 && dir[1] === 0) return prevPac;
+      const activeDir = dirRef.current;
+      let nextPacPos = pacmanRef.current;
 
-        const nextX = prevPac[0] + dir[0];
-        const nextY = prevPac[1] + dir[1];
+      if (activeDir[0] !== 0 || activeDir[1] !== 0) {
+        const nextX = nextPacPos[0] + activeDir[0];
+        const nextY = nextPacPos[1] + activeDir[1];
+        if (nextX >= 0 && nextX < 9 && nextY >= 0 && nextY < 9 && maze[nextY][nextX] !== 1) {
+          nextPacPos = [nextX, nextY];
+          setPacman(nextPacPos);
 
-        if (nextX < 0 || nextX >= 9 || nextY < 0 || nextY >= 9 || maze[nextY][nextX] === 1) {
-          return prevPac;
-        }
+          setPellets((prevPellets) => {
+            const isPelletEaten = prevPellets.some(
+              (p) => p[0] === nextPacPos[0] && p[1] === nextPacPos[1]
+            );
+            if (!isPelletEaten) return prevPellets;
 
-        const newPac: [number, number] = [nextX, nextY];
-
-        setPellets((prevPellets) => {
-          const isPelletEaten = prevPellets.some((p) => p[0] === newPac[0] && p[1] === newPac[1]);
-          if (isPelletEaten) {
-            const nextScore = score + 10;
+            const nextScore = scoreRef.current + 10;
+            scoreRef.current = nextScore;
             setScore(nextScore);
-            onUpdateScore(nextScore);
+            onUpdateScoreRef.current(nextScore);
             playSound("point");
 
-            const remaining = prevPellets.filter((p) => !(p[0] === newPac[0] && p[1] === newPac[1]));
+            const remaining = prevPellets.filter(
+              (p) => !(p[0] === nextPacPos[0] && p[1] === nextPacPos[1])
+            );
             if (remaining.length === 0) {
               setIsWon(true);
               setIsRunning(false);
               playSound("success");
-              onLog(`Congratulations! You cleared all pellets! Score: ${nextScore}`);
+              onLogRef.current(`Congratulations! You cleared all pellets! Score: ${nextScore}`);
             } else {
-              onLog(`Chomped pellet! Remaining: ${remaining.length}, Score: ${nextScore}`);
+              onLogRef.current(`Chomped pellet! Remaining: ${remaining.length}, Score: ${nextScore}`);
             }
             return remaining;
-          }
-          return prevPellets;
-        });
+          });
+        }
+      }
 
-        return newPac;
-      });
-
-      setGhosts((prevGhosts) => {
-        return prevGhosts.map((ghost) => {
+      setGhosts((prevGhosts) =>
+        prevGhosts.map((ghost) => {
           const possibleMoves: [number, number][] = [];
           const dirs: [number, number][] = [[0, -1], [0, 1], [-1, 0], [1, 0]];
           for (const [gDx, gDy] of dirs) {
@@ -358,24 +370,23 @@ const PacmanGameStage: React.FC<{
               let bestMove = possibleMoves[0];
               let minDist = Infinity;
               for (const move of possibleMoves) {
-                const dist = Math.hypot(move[0] - pacman[0], move[1] - pacman[1]);
+                const dist = Math.hypot(move[0] - nextPacPos[0], move[1] - nextPacPos[1]);
                 if (dist < minDist) {
                   minDist = dist;
                   bestMove = move;
                 }
               }
               return bestMove;
-            } else {
-              return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
             }
+            return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
           }
           return ghost;
-        });
-      });
-    }, 280);
+        })
+      );
+    }, 260);
 
     return () => clearInterval(timer);
-  }, [isRunning, isGameOver, isWon, dir, pellets, score, pacman]);
+  }, [isRunning, isGameOver, isWon]);
 
   useEffect(() => {
     if (!isRunning || isGameOver || isWon) return;
@@ -402,13 +413,11 @@ const PacmanGameStage: React.FC<{
         </div>
       </div>
 
-      <div className="relative bg-slate-900 border-2 border-yellow-500/40 rounded-2xl p-2 shadow-2xl">
+      <div className="relative bg-slate-900 border-2 border-yellow-500/40 rounded-2xl p-2 shadow-2xl w-full max-w-[336px]">
         <div
-          className="grid gap-1 bg-slate-950 p-2 rounded-xl"
+          className="grid gap-1 bg-slate-950 p-2 rounded-xl w-full aspect-square"
           style={{
             gridTemplateColumns: `repeat(9, minmax(0, 1fr))`,
-            width: "320px",
-            height: "320px",
           }}
         >
           {Array.from({ length: 81 }).map((_, index) => {
@@ -441,7 +450,7 @@ const PacmanGameStage: React.FC<{
                   <div className="w-1.5 h-1.5 bg-slate-950 rounded-full ml-1" />
                 )}
                 {hasPellet && !isPacman && !isGhost0 && !isGhost1 && (
-                  <div className="w-1.5 h-1.5 bg-yellow-300 rounded-full shadow-md animate-pulse" />
+                  <div className="w-1.5 h-1.5 bg-yellow-300 rounded-full shadow-md" />
                 )}
                 {(isGhost0 || isGhost1) && (
                   <div className="flex gap-0.5">
@@ -571,20 +580,34 @@ const SnakeGameStage: React.FC<{
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [snake, isRunning, isGameOver]);
 
+  const dirRef = useRef(dir);
+  dirRef.current = dir;
+  const foodRef = useRef(food);
+  foodRef.current = food;
+  const scoreRef = useRef(score);
+  scoreRef.current = score;
+  const onUpdateScoreRef = useRef(onUpdateScore);
+  onUpdateScoreRef.current = onUpdateScore;
+  const onLogRef = useRef(onLog);
+  onLogRef.current = onLog;
+
   useEffect(() => {
     if (!isRunning || isGameOver) return;
 
     const timer = setInterval(() => {
+      const activeDir = dirRef.current;
+      const currentFood = foodRef.current;
+
       setSnake((prev) => {
         const head = prev[0];
-        const newHead: [number, number] = [head[0] + dir[0], head[1] + dir[1]];
+        const newHead: [number, number] = [head[0] + activeDir[0], head[1] + activeDir[1]];
 
         if (newHead[0] < 0 || newHead[0] >= gridDim || newHead[1] < 0 || newHead[1] >= gridDim) {
           setIsGameOver(true);
           setIsRunning(false);
           playSound("crash");
           playSound("gameover");
-          onLog("Collision with boundary wall. Game Over!");
+          onLogRef.current("Collision with boundary wall. Game Over!");
           return prev;
         }
 
@@ -593,18 +616,19 @@ const SnakeGameStage: React.FC<{
           setIsRunning(false);
           playSound("crash");
           playSound("gameover");
-          onLog("Snake collided with its own tail. Game Over!");
+          onLogRef.current("Snake collided with its own tail. Game Over!");
           return prev;
         }
 
         const newSnake = [newHead, ...prev];
 
-        if (newHead[0] === food[0] && newHead[1] === food[1]) {
-          const nextScore = score + 10;
+        if (newHead[0] === currentFood[0] && newHead[1] === currentFood[1]) {
+          const nextScore = scoreRef.current + 10;
+          scoreRef.current = nextScore;
           setScore(nextScore);
-          onUpdateScore(nextScore);
+          onUpdateScoreRef.current(nextScore);
           playSound("point");
-          onLog(`Consumed fruit! Length: ${newSnake.length}, Score: ${nextScore}`);
+          onLogRef.current(`Consumed fruit! Length: ${newSnake.length}, Score: ${nextScore}`);
 
           let newFoodCandidate: [number, number] = [
             Math.floor(Math.random() * gridDim),
@@ -616,6 +640,7 @@ const SnakeGameStage: React.FC<{
               Math.floor(Math.random() * gridDim),
             ];
           }
+          foodRef.current = newFoodCandidate;
           setFood(newFoodCandidate);
         } else {
           newSnake.pop();
@@ -626,7 +651,7 @@ const SnakeGameStage: React.FC<{
     }, speed);
 
     return () => clearInterval(timer);
-  }, [isRunning, isGameOver, dir, food, score, speed]);
+  }, [isRunning, isGameOver, speed]);
 
   return (
     <div className="flex flex-col items-center gap-4 max-w-md w-full">
@@ -641,13 +666,11 @@ const SnakeGameStage: React.FC<{
         </div>
       </div>
 
-      <div className="relative bg-slate-900 border-2 border-emerald-500/40 rounded-2xl p-2 shadow-2xl">
+      <div className="relative bg-slate-900 border-2 border-emerald-500/40 rounded-2xl p-2 shadow-2xl w-full max-w-[336px]">
         <div
-          className="grid gap-1 bg-slate-950 p-2 rounded-xl"
+          className="grid gap-1 bg-slate-950 p-2 rounded-xl w-full aspect-square"
           style={{
             gridTemplateColumns: `repeat(${gridDim}, minmax(0, 1fr))`,
-            width: "320px",
-            height: "320px",
           }}
         >
           {Array.from({ length: gridDim * gridDim }).map((_, index) => {
@@ -666,7 +689,7 @@ const SnakeGameStage: React.FC<{
                     : isBody
                     ? "bg-emerald-600/80"
                     : isFood
-                    ? "bg-rose-500 rounded-full animate-pulse shadow-md shadow-rose-500/60"
+                    ? "bg-rose-500 rounded-full shadow-md shadow-rose-500/60"
                     : "bg-slate-900/60"
                 }`}
               >
@@ -679,7 +702,7 @@ const SnakeGameStage: React.FC<{
         {(!isRunning || isGameOver) && (
           <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-6 text-center space-y-3">
             <h3 className="text-base font-black text-white uppercase tracking-wider">
-              {isGameOver ? "GAME OVER" : "CHOMPSNAKE READY"}
+              {isGameOver ? "Game Over" : "Snake Ready"}
             </h3>
             {isGameOver && (
               <p className="text-xs text-slate-300 font-mono">
@@ -837,14 +860,15 @@ const TicTacToeGameStage: React.FC<{
       return;
     }
 
-    // AI Turn (Minimax)
-    const [aiRow, aiCol] = getBestMove(nextBoard);
+    // AI Turn (Minimax) on cloned board
+    const aiBoard = nextBoard.map((r) => [...r]);
+    const [aiRow, aiCol] = getBestMove(aiBoard);
     if (aiRow !== -1 && aiCol !== -1) {
-      nextBoard[aiRow][aiCol] = "O";
-      setBoard(nextBoard);
-      currentWinner = checkWinner(nextBoard);
+      aiBoard[aiRow][aiCol] = "O";
+      setBoard(aiBoard);
+      currentWinner = checkWinner(aiBoard);
       if (currentWinner) {
-        handleEndGame(currentWinner, nextBoard);
+        handleEndGame(currentWinner, aiBoard);
         return;
       }
     }
@@ -871,9 +895,9 @@ const TicTacToeGameStage: React.FC<{
   return (
     <div className="flex flex-col items-center gap-4 max-w-md w-full">
       <div className="w-full flex items-center justify-between px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl font-mono text-xs">
-        <div className="text-blue-400">WINS: <strong className="text-white">{playerWins}</strong></div>
-        <div className="text-rose-400">AI: <strong className="text-white">{aiWins}</strong></div>
-        <div className="text-slate-400">DRAWS: <strong className="text-white">{draws}</strong></div>
+        <div className="text-blue-400">YOU: <strong className="text-white">{playerWins}</strong></div>
+        <div className="text-rose-400">CPU: <strong className="text-white">{aiWins}</strong></div>
+        <div className="text-slate-400">TIES: <strong className="text-white">{draws}</strong></div>
       </div>
 
       <div className="grid grid-cols-3 gap-2 bg-slate-900 border border-slate-800 p-4 rounded-2xl w-72 h-72 shadow-2xl relative">
@@ -1088,12 +1112,12 @@ const HangmanGameStage: React.FC<{
 
           <div className="text-center font-mono text-[11px] text-slate-400">
             {isWon ? (
-              <span className="text-emerald-400 font-bold uppercase tracking-wider animate-pulse">
-                Word Cleared!
+              <span className="text-emerald-400 font-bold uppercase tracking-wider">
+                You Got It!
               </span>
             ) : isLost ? (
               <span className="text-rose-500 font-bold uppercase tracking-wider">
-                Gallows Built!
+                Out of Lives
               </span>
             ) : (
               <span>LIVES LEFT: <strong className="text-white">{lives}</strong></span>

@@ -33,10 +33,11 @@ export interface AiChatSession {
 }
 
 const DB_NAME = "MilkyPy_OfflineDB";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const STORE_SNIPPETS = "local_snippets";
 const STORE_AI_CHAT = "ai_chat_history";
+const STORE_QUIZ_HISTORY = "quiz_history";
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -68,6 +69,12 @@ export async function openIndexedDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE_AI_CHAT)) {
         const chatStore = db.createObjectStore(STORE_AI_CHAT, { keyPath: "id" });
         chatStore.createIndex("timestamp", "timestamp", { unique: false });
+      }
+
+      // 3. Quiz History Store
+      if (!db.objectStoreNames.contains(STORE_QUIZ_HISTORY)) {
+        const quizStore = db.createObjectStore(STORE_QUIZ_HISTORY, { keyPath: "id" });
+        quizStore.createIndex("timestamp", "timestamp", { unique: false });
       }
     };
 
@@ -226,6 +233,57 @@ export async function clearAllAiChatSessions(): Promise<void> {
     const store = transaction.objectStore(STORE_AI_CHAT);
     const request = store.clear();
 
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// --------------------------------------------------------------------------
+// Quiz Session History (IndexedDB Persistence)
+// --------------------------------------------------------------------------
+
+export async function saveQuizSessionToDb<T extends { id: string; timestamp: number }>(
+  session: T
+): Promise<void> {
+  const db = await openIndexedDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_QUIZ_HISTORY], "readwrite");
+    const store = transaction.objectStore(STORE_QUIZ_HISTORY);
+    const request = store.put(session);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getQuizSessionsFromDb<T extends { timestamp?: number }>(): Promise<T[]> {
+  const db = await openIndexedDB();
+  return new Promise((resolve, reject) => {
+    if (!db.objectStoreNames.contains(STORE_QUIZ_HISTORY)) {
+      resolve([]);
+      return;
+    }
+    const transaction = db.transaction([STORE_QUIZ_HISTORY], "readonly");
+    const store = transaction.objectStore(STORE_QUIZ_HISTORY);
+    const request = store.getAll();
+    request.onsuccess = () => {
+      const results: T[] = request.result || [];
+      results.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      resolve(results);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function clearQuizSessionsFromDb(): Promise<void> {
+  const db = await openIndexedDB();
+  return new Promise((resolve, reject) => {
+    if (!db.objectStoreNames.contains(STORE_QUIZ_HISTORY)) {
+      resolve();
+      return;
+    }
+    const transaction = db.transaction([STORE_QUIZ_HISTORY], "readwrite");
+    const store = transaction.objectStore(STORE_QUIZ_HISTORY);
+    const request = store.clear();
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });

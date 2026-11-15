@@ -13,6 +13,15 @@ import { CurriculumLessonReader } from "./CurriculumLessonReader";
 import { CurriculumDiagnosticView } from "./CurriculumDiagnosticView";
 import { CurriculumEmptyGuide } from "./CurriculumEmptyGuide";
 import { ValidationResult } from "../../data/curriculum/validate";
+import { GlossaryModal } from "../GlossaryModal";
+import { BadgesModal } from "../BadgesModal";
+import { BadgeCelebrationToast, LessonSavedNotification } from "../BadgeCelebrationToast";
+import { getEarnedBadges, getNewlyUnlockedBadge } from "../../data/badges";
+
+interface QuizReturnContext {
+  topicTitle: string;
+  question?: string;
+}
 
 interface CurriculumViewProps {
   progress: UserProgress;
@@ -20,6 +29,12 @@ interface CurriculumViewProps {
   onOpenAiAssist: (code: string, errorMsg?: string, lessonCtx?: any) => void;
   onPracticeClick: (code: string) => void;
   currentUser: string | null;
+  requestedLessonId?: string | null;
+  onClearRequestedLesson?: () => void;
+  onStartLessonQuiz?: (lessonId: string) => void;
+  quizReturnContext?: QuizReturnContext | null;
+  onReturnToQuiz?: () => void;
+  onDismissQuizReturn?: () => void;
 }
 
 export const CurriculumView: React.FC<CurriculumViewProps> = ({
@@ -28,6 +43,12 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
   onOpenAiAssist,
   onPracticeClick,
   currentUser,
+  requestedLessonId,
+  onClearRequestedLesson,
+  onStartLessonQuiz,
+  quizReturnContext,
+  onReturnToQuiz,
+  onDismissQuizReturn,
 }) => {
   // Show outline first on both mobile and desktop views; upon selection it hides
   // If a specific lesson was requested via URL (?lesson=...), start with sidebar closed so the lesson is immediately visible
@@ -46,6 +67,9 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
     return true;
   });
   const [showFormatGuide, setShowFormatGuide] = useState<boolean>(false);
+  const [showGlossary, setShowGlossary] = useState<boolean>(false);
+  const [showBadges, setShowBadges] = useState<boolean>(false);
+  const [celebrationToast, setCelebrationToast] = useState<LessonSavedNotification | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult>(() =>
     getCurriculumValidation()
   );
@@ -74,6 +98,16 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
     }
     return allLessons[0]?.lesson.id || "lesson-01-01-what-is-python";
   });
+
+  // Sync when navigated directly to a specific lesson (e.g., from QuizView)
+  useEffect(() => {
+    if (requestedLessonId && allLessons.some((item) => item.lesson.id === requestedLessonId)) {
+      setActiveLessonId(requestedLessonId);
+      setMobileSidebarOpen(false);
+      setDesktopSidebarOpen(false);
+      onClearRequestedLesson?.();
+    }
+  }, [requestedLessonId, allLessons, onClearRequestedLesson]);
 
   // Keep progress and persistent storage in sync with active lesson
   useEffect(() => {
@@ -106,6 +140,7 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
 
   // Handle student-controlled mark as complete
   const handleToggleComplete = (lessonId: string) => {
+    const prevCount = progress.completedLessonIds.length;
     const isCompleted = progress.completedLessonIds.includes(lessonId);
     let newCompleted: string[];
     let xpDelta = 0;
@@ -125,6 +160,29 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
     };
 
     onUpdateProgress(updated);
+
+    if (!isCompleted) {
+      const unlocked = getNewlyUnlockedBadge(prevCount, newCompleted.length);
+      const lessonMeta = getLessonById(lessonId);
+      setCelebrationToast({
+        lessonId,
+        badge: unlocked,
+        lessonTitle: lessonMeta?.lesson.title || "Python Lesson",
+        xpEarned: 25,
+        currentUser,
+      });
+    } else if (celebrationToast?.lessonId === lessonId) {
+      setCelebrationToast(null);
+    }
+  };
+
+  const handleUndoComplete = (lessonId: string) => {
+    if (!progress.completedLessonIds.includes(lessonId)) return;
+    onUpdateProgress({
+      ...progress,
+      completedLessonIds: progress.completedLessonIds.filter((id) => id !== lessonId),
+      totalXp: Math.max(0, (progress.totalXp || 0) - 25),
+    });
   };
 
   const handleSelectLesson = (lessonId: string) => {
@@ -178,9 +236,10 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
   }
 
   const isCompleted = progress.completedLessonIds.includes(activeLessonData.lesson.id);
+  const earnedBadgesCount = getEarnedBadges(progress.completedLessonIds).length;
 
   return (
-    <div className="flex-1 flex h-[calc(100vh-3.5rem)] overflow-hidden">
+    <div className="flex-1 flex h-[calc(100vh-7.5rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden">
       {/* Curriculum Outline Desktop Sidebar */}
       {desktopSidebarOpen && (
         <div className="hidden md:block h-full shrink-0 animate-in slide-in-from-left duration-200">
@@ -193,6 +252,10 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
             onCloseMobile={() => setMobileSidebarOpen(false)}
             onToggleDesktopCollapse={() => setDesktopSidebarOpen(false)}
             onOpenFormatGuide={() => setShowFormatGuide(true)}
+            onOpenGlossary={() => setShowGlossary(true)}
+            onOpenBadges={() => setShowBadges(true)}
+            earnedBadgesCount={earnedBadgesCount}
+            totalXp={progress.totalXp || 0}
             isMobileDrawer={false}
             currentUser={currentUser}
             lastActiveLessonId={progress.lastActiveLessonId || activeLessonId}
@@ -209,6 +272,10 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
         isOpenOnMobile={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
         onOpenFormatGuide={() => setShowFormatGuide(true)}
+        onOpenGlossary={() => setShowGlossary(true)}
+        onOpenBadges={() => setShowBadges(true)}
+        earnedBadgesCount={earnedBadgesCount}
+        totalXp={progress.totalXp || 0}
         isMobileDrawer={true}
         currentUser={currentUser}
         lastActiveLessonId={progress.lastActiveLessonId || activeLessonId}
@@ -226,6 +293,36 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
         onToggleSidebar={() => setDesktopSidebarOpen((prev) => !prev)}
         sidebarCollapsed={!desktopSidebarOpen}
         onOpenAiAssist={onOpenAiAssist}
+        onPracticeClick={onPracticeClick}
+        onOpenGlossary={() => setShowGlossary(true)}
+        onOpenBadges={() => setShowBadges(true)}
+        onStartLessonQuiz={onStartLessonQuiz}
+        quizReturnContext={quizReturnContext}
+        onReturnToQuiz={onReturnToQuiz}
+        onDismissQuizReturn={onDismissQuizReturn}
+      />
+
+      {/* Interactive Python Glossary Modal */}
+      <GlossaryModal
+        isOpen={showGlossary}
+        onClose={() => setShowGlossary(false)}
+      />
+
+      {/* Coding Badges & XP Trophy Modal */}
+      <BadgesModal
+        isOpen={showBadges}
+        onClose={() => setShowBadges(false)}
+        completedLessonIds={progress.completedLessonIds}
+        totalXp={progress.totalXp || 0}
+      />
+
+      {/* Subtle Local-Save & Milestone Toast */}
+      <BadgeCelebrationToast
+        notification={celebrationToast}
+        onClose={() => setCelebrationToast(null)}
+        onUndo={handleUndoComplete}
+        onNextLesson={nextLessonData ? handleNext : undefined}
+        onOpenBadges={() => setShowBadges(true)}
       />
     </div>
   );

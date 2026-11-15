@@ -1,4 +1,4 @@
-export type AppMode = "study" | "playground" | "games";
+export type AppMode = "study" | "playground" | "quiz" | "games";
 
 export type ThemeMode = "dark" | "light";
 

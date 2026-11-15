@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
 import {
   Share2,
   Copy,
@@ -7,9 +6,7 @@ import {
   ExternalLink,
   X,
   Code2,
-  Sparkles,
   Link,
-  Globe,
 } from "lucide-react";
 
 interface ShareModalProps {
@@ -37,34 +34,24 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleOpenLink = () => {
-    window.open(shareUrl, "_blank");
-  };
-
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden font-sans"
-        >
-          {/* Header */}
-          <div className="px-5 py-4 bg-linear-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-white/15 rounded-lg">
-                <Share2 className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-base leading-none">
-                  Share Python Playground
-                </h3>
-                <p className="text-xs text-blue-100 mt-1">
-                  Unique, permanent Firebase link generated
-                </p>
-              </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+      <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden font-sans">
+        {/* Header */}
+        <div className="px-5 py-4 bg-linear-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-white/15 rounded-lg">
+              <Share2 className="w-5 h-5 text-white" />
             </div>
+            <div>
+              <h3 className="font-bold text-base leading-none">
+                Share Python Code
+              </h3>
+              <p className="text-xs text-blue-100 mt-1">
+                Share link ready
+              </p>
+            </div>
+          </div>
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg hover:bg-white/20 text-white/80 hover:text-white transition-colors"
@@ -143,17 +130,18 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 Done
               </button>
 
-              <button
-                onClick={handleOpenLink}
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-colors"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>Open in New Tab</span>
-              </button>
+                <span>Open Link</span>
+              </a>
             </div>
           </div>
-        </motion.div>
       </div>
-    </AnimatePresence>
+    </div>
   );
 };

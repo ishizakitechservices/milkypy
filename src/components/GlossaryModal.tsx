@@ -5,16 +5,11 @@ import {
   BookOpen,
   Search,
   X,
-  Sparkles,
   Lightbulb,
-  Code2,
-  Bookmark,
   Check,
   Copy,
-  Tag,
   ArrowRight
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 
 interface GlossaryModalProps {
   isOpen: boolean;
@@ -63,12 +58,7 @@ export const GlossaryModal: React.FC<GlossaryModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.96 }}
-        className="w-full max-w-4xl h-[85vh] max-h-[800px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-      >
+      <div className="w-full max-w-4xl h-[85vh] max-h-[800px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-5 py-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -226,7 +216,7 @@ export const GlossaryModal: React.FC<GlossaryModalProps> = ({
             Close
           </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
@@ -249,12 +239,7 @@ export const TermPopover: React.FC<TermPopoverProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs">
-      <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 space-y-3 relative"
-      >
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 space-y-3 relative">
         <div className="flex items-start justify-between gap-2">
           <div>
             <div className="flex items-center gap-2">
@@ -312,7 +297,7 @@ export const TermPopover: React.FC<TermPopoverProps> = ({
             Got it
           </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

@@ -3,11 +3,6 @@ import { PremadeGame } from "../data/premadeGames";
 import {
   Play,
   Code2,
-  Sparkles,
-  Trophy,
-  Flame,
-  ArrowRight,
-  BookOpen,
   Wrench,
   Search,
   Gamepad2,
@@ -61,39 +56,15 @@ export const ArcadeCatalog: React.FC<ArcadeCatalogProps> = ({
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-y-auto px-4 py-4 md:px-8 space-y-6">
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-purple-950/40 to-slate-900 border border-purple-500/20 p-6 md:p-8 shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 left-10 w-64 h-64 bg-indigo-600/10 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-purple-400 uppercase">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>4 Playable Python Titles · WebAssembly Engine</span>
-          </div>
-
-          <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white uppercase font-sans">
-            Python Arcade Hall
+      {/* Header */}
+      <div className="rounded-2xl bg-[#15171E] border border-[#252933] p-5 md:p-6">
+        <div className="max-w-2xl space-y-2">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
+            Python Games
           </h1>
-
-          <p className="text-xs md:text-sm text-slate-300 leading-relaxed max-w-2xl">
-            Real games powered by real Python code. Play classic retro arcade titles, test your wits against minimax AI, explore turn-based dungeons, or jump straight into the code to customize game mechanics.
+          <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
+            Play classic games or open their Python code in the editor to change how they work.
           </p>
-
-          <div className="flex flex-wrap items-center gap-4 pt-2 text-[11px] font-mono text-slate-400">
-            <span className="flex items-center gap-1.5 bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-              <span>Real-Time State Telemetry</span>
-            </span>
-            <span className="flex items-center gap-1.5 bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              <span>Local High Scores</span>
-            </span>
-            <span className="flex items-center gap-1.5 bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
-              <Wrench className="w-3.5 h-3.5 text-cyan-400" />
-              <span>One-Click Code Remix</span>
-            </span>
-          </div>
         </div>
       </div>
 
@@ -145,10 +116,8 @@ export const ArcadeCatalog: React.FC<ArcadeCatalogProps> = ({
           return (
             <div
               key={game.id}
-              className="bg-slate-900/90 hover:bg-slate-900 border border-slate-800 hover:border-purple-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all duration-200 shadow-lg hover:shadow-purple-900/20 group relative overflow-hidden"
+              className="bg-slate-900/90 hover:bg-slate-900 border border-slate-800 hover:border-purple-500/40 rounded-2xl p-5 flex flex-col justify-between transition-colors duration-200 shadow-lg group"
             >
-              {/* Subtle accent glow */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-all pointer-events-none" />
 
               <div className="space-y-3">
                 {/* Header: Icon, Category & Difficulty */}

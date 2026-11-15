@@ -192,8 +192,26 @@ export default defineConfig(() => {
       },
     },
     build: {
+      chunkSizeWarningLimit: 1200,
       rollupOptions: {
         external: ['/pyodide/pyodide.mjs'],
+        output: {
+          manualChunks(id) {
+            if (id.includes('curriculum.json') || id.includes('pythonLessons.ts')) {
+              return 'curriculum-data';
+            }
+            if (id.includes('node_modules')) {
+              if (id.includes('firebase')) return 'vendor-firebase';
+              if (id.includes('prismjs')) return 'vendor-prism';
+              if (id.includes('jszip')) return 'vendor-jszip';
+              if (id.includes('react-markdown') || id.includes('remark') || id.includes('unified') || id.includes('mdast') || id.includes('micromark')) {
+                return 'vendor-markdown';
+              }
+              if (id.includes('lucide-react')) return 'vendor-icons';
+              if (id.includes('react-dom') || id.includes('/react/')) return 'vendor-react';
+            }
+          },
+        },
       },
     },
     server: {

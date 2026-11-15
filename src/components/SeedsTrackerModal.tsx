@@ -1,7 +1,6 @@
 import React from "react";
 import { LessonSeed } from "../types";
-import { X, Sprout, ArrowRight, CheckCircle2 } from "lucide-react";
-import { motion } from "motion/react";
+import { X, Sprout, CheckCircle2 } from "lucide-react";
 
 export interface PlantedSeed {
   lessonId: string;
@@ -28,12 +27,7 @@ export const SeedsTrackerModal: React.FC<SeedsTrackerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl max-h-[85vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-      >
+      <div className="w-full max-w-2xl max-h-[85vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-5 bg-emerald-50/60 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/40 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -123,7 +117,7 @@ export const SeedsTrackerModal: React.FC<SeedsTrackerModalProps> = ({
             Close Tracker
           </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

@@ -68,20 +68,17 @@
   color: #8BBEFF;
 }
 
-.syntaxBadge {
+.syntaxLangLabel {
   font-size: 0.6875rem;
-  font-family: monospace;
-  background-color: #e0f2fe;
-  color: #0284c7;
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
-  border: 1px solid #bae6fd;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  color: #0369a1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-:global(.dark) .syntaxBadge {
-  background-color: rgba(139, 190, 255, 0.15);
+:global(.dark) .syntaxLangLabel {
   color: #8BBEFF;
-  border-color: rgba(139, 190, 255, 0.3);
 }
 
 .syntaxCodeBlock {
@@ -459,14 +456,22 @@
   color: #bbf7d0;
 }
 
+.compareLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+
 .compareLabel {
-  display: block;
+  display: inline-flex;
+  align-items: center;
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
 }
 
 .avoidBox .compareLabel {
@@ -532,6 +537,63 @@
 
 .proseBlock li {
   margin-bottom: 0.375rem;
+}
+
+.markdownCodeWrapper {
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  overflow: hidden;
+}
+
+:global(.dark) .markdownCodeWrapper {
+  border-color: #252933;
+  background-color: #08090D;
+}
+
+.markdownCodeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+:global(.dark) .markdownCodeHeader {
+  background-color: #15171E;
+  border-bottom-color: #252933;
+}
+
+.markdownCodeLang {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+:global(.dark) .markdownCodeLang {
+  color: #BFC4CE;
+}
+
+.markdownCodePre {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #0f172a;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+:global(.dark) .markdownCodePre {
+  color: #F3F4F6;
 }
 
 .inlineCode {

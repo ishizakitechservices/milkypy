@@ -1,16 +1,11 @@
 import React, { useState } from "react";
 import { PYTHON_BUILTIN_TYPE_HINTS, TypeHintInfo } from "../lib/pythonTypeHints";
-import { motion, AnimatePresence } from "motion/react";
 import {
-  Sparkles,
   Search,
   X,
   Code2,
   Copy,
   Check,
-  BookOpen,
-  Filter,
-  Layers,
 } from "lucide-react";
 
 interface TypeHintsModalProps {
@@ -51,23 +46,17 @@ export const TypeHintsModal: React.FC<TypeHintsModalProps> = ({
   };
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs font-sans">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="w-full max-w-4xl h-[85vh] max-h-[720px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-        >
-          {/* Header */}
-          <div className="px-4 sm:px-6 py-3.5 bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-white/20 rounded-xl">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-sm sm:text-base leading-tight flex items-center gap-2">
-                  <span>Python Built-in Type Hints & Signatures</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs font-sans">
+      <div className="w-full max-w-4xl h-[85vh] max-h-[720px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="px-4 sm:px-6 py-3.5 bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-white/20 rounded-xl">
+              <Code2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm sm:text-base leading-tight flex items-center gap-2">
+                <span>Python Built-in Functions</span>
                   <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 bg-white/20 rounded-full font-mono font-medium">
                     Python 3.11
                   </span>
@@ -319,8 +308,7 @@ export const TypeHintsModal: React.FC<TypeHintsModalProps> = ({
               Close
             </button>
           </div>
-        </motion.div>
       </div>
-    </AnimatePresence>
+    </div>
   );
 };

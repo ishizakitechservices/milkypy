@@ -1,7 +1,6 @@
 import React from "react";
 import { TypeHintInfo } from "../lib/pythonTypeHints";
-import { motion } from "motion/react";
-import { Sparkles, Code2, HelpCircle, Check, Copy } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 
 interface TypeHintTooltipProps {
   info: TypeHintInfo;
@@ -23,11 +22,7 @@ export const TypeHintTooltip: React.FC<TypeHintTooltipProps> = ({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 4, scale: 0.98 }}
-      transition={{ duration: 0.15 }}
+    <div
       style={{ top: position.top, left: position.left }}
       className="absolute z-50 w-80 sm:w-96 max-w-[calc(100vw-3rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden font-sans pointer-events-auto select-text text-xs text-slate-800 dark:text-slate-100 backdrop-blur-md"
     >
@@ -135,6 +130,6 @@ export const TypeHintTooltip: React.FC<TypeHintTooltipProps> = ({
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };

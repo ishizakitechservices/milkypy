@@ -7,7 +7,6 @@ import { getPythonTypeHint, TypeHintInfo } from "../lib/pythonTypeHints";
 import { TypeHintTooltip } from "./TypeHintTooltip";
 import { TypeHintsModal } from "./TypeHintsModal";
 import { AutocompleteItem } from "../types";
-import { motion, AnimatePresence } from "motion/react";
 import {
   Copy,
   Check,
@@ -24,6 +23,7 @@ interface CodeEditorProps {
   isRunning?: boolean;
   title?: string;
   readOnly?: boolean;
+  errorLine?: number | null;
 }
 
 export const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -33,8 +33,11 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   isRunning = false,
   title = "main.py",
   readOnly = false,
+  errorLine = null,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [cursorLine, setCursorLine] = useState(1);
   const [suggestions, setSuggestions] = useState<AutocompleteItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -235,6 +238,22 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     }, 250);
   };
 
+  // Auto-reset two-step Clear confirmation
+  useEffect(() => {
+    if (!confirmClear) return;
+    const t = setTimeout(() => setConfirmClear(false), 3000);
+    return () => clearTimeout(t);
+  }, [confirmClear]);
+
+  // Update active cursor line indicator
+  const syncCursorLine = (target?: HTMLTextAreaElement | null) => {
+    const el = target || textareaRef.current;
+    if (!el) return;
+    const pos = el.selectionStart ?? 0;
+    const lineNum = el.value.slice(0, pos).split("\n").length;
+    setCursorLine(lineNum);
+  };
+
   // Line numbers calculation
   const lines = code.split("\n");
   const lineNumbers = Array.from({ length: lines.length }, (_, i) => i + 1);
@@ -397,6 +416,27 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         }
       }
 
+      // Smart Python Enter auto-indent (preserves indent and adds 4 spaces after ':')
+      if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        const lineStart = code.lastIndexOf("\n", start - 1) + 1;
+        const currentLineBeforeCursor = code.slice(lineStart, start);
+        const indentMatch = currentLineBeforeCursor.match(/^(\s*)/);
+        const baseIndent = indentMatch ? indentMatch[1] : "";
+        const strippedBefore = currentLineBeforeCursor.replace(/#.*$/, "").trimEnd();
+        const extraIndent = strippedBefore.endsWith(":") ? "    " : "";
+        const insertion = "\n" + baseIndent + extraIndent;
+        const newCode = code.slice(0, start) + insertion + code.slice(end);
+        onChange(newCode);
+        setShowAutocomplete(false);
+        setTimeout(() => {
+          const nextPos = start + insertion.length;
+          textarea.selectionStart = textarea.selectionEnd = nextPos;
+          syncCursorLine(textarea);
+        }, 0);
+        return;
+      }
+
       // Backspace deletes matching empty pairs
       if (e.key === "Backspace" && start === end && start > 0) {
         const charBefore = code.charAt(start - 1);
@@ -467,38 +507,24 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       onDrop={handleDrop}
       className="flex flex-col h-full bg-white dark:bg-[#15171E] border border-slate-200/80 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm relative group"
     >
-      {/* Animated Drag Over Overlay */}
-      <AnimatePresence>
-        {isDragging && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-blue-600/90 dark:bg-[#15171E]/95 backdrop-blur-xs z-40 flex flex-col items-center justify-center p-6 text-white text-center pointer-events-none border-4 border-dashed border-[#8BBEFF]/50 m-2 rounded-xl"
-          >
-            <UploadCloud className="w-12 h-12 mb-3 text-[#8BBEFF] animate-bounce" />
-            <h3 className="text-base font-black uppercase tracking-wider">Drop Python Script / Text File</h3>
-            <p className="text-xs text-blue-100 dark:text-[#BFC4CE] mt-1 leading-relaxed max-w-xs">
-              Release to instantly import your Python (.py), text (.txt) file or plain text into the editor canvas!
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Drag Over Overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 bg-blue-600/90 dark:bg-[#15171E]/95 backdrop-blur-xs z-40 flex flex-col items-center justify-center p-6 text-white text-center pointer-events-none border-4 border-dashed border-[#8BBEFF]/50 m-2 rounded-xl">
+          <UploadCloud className="w-12 h-12 mb-3 text-[#8BBEFF]" />
+          <h3 className="text-base font-black uppercase tracking-wider">Drop Python or Text File</h3>
+          <p className="text-xs text-blue-100 dark:text-[#BFC4CE] mt-1 leading-relaxed max-w-xs">
+            Release to load your .py or .txt file into the editor.
+          </p>
+        </div>
+      )}
 
       {/* Drag feedback toast */}
-      <AnimatePresence>
-        {dragFeedback && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-12 left-1/2 -translate-x-1/2 bg-blue-600 dark:bg-[#8BBEFF] text-white dark:text-[#08090D] font-semibold text-xs px-3.5 py-2 rounded-xl shadow-lg z-30 flex items-center gap-1.5"
-          >
-            <UploadCloud className="w-4 h-4 animate-bounce" />
-            <span>{dragFeedback}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {dragFeedback && (
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-blue-600 dark:bg-[#8BBEFF] text-white dark:text-[#08090D] font-semibold text-xs px-3.5 py-2 rounded-xl shadow-lg z-30 flex items-center gap-1.5">
+          <UploadCloud className="w-4 h-4" />
+          <span>{dragFeedback}</span>
+        </div>
+      )}
 
       {/* Clean, Debloated Editor Header */}
       <div className="h-10 bg-slate-100/90 dark:bg-[#252933]/80 border-b border-slate-200/80 dark:border-white/10 px-3 flex items-center justify-between gap-2 select-none">
@@ -506,6 +532,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           <Code className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF] shrink-0" />
           <span className="text-xs font-mono font-bold text-slate-700 dark:text-[#F3F4F6] truncate">
             {title}
+          </span>
+          <span className="hidden xs:inline text-[10px] font-mono text-slate-400 dark:text-[#BFC4CE]/60 tabular-nums shrink-0">
+            Ln {cursorLine}
           </span>
         </div>
 
@@ -523,6 +552,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
           <button
             id="editor-btn-copy"
+            type="button"
             onClick={handleCopy}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6] hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors cursor-pointer touch-target"
             title="Copy Code"
@@ -541,15 +571,44 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           </button>
 
           {!readOnly && (
-            <button
-              id="editor-btn-clear"
-              onClick={() => onChange("")}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer touch-target"
-              title="Clear Editor"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Clear</span>
-            </button>
+            confirmClear ? (
+              <div className="flex items-center gap-1">
+                <button
+                  id="editor-btn-confirm-clear"
+                  type="button"
+                  onClick={() => {
+                    onChange("");
+                    setConfirmClear(false);
+                  }}
+                  className="px-2 py-1 rounded-lg text-[11px] font-bold bg-rose-600 hover:bg-rose-500 text-white transition-colors cursor-pointer"
+                  title="Confirm clear editor"
+                >
+                  Clear?
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmClear(false)}
+                  className="px-1.5 py-1 rounded-lg text-[11px] font-medium text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                id="editor-btn-clear"
+                type="button"
+                onClick={() => {
+                  if (!code.trim()) return;
+                  setConfirmClear(true);
+                }}
+                disabled={!code.trim()}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 disabled:opacity-40 transition-colors cursor-pointer touch-target"
+                title="Clear Editor"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Clear</span>
+              </button>
+            )
           )}
         </div>
       </div>
@@ -559,13 +618,28 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         {/* Line Numbers Sidebar */}
         <div
           ref={lineNumbersRef}
-          className="w-11 py-3 bg-slate-50 dark:bg-[#08090D] border-r border-slate-200/80 dark:border-white/10 text-slate-400 dark:text-[#BFC4CE]/50 text-right pr-2.5 font-mono text-xs select-none shrink-0 overflow-hidden"
+          className="w-11 py-3 bg-slate-50 dark:bg-[#08090D] border-r border-slate-200/80 dark:border-white/10 text-slate-400 dark:text-[#BFC4CE]/50 text-right pr-2 font-mono text-xs select-none shrink-0 overflow-hidden tabular-nums"
         >
-          {lineNumbers.map((n) => (
-            <div key={n} className="h-6 leading-6">
-              {n}
-            </div>
-          ))}
+          {lineNumbers.map((n) => {
+            const isErrorLine = errorLine === n;
+            const isActiveLine = cursorLine === n;
+            return (
+              <div
+                key={n}
+                title={isErrorLine ? `Python error reported near line ${n}` : undefined}
+                className={`h-6 leading-6 pr-0.5 rounded-r transition-colors flex items-center justify-end gap-1 ${
+                  isErrorLine
+                    ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold"
+                    : isActiveLine
+                    ? "text-blue-600 dark:text-[#8BBEFF] font-semibold"
+                    : ""
+                }`}
+              >
+                {isErrorLine && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />}
+                <span>{n}</span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Code Input Canvas */}
@@ -589,8 +663,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             onChange={(e) => {
               setTypeHintState(null);
               handleTextChange(e);
+              syncCursorLine(e.currentTarget);
             }}
-            onClick={() => setTypeHintState(null)}
+            onClick={(e) => {
+              setTypeHintState(null);
+              syncCursorLine(e.currentTarget);
+            }}
+            onKeyUp={(e) => syncCursorLine(e.currentTarget)}
             onKeyDown={(e) => {
               setTypeHintState(null);
               handleKeyDown(e);
@@ -606,71 +685,63 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           />
 
           {/* Type Hints Tooltip Overlay */}
-          <AnimatePresence>
-            {typeHintState && (
-              <TypeHintTooltip
-                info={typeHintState.info}
-                position={typeHintState.pos}
-                onClose={() => setTypeHintState(null)}
-              />
-            )}
-          </AnimatePresence>
+          {typeHintState && (
+            <TypeHintTooltip
+              info={typeHintState.info}
+              position={typeHintState.pos}
+              onClose={() => setTypeHintState(null)}
+            />
+          )}
         </div>
 
         {/* Autocomplete Popup Menu */}
-        <AnimatePresence>
-          {showAutocomplete && suggestions.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-              className="absolute z-50 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl overflow-hidden text-xs"
-              style={{ top: autocompletePos.top, left: autocompletePos.left }}
-            >
-              <div className="px-3 py-1.5 bg-slate-50/80 dark:bg-slate-950/40 backdrop-blur-sm text-[10px] text-slate-500 dark:text-slate-400 font-sans font-semibold border-b border-slate-200/60 dark:border-slate-800/80 flex justify-between select-none tracking-wide">
-                <span>AUTOCOMPLETE SUGGESTIONS</span>
-                <span className="text-[9px] text-slate-400 font-sans font-normal">↑↓ Nav • Tab/Enter</span>
-              </div>
-              <div className="max-h-48 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
-                {suggestions.map((item, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => applyAutocomplete(item)}
-                    className={`w-full text-left px-3 py-1.5 flex items-center justify-between font-mono transition-colors ${
-                      idx === selectedIndex
-                        ? "bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-semibold"
-                        : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <span
-                        className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider font-sans ${
-                          item.type === "keyword"
-                            ? "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300"
-                            : item.type === "builtin"
-                            ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300"
-                            : item.type === "snippet"
-                            ? "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300"
-                            : "bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-300"
-                        }`}
-                      >
-                        {item.type}
-                      </span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">{item.label}</span>
-                    </div>
-                    {item.detail && (
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono italic truncate max-w-[120px] ml-1">
-                        {item.detail}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {showAutocomplete && suggestions.length > 0 && (
+          <div
+            className="absolute z-50 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl overflow-hidden text-xs"
+            style={{ top: autocompletePos.top, left: autocompletePos.left }}
+          >
+            <div className="px-3 py-1.5 bg-slate-50/80 dark:bg-slate-950/40 backdrop-blur-sm text-[10px] text-slate-500 dark:text-slate-400 font-sans font-semibold border-b border-slate-200/60 dark:border-slate-800/80 flex justify-between select-none tracking-wide">
+              <span>Suggestions</span>
+              <span className="text-[9px] text-slate-400 font-sans font-normal">↑↓ • Tab/Enter</span>
+            </div>
+            <div className="max-h-48 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
+              {suggestions.map((item, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => applyAutocomplete(item)}
+                  className={`w-full text-left px-3 py-1.5 flex items-center justify-between font-mono transition-colors ${
+                    idx === selectedIndex
+                      ? "bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-semibold"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider font-sans ${
+                        item.type === "keyword"
+                          ? "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300"
+                          : item.type === "builtin"
+                          ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300"
+                          : item.type === "snippet"
+                          ? "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300"
+                          : "bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-300"
+                      }`}
+                    >
+                      {item.type}
+                    </span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{item.label}</span>
+                  </div>
+                  {item.detail && (
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono italic truncate max-w-[120px] ml-1">
+                      {item.detail}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Touch & Mobile-Friendly Python Type Hints Reference Modal */}

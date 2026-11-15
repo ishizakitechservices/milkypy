@@ -43,12 +43,22 @@ Module 7: 7. Functions & Reusable Blocks
   - 7.3 The return Statement (intermediate): Returning computed results with return vs printing with print(), saving returned values.
   - 7.4 Variable Scope & Functions Recap (intermediate): Local vs global scope and default parameter values (e.g. def greet(name='Friend'):).`;
 
+export interface MilkyChatQuizContext {
+  question: string;
+  userChoice?: string;
+  correctAnswer: string;
+  explanation?: string;
+  isCorrect?: boolean;
+}
+
 export interface MilkyChatInstructionOptions {
   code?: string;
   lessonContext?: {
     title?: string;
     description?: string;
     expectedOutput?: string;
+    learningObjectives?: string[];
+    quizQuestion?: MilkyChatQuizContext;
   };
   customSystem?: string;
 }
@@ -61,6 +71,19 @@ export function buildMilkyChatSystemInstruction(
   }
 
   const trimmedCode = (options.code || "").trim();
+  const qCtx = options.lessonContext?.quizQuestion;
+  const quizBlock = qCtx
+    ? `\nACTIVE QUIZ QUESTION HELP CONTEXT:
+- Question: ${qCtx.question}${
+        qCtx.userChoice !== undefined
+          ? `\n- Student Selected: ${qCtx.userChoice} (${qCtx.isCorrect ? "Correct" : "Incorrect"})`
+          : ""
+      }
+- Correct Answer: ${qCtx.correctAnswer}${
+        qCtx.explanation ? `\n- Concept Note: ${qCtx.explanation}` : ""
+      }`
+    : "";
+
   const lessonBlock = options.lessonContext?.title
     ? `\nACTIVE LESSON CONTEXT:\n- Title: ${options.lessonContext.title}${
         options.lessonContext.description
@@ -70,8 +93,14 @@ export function buildMilkyChatSystemInstruction(
         options.lessonContext.expectedOutput
           ? `\n- Expected Output: ${options.lessonContext.expectedOutput}`
           : ""
+      }${
+        options.lessonContext.learningObjectives?.length
+          ? `\n- Objectives: ${options.lessonContext.learningObjectives.join("; ")}`
+          : ""
       }`
     : "";
+
+  const fullLessonContext = `${lessonBlock}${quizBlock}`;
 
   const codeBlock = trimmedCode
     ? `\nOPTIONAL WORKSPACE CODE (reference this ONLY when the user asks about their script, debugging, or improving it—ignore it for general or unrelated questions):\n\`\`\`python\n${trimmedCode}\n\`\`\``
@@ -86,7 +115,7 @@ HOW TO RESPOND:
 4. No emojis: Never use emojis, emoticons, or decorative Unicode symbols anywhere in your responses unless the user explicitly asks for them.
 5. Complete answers: Write complete explanations and complete code blocks without cutting off or leaving placeholders. If suggesting a replacement script for the user's workspace, include the full updated code inside a single \`\`\`python block.
 
-${MILKY_CURRICULUM_OUTLINE}${lessonBlock}${codeBlock}`;
+${MILKY_CURRICULUM_OUTLINE}${fullLessonContext}${codeBlock}`;
 }
 
 /**

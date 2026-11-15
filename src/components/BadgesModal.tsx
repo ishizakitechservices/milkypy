@@ -1,7 +1,6 @@
 import React from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { X, Award, CheckCircle2, Lock, Sparkles } from "lucide-react";
-import { LEARNER_BADGES, getEarnedBadges, LearnerBadge } from "../data/badges";
+import { X, Award, CheckCircle2, Lock } from "lucide-react";
+import { LEARNER_BADGES, getEarnedBadges } from "../data/badges";
 
 interface BadgesModalProps {
   isOpen: boolean;
@@ -22,18 +21,14 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
   const earnedIds = new Set(earned.map((b) => b.id));
 
   return (
-    <AnimatePresence>
+    <div
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+    >
       <div
-        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
-        onClick={onClose}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[85vh]"
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[85vh]"
-        >
           {/* Header */}
           <div className="p-4 sm:p-5 bg-linear-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">
@@ -112,8 +107,8 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
           {/* Footer */}
           <div className="p-3.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              Complete lessons to unlock all trophies!
+              <Award className="w-3.5 h-3.5 text-amber-500" />
+              Finish lessons to unlock badges.
             </span>
             <button
               onClick={onClose}
@@ -122,8 +117,7 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
               Keep Learning
             </button>
           </div>
-        </motion.div>
       </div>
-    </AnimatePresence>
+    </div>
   );
 };

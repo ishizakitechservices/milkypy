@@ -1,31 +1,15 @@
-import React, { useState, useEffect, Suspense, lazy } from "react";
+import React, { useState, useEffect } from "react";
 import { AppMode, ThemeMode, UserProgress, UserCloudFile } from "./types";
 import { Navbar } from "./components/Navbar";
 import { PlaygroundView } from "./components/PlaygroundView";
+import { CurriculumView } from "./components/curriculum/CurriculumView";
+import { QuizView } from "./components/QuizView";
+import { GamesView } from "./components/GamesView";
+import { AIAssistPanel } from "./components/AIAssistPanel";
+import { StudentAuthModal } from "./components/StudentAuthModal";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { initPyodide } from "./lib/pyodideRunner";
-import { motion, AnimatePresence } from "motion/react";
-
-const CurriculumView = lazy(() =>
-  import("./components/curriculum/CurriculumView").then((m) => ({
-    default: m.CurriculumView,
-  }))
-);
-const GamesView = lazy(() =>
-  import("./components/GamesView").then((m) => ({
-    default: m.GamesView,
-  }))
-);
-const AIAssistPanel = lazy(() =>
-  import("./components/AIAssistPanel").then((m) => ({
-    default: m.AIAssistPanel,
-  }))
-);
-const StudentAuthModal = lazy(() =>
-  import("./components/StudentAuthModal").then((m) => ({
-    default: m.StudentAuthModal,
-  }))
-);
+import { X } from "lucide-react";
 import {
   loadUserProgress,
   saveUserProgress,
@@ -62,6 +46,14 @@ export default function App() {
   // Shared snippet notification banner state
   const [sharedToast, setSharedToast] = useState<{ title: string; author?: string } | null>(null);
 
+  // Cross-mode deep-link targets (Curriculum <-> Quiz)
+  const [requestedStudyLessonId, setRequestedStudyLessonId] = useState<string | null>(null);
+  const [requestedQuizLessonId, setRequestedQuizLessonId] = useState<string | null>(null);
+  const [quizReturnContext, setQuizReturnContext] = useState<{
+    topicTitle: string;
+    question?: string;
+  } | null>(null);
+
   // Check URL for shared snippet parameter (?snippet=... or ?share=...) or mode parameter (?mode=...)
   useEffect(() => {
     try {
@@ -72,6 +64,8 @@ export default function App() {
 
       if (lessonParam || modeParam === "study" || modeParam === "lessons") {
         setMode("study");
+      } else if (modeParam === "quiz" || modeParam === "quizzes") {
+        setMode("quiz");
       } else if (gameParam || modeParam === "games" || modeParam === "arcade") {
         setMode("games");
       } else if (modeParam === "playground" || modeParam === "code") {
@@ -117,10 +111,10 @@ export default function App() {
       }
       setPyodideProgress(info.progress);
       setPyodideStage(info.stage);
-    }, simulateCrash).then((success) => {
+    }, simulateCrash).then(() => {
       setPyodideStatus("ready");
       setPyodideProgress(100);
-      setPyodideStage("Python Engine Ready!");
+      setPyodideStage("Python ready");
     });
   };
 
@@ -370,118 +364,127 @@ export default function App() {
       />
 
       {/* Shared Snippet Loaded Banner */}
-      <AnimatePresence>
-        {sharedToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 py-2 flex items-center justify-between shadow-md text-xs z-30"
+      {sharedToast && (
+        <div className="bg-blue-600 text-white px-4 py-2 flex items-center justify-between shadow-sm text-xs z-30">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">Shared:</span>
+            <span>
+              Loaded <strong className="underline underline-offset-2">{sharedToast.title}</strong>
+              {sharedToast.author && ` by ${sharedToast.author}`}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSharedToast(null)}
+            className="text-white/80 hover:text-white font-bold ml-4 p-1 cursor-pointer"
+            aria-label="Close shared notice"
           >
-            <div className="flex items-center gap-2">
-              <span className="px-1.5 py-0.5 bg-white/20 rounded font-bold uppercase tracking-wider text-[10px]">
-                Shared Link
-              </span>
-              <span>
-                Loaded <strong className="underline underline-offset-2">{sharedToast.title}</strong>
-                {sharedToast.author && ` shared by ${sharedToast.author}`} into your Playground!
-              </span>
-            </div>
-            <button
-              onClick={() => setSharedToast(null)}
-              className="text-white/80 hover:text-white font-bold ml-4 p-1"
-            >
-              ✕
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Main Mode Layout */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={mode}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="flex-1 flex flex-col min-h-0 pb-16 md:pb-0"
-        >
-          {mode === "study" ? (
-            <Suspense
-              fallback={
-                <div className="flex-1 flex items-center justify-center p-8 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Loading Python curriculum...
-                </div>
-              }
-            >
-              <CurriculumView
-                progress={progress}
-                onUpdateProgress={handleUpdateProgress}
-                onOpenAiAssist={handleOpenAiAssist}
-                currentUser={currentUser}
-                onPracticeClick={(code: string) => {
-                  setCurrentActiveCode(code);
-                  setMode("playground");
-                }}
-              />
-            </Suspense>
-          ) : mode === "games" ? (
-            <Suspense
-              fallback={
-                <div className="flex-1 flex items-center justify-center p-8 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Loading Games Lab...
-                </div>
-              }
-            >
-              <GamesView
-                onOpenAiAssist={handleOpenAiAssist}
-                onPracticeClick={(code: string) => {
-                  setCurrentActiveCode(code);
-                  setMode("playground");
-                }}
-              />
-            </Suspense>
-          ) : (
-            <PlaygroundView
-              activeCode={currentActiveCode}
-              onCodeChange={setCurrentActiveCode}
-              onOpenAiAssist={handleOpenAiAssist}
-              currentUser={currentUser}
-              userFiles={userFiles}
-              activeFileId={activeFileId}
-              onSelectFile={handleSelectFile}
-              onSaveFile={handleSaveCloudFile}
-              onCreateFile={handleCreateCloudFile}
-              onDeleteFile={handleDeleteCloudFile}
-              onOpenAuth={() => setAuthModalOpen(true)}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <div className="flex-1 flex flex-col min-h-0 pb-16 md:pb-0">
+        {mode === "study" ? (
+          <CurriculumView
+            progress={progress}
+            onUpdateProgress={handleUpdateProgress}
+            onOpenAiAssist={handleOpenAiAssist}
+            currentUser={currentUser}
+            onPracticeClick={(code: string) => {
+              setQuizReturnContext(null);
+              setCurrentActiveCode(code);
+              setMode("playground");
+            }}
+            requestedLessonId={requestedStudyLessonId}
+            onClearRequestedLesson={() => setRequestedStudyLessonId(null)}
+            onStartLessonQuiz={(lessonId: string) => {
+              setQuizReturnContext(null);
+              setRequestedQuizLessonId(lessonId);
+              setMode("quiz");
+            }}
+            quizReturnContext={quizReturnContext}
+            onReturnToQuiz={() => {
+              setQuizReturnContext(null);
+              setMode("quiz");
+            }}
+            onDismissQuizReturn={() => setQuizReturnContext(null)}
+          />
+        ) : mode === "quiz" ? (
+          <QuizView
+            progress={progress}
+            onUpdateProgress={handleUpdateProgress}
+            onOpenAiAssist={handleOpenAiAssist}
+            onPracticeClick={(code: string, meta?: { topicTitle?: string; question?: string }) => {
+              setQuizReturnContext({
+                topicTitle: meta?.topicTitle || "Python Quiz",
+                question: meta?.question,
+              });
+              setCurrentActiveCode(code);
+              setMode("playground");
+            }}
+            onOpenLesson={(lessonId: string, meta?: { topicTitle?: string; question?: string }) => {
+              setQuizReturnContext({
+                topicTitle: meta?.topicTitle || "Python Quiz",
+                question: meta?.question,
+              });
+              setRequestedStudyLessonId(lessonId);
+              setMode("study");
+            }}
+            requestedLessonId={requestedQuizLessonId}
+            onClearRequestedLesson={() => setRequestedQuizLessonId(null)}
+          />
+        ) : mode === "games" ? (
+          <GamesView
+            onOpenAiAssist={handleOpenAiAssist}
+            onPracticeClick={(code: string) => {
+              setQuizReturnContext(null);
+              setCurrentActiveCode(code);
+              setMode("playground");
+            }}
+          />
+        ) : (
+          <PlaygroundView
+            activeCode={currentActiveCode}
+            onCodeChange={setCurrentActiveCode}
+            onOpenAiAssist={handleOpenAiAssist}
+            currentUser={currentUser}
+            userFiles={userFiles}
+            activeFileId={activeFileId}
+            onSelectFile={handleSelectFile}
+            onSaveFile={handleSaveCloudFile}
+            onCreateFile={handleCreateCloudFile}
+            onDeleteFile={handleDeleteCloudFile}
+            onOpenAuth={() => setAuthModalOpen(true)}
+            quizReturnContext={quizReturnContext}
+            onReturnToQuiz={() => {
+              setQuizReturnContext(null);
+              setMode("quiz");
+            }}
+            onDismissQuizReturn={() => setQuizReturnContext(null)}
+          />
+        )}
+      </div>
 
       {/* Student Auth Modal */}
-      <Suspense fallback={null}>
-        <StudentAuthModal
-          isOpen={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
-          onLoginSuccess={handleLoginSuccess}
-        />
-      </Suspense>
+      <StudentAuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
 
-      {/* Slide-over Ask AI Assistant Sidebar Panel */}
-      <Suspense fallback={null}>
-        <AIAssistPanel
-          isOpen={aiModalOpen}
-          onClose={() => setAiModalOpen(false)}
-          code={aiCode}
-          errorMessage={aiErrorMessage}
-          onApplyCode={handleApplyAiCode}
-          lessonContext={aiLessonContext}
-        />
-      </Suspense>
+      {/* Code Help Sidebar Panel */}
+      <AIAssistPanel
+        isOpen={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        code={aiCode}
+        errorMessage={aiErrorMessage}
+        onApplyCode={handleApplyAiCode}
+        lessonContext={aiLessonContext}
+      />
 
-      {/* Global Offline Network & Pyodide Cache Toast */}
+      {/* Offline Status Indicator */}
       <OfflineIndicator />
     </div>
   );

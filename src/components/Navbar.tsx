@@ -3,10 +3,8 @@ import { AppMode, ThemeMode } from "../types";
 import {
   BookOpen,
   Code2,
-  Sparkles,
   Sun,
   Moon,
-  Zap,
   User,
   LogOut,
   Milk,
@@ -15,15 +13,12 @@ import {
   X,
   ChevronRight,
   HelpCircle,
-  ExternalLink,
-  Wifi,
-  WifiOff,
   CheckCircle2,
   HardDrive,
-  Smartphone,
   RotateCcw,
+  Target,
+  MessageSquare,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { PWAInstallButton } from "./PWAInstallButton";
 import { usePWAInstall } from "../hooks/usePWAInstall";
 import {
@@ -139,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   pyodideStatus === "ready"
                     ? "bg-[#65D9A3] skeuo-indicator text-[#65D9A3]"
                     : pyodideStatus === "loading"
-                    ? "bg-[#F2BC72] animate-pulse"
+                    ? "bg-[#F2BC72]"
                     : pyodideStatus === "error"
                     ? "bg-[#F08089]"
                     : "bg-[#686D78]"
@@ -175,7 +170,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="tab-study-mode"
               onClick={() => setMode("study")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 mode === "study"
                   ? "bg-white dark:bg-[#15171E] border border-slate-200 dark:border-white/15 shadow-xs text-blue-600 dark:text-[#8BBEFF]"
                   : "text-slate-600 hover:text-slate-900 dark:text-[#BFC4CE] dark:hover:text-[#F3F4F6]"
@@ -185,19 +180,32 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Lessons</span>
             </button>
 
-            {/* Games Lab Mode */}
+            {/* Quiz Mode */}
+            <button
+              id="tab-quiz-mode"
+              onClick={() => setMode("quiz")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                mode === "quiz"
+                  ? "bg-white dark:bg-[#15171E] border border-slate-200 dark:border-white/15 shadow-xs text-emerald-600 dark:text-[#65D9D0]"
+                  : "text-slate-600 hover:text-slate-900 dark:text-[#BFC4CE] dark:hover:text-[#F3F4F6]"
+              }`}
+            >
+              <Target className="w-3.5 h-3.5 text-emerald-600 dark:text-[#65D9D0] shrink-0" />
+              <span>Quiz</span>
+            </button>
+
+            {/* Games Mode */}
             <button
               id="tab-games-mode"
               onClick={() => setMode("games")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 mode === "games"
                   ? "bg-white dark:bg-[#15171E] border border-slate-200 dark:border-white/15 shadow-xs text-purple-600 dark:text-[#A98BFF]"
                   : "text-slate-600 hover:text-slate-900 dark:text-[#BFC4CE] dark:hover:text-[#F3F4F6]"
               }`}
             >
               <Gamepad2 className="w-3.5 h-3.5 text-[#A98BFF] shrink-0" />
-              <span className="hidden lg:inline">Games Lab</span>
-              <span className="lg:hidden">Games</span>
+              <span>Games</span>
             </button>
           </nav>
 
@@ -229,18 +237,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Ask AI Assistant Trigger */}
+            {/* Code Help Trigger */}
             <button
               id="btn-ai-assist"
               onClick={onOpenAiAssist}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-[#8BBEFF] dark:to-[#A98BFF] text-white dark:text-[#08090D] text-xs font-extrabold shadow-xs hover:opacity-95 transition-all cursor-pointer shrink-0 touch-target"
-              title="Ask AI Assistant (Ctrl+K)"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-[#8BBEFF] dark:hover:bg-[#73aef8] text-white dark:text-[#08090D] text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 touch-target whitespace-nowrap"
+              title="Code Help (Ctrl+K)"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 dark:text-[#08090D]" />
-              <span className="inline">Ask AI</span>
+              <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+              <span className="inline">Code Help</span>
             </button>
 
-            {/* Theme Toggle (Light / Dark) - Visible on sm+ or mobile drawer */}
+            {/* Theme Toggle (Light / Dark) */}
             <button
               id="btn-theme-toggle"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -255,28 +263,27 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-global-help"
                 className="p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-[#BFC4CE] dark:hover:text-[#F3F4F6] bg-slate-100 hover:bg-slate-200 dark:bg-[#252933] dark:hover:bg-[#353A46] border border-slate-200 dark:border-white/10 transition-colors cursor-help shrink-0 flex items-center justify-center"
-                title="Keyboard Shortcuts & Help Reference"
+                title="Keyboard Shortcuts"
               >
                 <HelpCircle className="w-4 h-4 text-blue-600 dark:text-[#8BBEFF]" />
               </button>
-              
+
               {/* Hover Popover dropdown */}
               <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-[#15171E] border border-slate-200 dark:border-white/12 rounded-2xl p-4 shadow-2xl space-y-3 opacity-0 pointer-events-none group-hover/help:opacity-100 group-hover/help:pointer-events-auto transition-all duration-200 z-50">
-                <h4 className="text-xs font-black font-sans text-slate-900 dark:text-[#F3F4F6] border-b border-slate-100 dark:border-white/10 pb-2 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#8BBEFF]" />
-                  <span>Keyboard Shortcuts</span>
+                <h4 className="text-xs font-bold font-sans text-slate-900 dark:text-[#F3F4F6] border-b border-slate-100 dark:border-white/10 pb-2">
+                  Keyboard Shortcuts
                 </h4>
                 <div className="space-y-2 font-sans">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-600 dark:text-[#BFC4CE]">Run Python Code</span>
+                    <span className="text-slate-600 dark:text-[#BFC4CE]">Run Code</span>
                     <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-[#08090D] border border-slate-200 dark:border-white/10 rounded text-slate-700 dark:text-[#F3F4F6] font-mono font-bold text-[10px]">Ctrl+Enter</kbd>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-600 dark:text-[#BFC4CE]">Ask Milky AI Assist</span>
+                    <span className="text-slate-600 dark:text-[#BFC4CE]">Code Help</span>
                     <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-[#08090D] border border-slate-200 dark:border-white/10 rounded text-slate-700 dark:text-[#F3F4F6] font-mono font-bold text-[10px]">Ctrl+K</kbd>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-600 dark:text-[#BFC4CE]">Trigger Autocomplete</span>
+                    <span className="text-slate-600 dark:text-[#BFC4CE]">Autocomplete</span>
                     <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-[#08090D] border border-slate-200 dark:border-white/10 rounded text-slate-700 dark:text-[#F3F4F6] font-mono font-bold text-[10px]">Ctrl+Space</kbd>
                   </div>
                   <div className="flex justify-between items-center text-xs">
@@ -305,167 +312,144 @@ export const Navbar: React.FC<NavbarProps> = ({
       </header>
 
       {/* Runtime Details Popover Dropdown */}
-      <AnimatePresence>
-        {showRuntimeDetails && (
-          <div className="fixed inset-0 z-50" onClick={() => setShowRuntimeDetails(false)}>
-            <div className="absolute top-14 left-3 sm:left-4 z-50">
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-72 sm:w-80 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl space-y-3 font-sans text-xs"
-              >
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-blue-500" />
-                    <span className="font-bold text-slate-900 dark:text-slate-100">
-                      Python Status
-                    </span>
+      {showRuntimeDetails && (
+        <div className="fixed inset-0 z-50" onClick={() => setShowRuntimeDetails(false)}>
+          <div className="absolute top-14 left-3 sm:left-4 z-50">
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-72 sm:w-80 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl space-y-3 font-sans text-xs"
+            >
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <span className="font-bold text-slate-900 dark:text-slate-100">
+                  Python Status
+                </span>
+                <button
+                  onClick={() => setShowRuntimeDetails(false)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {pyodideStatus === "ready" ? (
+                <div className="space-y-3 py-1">
+                  <div>
+                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Python is Ready
+                    </p>
+                    <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed mt-1">
+                      Python runs directly on your device in the browser.
+                    </p>
                   </div>
-                  <button
-                    onClick={() => setShowRuntimeDetails(false)}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
 
-                {pyodideStatus === "ready" ? (
-                  <div className="space-y-3 py-1">
-                    <div>
-                      <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Python is Ready!
-                      </p>
-                      <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed mt-1">
-                        In-browser WebAssembly engine with local cache storage is fully active. Code executes immediately on-device!
-                      </p>
-                    </div>
-
-                    {/* Offline Readiness Card */}
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px] font-semibold">
-                        <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                          <HardDrive className="w-3.5 h-3.5 text-blue-500" />
-                          <span>Offline Python Support</span>
-                        </div>
-                        {offlineStatus.isPyodideCached ? (
-                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" /> Ready Offline
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-amber-500 font-medium">
-                            {offlineStatus.cachedCount}/{offlineStatus.totalCount} Cached
-                          </span>
-                        )}
+                  {/* Offline Readiness Card */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-semibold">
+                      <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                        <HardDrive className="w-3.5 h-3.5 text-blue-500" />
+                        <span>Offline Support</span>
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                        {offlineStatus.isPyodideCached
-                          ? "Pyodide core WASM & Python standard library are stored locally in Cache API."
-                          : "Core Pyodide files are downloading to enable full offline coding."}
-                      </p>
-                      {!offlineStatus.isPyodideCached && (
-                        <button
-                          onClick={() => preloadPyodideForOffline()}
-                          disabled={offlineStatus.isDownloading}
-                          className="w-full mt-1 py-1 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[10px] transition-all disabled:opacity-50 cursor-pointer"
-                        >
-                          {offlineStatus.isDownloading
-                            ? `Caching Pyodide (${offlineStatus.downloadProgress}%)...`
-                            : "Pre-Cache Pyodide for Offline"}
-                        </button>
+                      {offlineStatus.isPyodideCached ? (
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Ready Offline
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-amber-500 font-medium">
+                          {offlineStatus.cachedCount}/{offlineStatus.totalCount} Saved
+                        </span>
                       )}
                     </div>
-                  </div>
-                ) : pyodideStatus === "loading" ? (
-                  <div className="p-2.5 bg-amber-50 dark:bg-amber-950/50 rounded-xl border border-amber-200/70 dark:border-amber-900/60 space-y-2">
-                    <div className="flex justify-between text-xs text-amber-800 dark:text-amber-300 font-semibold">
-                      <span>{pyodideStage || "Getting Python ready..."}</span>
-                      <span>{pyodideProgress}%</span>
-                    </div>
-                    <div className="h-1.5 bg-amber-200 dark:bg-amber-900/80 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-500 rounded-full transition-all duration-300"
-                        style={{ width: `${pyodideProgress}%` }}
-                      />
-                    </div>
-                    <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium leading-relaxed">
-                      WebAssembly environment files are loaded locally from browser cache API for sub-second, network-free loads on subsequent visits!
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {offlineStatus.isPyodideCached
+                        ? "Python files are saved in your browser so everything works without internet."
+                        : "Saving Python files for offline use."}
                     </p>
-                  </div>
-                ) : (
-                  <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900/60 space-y-3">
-                    <div className="space-y-1">
-                      <p className="text-xs font-extrabold text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
-                        <X className="w-4 h-4 text-rose-500" /> Initialization Failed {pyodideProgress === 75 ? "at 75%" : ""}
-                      </p>
-                      <p className="text-[11px] text-rose-600/90 dark:text-rose-400/90 leading-normal">
-                        {pyodideStage || "WebAssembly core memory allocation failed (Out of Memory/OOM error)."}
-                      </p>
-                    </div>
-                    
-                    {onReloadPyodide && (
+                    {!offlineStatus.isPyodideCached && (
                       <button
-                        onClick={() => {
-                          onReloadPyodide(false);
-                        }}
-                        className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                        onClick={() => preloadPyodideForOffline()}
+                        disabled={offlineStatus.isDownloading}
+                        className="w-full mt-1 py-1 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[10px] transition-all disabled:opacity-50 cursor-pointer"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Reload Python Runtime</span>
+                        {offlineStatus.isDownloading
+                          ? `Saving (${offlineStatus.downloadProgress}%)...`
+                          : "Save for Offline Use"}
                       </button>
                     )}
-                    
-                    <p className="text-[9px] text-slate-400 leading-tight">
-                      Note: While WASM is reloading, you can continue coding. Milky AI Tutor seamlessly bridges to safe native backups if offline.
+                  </div>
+                </div>
+              ) : pyodideStatus === "loading" ? (
+                <div className="p-2.5 bg-amber-50 dark:bg-amber-950/50 rounded-xl border border-amber-200/70 dark:border-amber-900/60 space-y-2">
+                  <div className="flex justify-between text-xs text-amber-800 dark:text-amber-300 font-semibold">
+                    <span>{pyodideStage || "Starting Python..."}</span>
+                    <span>{pyodideProgress}%</span>
+                  </div>
+                  <div className="h-1.5 bg-amber-200 dark:bg-amber-900/80 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-amber-500 rounded-full transition-all duration-300"
+                      style={{ width: `${pyodideProgress}%` }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900/60 space-y-3">
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                      <X className="w-4 h-4 text-rose-500" /> Python Failed to Start
+                    </p>
+                    <p className="text-[11px] text-rose-600/90 dark:text-rose-400/90 leading-normal">
+                      {pyodideStage || "Could not load Python. Try reloading below."}
                     </p>
                   </div>
-                )}
-              </motion.div>
+
+                  {onReloadPyodide && (
+                    <button
+                      onClick={() => {
+                        onReloadPyodide(false);
+                      }}
+                      className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Reload Python</span>
+                    </button>
+                  )}
+
+                  <p className="text-[10px] text-slate-500 leading-tight">
+                    You can keep editing your code while Python reloads.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
-      {/* Mobile Drawer Navigation Menu (Full slide-over sheet for phones & tablets) */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 z-50 flex justify-end">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileMenuOpen(false)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
-            />
+      {/* Mobile Drawer Navigation Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex justify-end">
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+          />
 
-            {/* Slide-over Drawer Panel */}
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="relative w-4/5 max-w-sm h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between p-5 overflow-y-auto"
-            >
-              <div className="space-y-6">
-                {/* Header in Drawer */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white">
-                      <Milk className="w-4 h-4 fill-white/20" />
-                    </div>
-                    <span className="font-bold text-base text-slate-900 dark:text-slate-100">
-                      Milky AI Tutor Menu
-                    </span>
+          <div className="relative w-4/5 max-w-sm h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between p-5 overflow-y-auto">
+            <div className="space-y-6">
+              {/* Header in Drawer */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                    <Milk className="w-4 h-4 fill-white/20" />
                   </div>
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                  <span className="font-bold text-base text-slate-900 dark:text-slate-100">
+                    MilkyPy
+                  </span>
                 </div>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
                 {/* Student Auth Section */}
                 <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/80">
@@ -518,8 +502,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 {/* Primary Mode Navigation Links */}
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Application Modes
+                  <span className="text-xs font-semibold text-slate-400">
+                    Sections
                   </span>
 
                   <button
@@ -532,7 +516,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center gap-2.5">
                       <Code2 className="w-4 h-4" />
-                      <span className="text-xs">Python Playground</span>
+                      <span className="text-xs">Playground</span>
                     </div>
                     <ChevronRight className="w-4 h-4 opacity-70" />
                   </button>
@@ -547,11 +531,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center gap-2.5">
                       <BookOpen className="w-4 h-4" />
-                      <span className="text-xs">Interactive Lessons</span>
+                      <span className="text-xs">Lessons</span>
                     </div>
                     <ChevronRight className="w-4 h-4 opacity-70" />
                   </button>
 
+                  <button
+                    onClick={() => handleSelectMode("quiz")}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
+                      mode === "quiz"
+                        ? "bg-emerald-600 text-white font-bold shadow-xs"
+                        : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Target className="w-4 h-4 text-emerald-500 dark:text-[#65D9D0]" />
+                      <span className="text-xs">Python Quiz</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 opacity-70" />
+                  </button>
 
                   <button
                     onClick={() => handleSelectMode("games")}
@@ -563,26 +561,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center gap-2.5">
                       <Gamepad2 className="w-4 h-4 text-purple-400" />
-                      <span className="text-xs">Games Lab (Arcade)</span>
+                      <span className="text-xs">Games</span>
                     </div>
                     <ChevronRight className="w-4 h-4 opacity-70" />
                   </button>
 
-                  {/* Ask AI Assistant Trigger */}
+                  {/* Code Help Trigger */}
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
                       onOpenAiAssist();
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-xs cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-xs cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-300" />
-                      <span>Ask AI Assistant</span>
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Code Help</span>
                     </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 text-white">
-                      Help
-                    </span>
+                    <ChevronRight className="w-4 h-4 opacity-70" />
                   </button>
                 </div>
 
@@ -597,24 +593,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Drawer Footer */}
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>Color Theme:</span>
+                  <span>Theme:</span>
                   <button
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium"
                   >
                     {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-500" />}
-                    <span>{theme === "dark" ? "Dark Mode" : "Light Mode"}</span>
+                    <span>{theme === "dark" ? "Dark" : "Light"}</span>
                   </button>
                 </div>
 
                 <div className="text-[11px] text-slate-400 text-center">
-                  Made for Python learners of all ages
+                  Learn Python at your own pace
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
 
       {/* Mobile Sticky Bottom Navigation Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/85 dark:bg-[#15171E]/90 backdrop-blur-md border-t border-slate-200/80 dark:border-white/10 px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-2xl">
@@ -634,7 +629,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Lessons Tab */}
         <button
           onClick={() => handleSelectMode("study")}
-          className={`flex-1 min-w-0 flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer touch-target ${
+          className={`flex-1 min-w-0 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all cursor-pointer touch-target ${
             mode === "study"
               ? "text-blue-600 dark:text-[#8BBEFF] font-bold bg-blue-50/60 dark:bg-white/5"
               : "text-slate-500 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
@@ -644,10 +639,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="text-[10px] font-semibold leading-tight truncate">Lessons</span>
         </button>
 
-        {/* Games Lab Tab */}
+        {/* Quiz Tab */}
+        <button
+          onClick={() => handleSelectMode("quiz")}
+          className={`flex-1 min-w-0 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all cursor-pointer touch-target ${
+            mode === "quiz"
+              ? "text-emerald-600 dark:text-[#65D9D0] font-bold bg-emerald-50/60 dark:bg-white/5"
+              : "text-slate-500 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
+          }`}
+        >
+          <Target className="w-5 h-5 mb-0.5 shrink-0" />
+          <span className="text-[10px] font-semibold leading-tight truncate">Quiz</span>
+        </button>
+
+        {/* Games Tab */}
         <button
           onClick={() => handleSelectMode("games")}
-          className={`flex-1 min-w-0 flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all cursor-pointer touch-target ${
+          className={`flex-1 min-w-0 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all cursor-pointer touch-target ${
             mode === "games"
               ? "text-purple-600 dark:text-[#A98BFF] font-bold bg-purple-50/60 dark:bg-white/5"
               : "text-slate-500 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
@@ -660,7 +668,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* More / Menu Drawer Trigger */}
         <button
           onClick={() => setMobileMenuOpen(true)}
-          className="flex-1 min-w-0 flex flex-col items-center justify-center py-1.5 px-2 rounded-xl text-slate-500 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6] transition-all cursor-pointer touch-target"
+          className="flex-1 min-w-0 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-slate-500 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6] transition-all cursor-pointer touch-target"
         >
           <Menu className="w-5 h-5 mb-0.5 shrink-0" />
           <span className="text-[10px] font-semibold leading-tight truncate">Menu</span>

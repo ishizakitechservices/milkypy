@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { UserCloudFile } from "../types";
 import { User, Lock, AlertCircle, X, ArrowRight, Eye, EyeOff, UserPlus, LogIn } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { getApiUrl } from "../lib/apiConfig";
 
 interface StudentAuthModalProps {
@@ -80,7 +79,7 @@ export const StudentAuthModal: React.FC<StudentAuthModalProps> = ({
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
         throw new Error(
-          "Authentication service returned an unexpected response. Verify your API backend or Cloudflare Pages Functions deployment."
+          "Authentication service returned an unexpected response. Verify your API backend or Cloudflare Workers deployment."
         );
       }
 
@@ -102,21 +101,11 @@ export const StudentAuthModal: React.FC<StudentAuthModalProps> = ({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
-        >
-          <motion.div
-            initial={{ scale: 0.95, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.95, y: 20 }}
-            className="w-full max-w-md bg-white dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] rounded-2xl shadow-2xl overflow-hidden flex flex-col text-slate-800 dark:text-[#F3F4F6] select-none"
-          >
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] rounded-2xl shadow-2xl overflow-hidden flex flex-col text-slate-800 dark:text-[#F3F4F6] select-none">
             {/* Header */}
             <div className="p-5 bg-white dark:bg-[#15171E] border-b border-slate-200 dark:border-[#252933] flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -290,9 +279,7 @@ export const StudentAuthModal: React.FC<StudentAuthModalProps> = ({
                   : "Demo accounts: m162 / pass123 — or create your own Student ID under Sign Up."}
               </p>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </div>
+    </div>
   );
 };

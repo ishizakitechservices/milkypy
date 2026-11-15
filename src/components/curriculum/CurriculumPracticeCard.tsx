@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { PracticeQuestion } from "../../data/curriculum/schema";
-import { Check, X, Lightbulb, Play, RotateCcw, Square } from "lucide-react";
+import { Check, CheckCircle2, X, Lightbulb, Play, RotateCcw, Square } from "lucide-react";
 import { runPythonCode, stopPythonExecution } from "../../lib/pyodideRunner";
 
 interface CurriculumPracticeCardProps {
@@ -237,11 +237,16 @@ export const CurriculumPracticeCard: React.FC<CurriculumPracticeCardProps> = ({
                   : "bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800"
               }`}
             >
-              <div className="font-medium">
+              <div className="font-medium flex items-center gap-1.5">
                 {textAnswerInput.trim().toLowerCase() === targetAnswer.trim().toLowerCase() ||
-                acceptedAnswers.map((s) => s.trim().toLowerCase()).includes(textAnswerInput.trim().toLowerCase())
-                  ? "✓ Correct!"
-                  : `Answer: "${targetAnswer}"`}
+                acceptedAnswers.map((s) => s.trim().toLowerCase()).includes(textAnswerInput.trim().toLowerCase()) ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Correct!</span>
+                  </>
+                ) : (
+                  <span>Answer: &ldquo;{targetAnswer}&rdquo;</span>
+                )}
               </div>
               {question.explanation && <p className="mt-1 text-slate-600 dark:text-slate-300">{question.explanation}</p>}
             </div>
@@ -331,8 +336,15 @@ export const CurriculumPracticeCard: React.FC<CurriculumPracticeCardProps> = ({
                   : "bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border-rose-200 dark:border-rose-900/60"
               }`}
             >
-              <div className="font-sans font-semibold mb-1">
-                {!fixResult.isError ? "✓ Success! Fix worked cleanly." : "Execution Error:"}
+              <div className="font-sans font-semibold mb-1 flex items-center gap-1.5">
+                {!fixResult.isError ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Success! Fix worked cleanly.</span>
+                  </>
+                ) : (
+                  <span>Execution Error:</span>
+                )}
               </div>
               {fixResult.stdout && <div>Output: {fixResult.stdout}</div>}
               {fixResult.stderr && <div>{fixResult.stderr}</div>}

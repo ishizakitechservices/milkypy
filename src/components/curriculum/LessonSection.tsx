@@ -3,22 +3,77 @@ import { LessonSection as LessonSectionType } from "../../data/curriculum/schema
 import styles from "./LessonSection.module.css";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { AlertTriangle, BookOpen, Code } from "lucide-react";
+import { AlertTriangle, BookOpen, Code, CheckCircle2, XCircle, Terminal, Compass } from "lucide-react";
 import { CurriculumInlineEditor } from "./CurriculumInlineEditor";
 import { CurriculumPracticeCard } from "./CurriculumPracticeCard";
+import { CopyCodeButton } from "../CopyCodeButton";
 
 interface LessonSectionProps {
   section: LessonSectionType;
   onPracticeCorrect?: (id: string) => void;
+  lessonContext?: any;
+  onOpenAiAssist?: (code: string, errorMsg?: string, lessonCtx?: any) => void;
+  onPracticeClick?: (code: string) => void;
 }
 
 export const LessonSection: React.FC<LessonSectionProps> = ({
   section,
   onPracticeCorrect,
+  lessonContext,
+  onOpenAiAssist,
+  onPracticeClick,
 }) => {
+  const markdownComponents = React.useMemo(
+    () => ({
+      pre: ({ children }: any) => {
+        const child = React.Children.toArray(children)[0] as React.ReactElement<any> | undefined;
+        const className = child?.props?.className || "";
+        const langMatch = /language-(\w+)/.exec(className);
+        const lang = langMatch ? langMatch[1] : "python";
+        const rawCode = String(child?.props?.children || "").replace(/\n$/, "");
+
+        return (
+          <div className={styles.markdownCodeWrapper}>
+            <div className={styles.markdownCodeHeader}>
+              <span className={styles.markdownCodeLang}>
+                {lang === "python" || lang === "py" ? "Python" : lang}
+              </span>
+              <div className="flex items-center gap-2">
+                {onPracticeClick && (lang === "python" || lang === "py") && rawCode.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => onPracticeClick(rawCode)}
+                    className="text-[11px] font-sans font-semibold text-blue-600 dark:text-[#8BBEFF] hover:underline flex items-center gap-1 cursor-pointer"
+                    title="Open code in Playground"
+                  >
+                    <Code className="w-3 h-3" />
+                    <span>Try in Playground</span>
+                  </button>
+                )}
+                {rawCode.trim() && <CopyCodeButton code={rawCode} compact />}
+              </div>
+            </div>
+            <pre className={styles.markdownCodePre}>
+              <code>{rawCode}</code>
+            </pre>
+          </div>
+        );
+      },
+      code: ({ node, inline, className, children, ...props }: any) => {
+        // Block <code> inside <pre> is handled by pre renderer above
+        return (
+          <code className={styles.inlineCode} {...props}>
+            {children}
+          </code>
+        );
+      },
+    }),
+    [onPracticeClick]
+  );
+
   switch (section.type) {
     // ----------------------------------------------------
-    // 1. W3Schools-Style Syntax Section
+    // 1. Syntax Section
     // ----------------------------------------------------
     case "syntax": {
       const syntaxCode = section.syntax || section.code || "";
@@ -33,7 +88,10 @@ export const LessonSection: React.FC<LessonSectionProps> = ({
                 <Code className="w-3.5 h-3.5" />
                 <span>Syntax</span>
               </span>
-              <span className={styles.syntaxBadge}>Python</span>
+              <div className="flex items-center gap-2">
+                <span className={styles.syntaxLangLabel}>Python</span>
+                {syntaxCode && <CopyCodeButton code={syntaxCode} compact />}
+              </div>
             </div>
 
             {syntaxCode && (
@@ -87,7 +145,7 @@ export const LessonSection: React.FC<LessonSectionProps> = ({
     }
 
     // ----------------------------------------------------
-    // 2. W3Schools-Style Example Section
+    // 2. Example Section
     // ----------------------------------------------------
     case "example": {
       const stepWalkthrough: string[] = section.stepByStep || section.walkthrough || [];
@@ -98,9 +156,23 @@ export const LessonSection: React.FC<LessonSectionProps> = ({
           <div className={styles.exampleCard}>
             <div className={styles.exampleHeader}>
               <span className={styles.exampleTitle}>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1" />
+                <Terminal className="w-3.5 h-3.5 text-emerald-500 inline-block mr-1" />
                 <span>{section.title || "Example"}</span>
               </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {section.code && <CopyCodeButton code={section.code} compact />}
+                {onPracticeClick && section.code && (
+                  <button
+                    type="button"
+                    onClick={() => onPracticeClick(section.code)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-sans font-semibold text-blue-700 dark:text-[#8BBEFF] bg-blue-50/80 dark:bg-[#8BBEFF]/10 border border-blue-200 dark:border-[#8BBEFF]/30 hover:bg-blue-100 dark:hover:bg-[#8BBEFF]/20 transition-colors cursor-pointer"
+                    title="Open this example in Playground"
+                  >
+                    <Code className="w-3 h-3" />
+                    <span>Try in Playground</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {descriptionText && (
@@ -157,13 +229,37 @@ export const LessonSection: React.FC<LessonSectionProps> = ({
                       <div className={styles.codeCompareGrid}>
                         {badCode && (
                           <div className={styles.avoidBox}>
-                            <span className={styles.compareLabel}>❌ Avoid:</span>
+                            <div className={styles.compareLabelRow}>
+                              <span className={styles.compareLabel}>
+                                <XCircle className="w-3.5 h-3.5 text-rose-500 inline mr-1 -mt-0.5" />
+                                Avoid
+                              </span>
+                              <CopyCodeButton code={badCode} compact />
+                            </div>
                             <pre className="whitespace-pre-wrap">{badCode}</pre>
                           </div>
                         )}
                         {goodCode && (
                           <div className={styles.betterBox}>
-                            <span className={styles.compareLabel}>✅ Better:</span>
+                            <div className={styles.compareLabelRow}>
+                              <span className={styles.compareLabel}>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 inline mr-1 -mt-0.5" />
+                                Better
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {onPracticeClick && (
+                                  <button
+                                    type="button"
+                                    onClick={() => onPracticeClick(goodCode)}
+                                    className="text-[11px] font-sans font-semibold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+                                    title="Open corrected snippet in Playground"
+                                  >
+                                    Try
+                                  </button>
+                                )}
+                                <CopyCodeButton code={goodCode} compact />
+                              </div>
+                            </div>
                             <pre className="whitespace-pre-wrap">{goodCode}</pre>
                           </div>
                         )}
@@ -189,14 +285,7 @@ export const LessonSection: React.FC<LessonSectionProps> = ({
         <div className={styles.sectionContainer}>
           {section.title && <h2 className={styles.sectionHeading}>{section.title}</h2>}
           <div className={styles.proseBlock}>
-            <Markdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                code: ({ node, inline, ...props }: any) => (
-                  <code className={styles.inlineCode} {...props} />
-                ),
-              }}
-            >
+            <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
               {section.content}
             </Markdown>
           </div>
@@ -220,6 +309,9 @@ export const LessonSection: React.FC<LessonSectionProps> = ({
             solutionCode={section.solutionCode}
             expectedOutput={section.expectedOutput}
             hints={section.hints}
+            lessonContext={lessonContext}
+            onOpenAiAssist={onOpenAiAssist}
+            onPracticeClick={onPracticeClick}
           />
         </div>
       );
@@ -298,6 +390,54 @@ export const LessonSection: React.FC<LessonSectionProps> = ({
             {section.takeaway && (
               <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 italic">
                 {section.takeaway}
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ----------------------------------------------------
+    // 9. Deeper Dive Section
+    // ----------------------------------------------------
+    case "deeper-dive": {
+      return (
+        <div className={styles.sectionContainer}>
+          <div className="p-4 sm:p-5 rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 space-y-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>{section.title || "Deeper Dive"}</span>
+            </div>
+            <div className={styles.proseBlock}>
+              <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                {section.content}
+              </Markdown>
+            </div>
+            {section.challenge && (
+              <div className="p-3 rounded-lg bg-white/80 dark:bg-slate-900/70 border border-indigo-200/80 dark:border-indigo-800/50 text-xs text-slate-700 dark:text-slate-200">
+                <span className="font-bold text-indigo-700 dark:text-indigo-300">Challenge: </span>
+                {section.challenge}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ----------------------------------------------------
+    // 10. Future Preview Section
+    // ----------------------------------------------------
+    case "future-preview": {
+      return (
+        <div className={styles.sectionContainer}>
+          <div className="p-4 rounded-xl border border-slate-200 dark:border-[#252933] bg-slate-50/70 dark:bg-[#15171E] space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-[#8BBEFF] uppercase tracking-wider">
+              <Compass className="w-3.5 h-3.5" />
+              <span>{section.title || "Coming Up Next"}</span>
+            </div>
+            {(section.teaser || section.content) && (
+              <p className="text-xs text-slate-600 dark:text-[#BFC4CE] leading-relaxed">
+                {section.teaser || section.content}
               </p>
             )}
           </div>

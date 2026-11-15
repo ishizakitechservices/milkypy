@@ -10,7 +10,7 @@ import {
   Send,
   History,
   Square,
-  Sparkles,
+  MessageSquare,
 } from "lucide-react";
 
 interface TerminalOutputProps {
@@ -123,6 +123,18 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {!isRunning && result && typeof result.executionTimeMs === "number" && (
+            <span
+              className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border ${
+                result.isError
+                  ? "bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400"
+                  : "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-[#65D9D0]"
+              }`}
+              title="Execution duration"
+            >
+              {result.executionTimeMs}ms
+            </span>
+          )}
           {isRunning && onStop && (
             <button
               onClick={onStop}
@@ -177,7 +189,7 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
           {isRunning && (
             <div className="flex flex-col space-y-3">
               <div className="flex items-center gap-2 text-blue-600 dark:text-[#8BBEFF] font-sans text-xs font-semibold py-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 dark:bg-[#8BBEFF] animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-[#8BBEFF]" />
                 <span>Running your Python code...</span>
               </div>
               
@@ -192,7 +204,7 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
                   onSubmit={handleStdinSubmit}
                   className="mt-3 p-2 bg-white dark:bg-[#15171E] border border-blue-500/50 dark:border-[#8BBEFF]/50 rounded-lg flex items-center gap-2"
                 >
-                  <span className="text-xs text-blue-600 dark:text-[#8BBEFF] font-mono font-bold animate-pulse">
+                  <span className="text-xs text-blue-600 dark:text-[#8BBEFF] font-mono font-bold">
                     Input:
                   </span>
                   <input
@@ -244,8 +256,8 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
                         onClick={() => onAskAiFix(result.stderr)}
                         className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 dark:bg-[#8BBEFF] dark:hover:bg-[#8BBEFF]/90 text-white dark:text-[#08090D] font-sans text-[11px] font-bold shadow-xs transition-colors cursor-pointer"
                       >
-                        <Sparkles className="w-3 h-3" />
-                        <span>Fix with AI</span>
+                        <MessageSquare className="w-3 h-3" />
+                        <span>Explain Error</span>
                       </button>
                     )}
                   </div>
