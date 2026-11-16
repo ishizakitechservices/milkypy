@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { PremadeGame } from "../data/premadeGames";
+import { copyToClipboard } from "../lib/clipboard";
 import {
   ArrowLeft,
   Trophy,
@@ -10,7 +11,9 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
-  Check
+  Check,
+  X,
+  MessageSquare,
 } from "lucide-react";
 import { playSound } from "../lib/gameAudio";
 
@@ -47,17 +50,19 @@ export const ArcadePlayer: React.FC<ArcadePlayerProps> = ({
     setTerminalLogs((prev) => [...prev.slice(-40), msg]);
   };
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(game.code);
-    setCopiedCode(true);
-    playSound("click");
-    setTimeout(() => setCopiedCode(false), 2000);
+  const handleCopyCode = async () => {
+    const ok = await copyToClipboard(game.code);
+    if (ok) {
+      setCopiedCode(true);
+      playSound("click");
+      setTimeout(() => setCopiedCode(false), 2000);
+    }
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-7.5rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden bg-slate-950 font-sans text-slate-100 relative">
+    <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden bg-slate-950 font-sans text-slate-100 relative">
       {/* Top Game Bar */}
-      <div className="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-3 shrink-0 z-20">
+      <div className="px-3 sm:px-4 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-2 sm:gap-3 shrink-0 z-20">
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
@@ -118,8 +123,8 @@ export const ArcadePlayer: React.FC<ArcadePlayerProps> = ({
         </div>
       </div>
 
-      {/* Main Playing Area with split code drawer */}
-      <div className="flex-1 flex min-h-0 relative overflow-hidden">
+      {/* Main Playing Area with responsive split code drawer */}
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0 relative overflow-hidden">
         {/* Game Stage Area */}
         <div className="flex-1 flex flex-col min-h-0 relative bg-slate-950 overflow-hidden">
           {/* Specific game renderer */}
@@ -175,21 +180,45 @@ export const ArcadePlayer: React.FC<ArcadePlayerProps> = ({
 
         {/* Floating/Collapsible Code Inspector Drawer */}
         {showCodeInspector && (
-          <div className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-900 flex flex-col shrink-0 min-h-0 relative z-10 animate-in slide-in-from-bottom lg:slide-in-from-right">
-            <div className="p-3 border-b border-slate-800 flex items-center justify-between bg-slate-950 shrink-0">
-              <span className="text-xs font-mono text-purple-400 font-bold">Source: main.py</span>
-              <div className="flex items-center gap-2">
+          <div className="w-full h-[46%] lg:h-full lg:w-96 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-900 flex flex-col shrink-0 min-h-0 relative z-10 animate-in slide-in-from-bottom lg:slide-in-from-right">
+            <div className="px-3 py-2.5 border-b border-slate-800 flex items-center justify-between gap-2 bg-slate-950 shrink-0">
+              <span className="text-xs font-mono text-purple-400 font-bold truncate">Source: main.py</span>
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
+                  type="button"
+                  onClick={() =>
+                    onOpenAiAssist(game.code, undefined, {
+                      title: game.title,
+                      description: game.description,
+                    })
+                  }
+                  className="px-2 py-1 rounded-md text-blue-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-1 text-[11px] font-semibold cursor-pointer"
+                  title="Explain this game code"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Code Help</span>
+                </button>
+                <button
+                  type="button"
                   onClick={handleCopyCode}
-                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1 text-[11px]"
+                  className="px-2 py-1 rounded-md text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-1 text-[11px] cursor-pointer"
                   title="Copy Python Code"
                 >
                   {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedCode ? "Copied" : "Copy"}</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCodeInspector(false)}
+                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                  title="Close code inspector"
+                  aria-label="Close code inspector"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
-            <div className="flex-1 overflow-auto p-4 font-mono text-xs text-slate-300 bg-slate-950/80 whitespace-pre leading-relaxed select-text">
+            <div className="flex-1 min-h-0 overflow-auto p-4 font-mono text-xs text-slate-300 bg-slate-950/80 whitespace-pre leading-relaxed select-text">
               {game.code}
             </div>
           </div>
@@ -1126,18 +1155,19 @@ const HangmanGameStage: React.FC<{
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5 max-w-full">
+      <div className="grid grid-cols-7 gap-1.5 w-full max-w-[320px]">
         {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((char) => (
           <button
             key={char}
+            type="button"
             onClick={() => handleGuess(char)}
             disabled={guessed.has(char) || isWon || isLost}
-            className={`w-7 h-7 rounded-lg flex items-center justify-center font-extrabold text-xs transition border cursor-pointer ${
+            className={`h-9 rounded-lg flex items-center justify-center font-extrabold text-xs transition border cursor-pointer ${
               guessed.has(char)
                 ? word.includes(char)
                   ? "bg-emerald-950/40 text-emerald-500 border-emerald-800/50"
                   : "bg-rose-950/40 text-rose-500 border-rose-800/50"
-                : "bg-slate-950 border-slate-850 hover:bg-slate-800 text-slate-200"
+                : "bg-slate-950 border-slate-800 hover:bg-slate-800 text-slate-200"
             }`}
           >
             {char}

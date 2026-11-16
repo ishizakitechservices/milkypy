@@ -346,7 +346,7 @@ export default function App() {
   }, [aiModalOpen, authModalOpen, mode]);
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans ${theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
+    <div className={`min-h-[100dvh] flex flex-col font-sans ${theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
       {/* Navigation Header */}
       <Navbar
         mode={mode}
@@ -385,7 +385,7 @@ export default function App() {
       )}
 
       {/* Main Mode Layout */}
-      <div className="flex-1 flex flex-col min-h-0 pb-16 md:pb-0">
+      <div className="flex-1 flex flex-col min-h-0 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
         {mode === "study" ? (
           <CurriculumView
             progress={progress}

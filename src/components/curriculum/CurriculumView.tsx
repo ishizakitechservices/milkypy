@@ -239,7 +239,7 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({
   const earnedBadgesCount = getEarnedBadges(progress.completedLessonIds).length;
 
   return (
-    <div className="flex-1 flex h-[calc(100vh-7.5rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden">
+    <div className="flex-1 flex h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] md:h-[calc(100dvh-3.5rem)] overflow-hidden">
       {/* Curriculum Outline Desktop Sidebar */}
       {desktopSidebarOpen && (
         <div className="hidden md:block h-full shrink-0 animate-in slide-in-from-left duration-200">

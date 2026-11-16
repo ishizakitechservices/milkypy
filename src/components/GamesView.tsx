@@ -55,7 +55,7 @@ export const GamesView: React.FC<GamesViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-7.5rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden bg-[#08090D] font-sans text-slate-100 relative">
+    <div className="flex-1 flex flex-col h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] md:h-[calc(100dvh-3.5rem)] overflow-hidden bg-[#08090D] font-sans text-slate-100 relative">
       {/* Games Sub-Header */}
       <header className="px-3 sm:px-4 py-2 bg-[#15171E] border-b border-[#252933] flex items-center justify-between gap-2 sm:gap-3 shrink-0 z-20">
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">

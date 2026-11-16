@@ -128,27 +128,27 @@ export const QuizFeedbackActionsBar: React.FC<QuizFeedbackActionsBarProps> = ({
   return (
     <div className="space-y-3">
       {/* Action Row */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-2.5 pt-1">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
           {codeSnippet && (
             <>
               {isRunning ? (
                 <button
                   type="button"
                   onClick={handleStopLive}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-colors cursor-pointer"
+                  className="min-h-[44px] flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
                 >
-                  <Square className="w-3 h-3 fill-current" />
+                  <Square className="w-3.5 h-3.5 fill-current shrink-0" />
                   <span>Stop</span>
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleRunLive}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-[#252933] dark:hover:bg-[#353A46] text-white text-xs font-semibold transition-colors cursor-pointer"
+                  className="min-h-[44px] flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-[#252933] dark:hover:bg-[#353A46] text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
                   title="Run this code live right here"
                 >
-                  <Play className="w-3 h-3 fill-current text-emerald-400" />
+                  <Play className="w-3.5 h-3.5 fill-current text-emerald-400 shrink-0" />
                   <span>{isModified ? "Run Edited" : "Run Code"}</span>
                 </button>
               )}
@@ -156,24 +156,24 @@ export const QuizFeedbackActionsBar: React.FC<QuizFeedbackActionsBarProps> = ({
               <button
                 type="button"
                 onClick={() => setIsEditing((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+                className={`min-h-[44px] flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                   isEditing
                     ? "border-blue-400 dark:border-[#8BBEFF] bg-blue-50 dark:bg-[#8BBEFF]/15 text-blue-700 dark:text-[#8BBEFF]"
                     : "border-slate-300 dark:border-slate-700 bg-white dark:bg-[#15171E] hover:bg-slate-100 dark:hover:bg-[#252933] text-slate-700 dark:text-slate-200"
                 }`}
                 title="Edit and test a fix inline"
               >
-                <Pencil className="w-3 h-3" />
+                <Pencil className="w-3.5 h-3.5 shrink-0" />
                 <span>{isEditing ? "Hide Sandbox" : "Edit & Test"}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => onPracticeClick(editableCode || codeSnippet)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#15171E] hover:bg-slate-100 dark:hover:bg-[#252933] text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+                className="min-h-[44px] flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#15171E] hover:bg-slate-100 dark:hover:bg-[#252933] text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
                 title="Open snippet in the full Playground editor"
               >
-                <Code2 className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
+                <Code2 className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF] shrink-0" />
                 <span>Try in Editor</span>
               </button>
             </>
@@ -183,10 +183,10 @@ export const QuizFeedbackActionsBar: React.FC<QuizFeedbackActionsBarProps> = ({
             <button
               type="button"
               onClick={() => onOpenLesson(lessonId)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#15171E] hover:bg-slate-100 dark:hover:bg-[#252933] text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+              className="min-h-[44px] flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#15171E] hover:bg-slate-100 dark:hover:bg-[#252933] text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
               title="Open the matching lesson and return anytime"
             >
-              <BookOpen className="w-3.5 h-3.5 text-teal-600 dark:text-[#65D9D0]" />
+              <BookOpen className="w-3.5 h-3.5 text-teal-600 dark:text-[#65D9D0] shrink-0" />
               <span>Open Lesson</span>
             </button>
           )}
@@ -194,10 +194,12 @@ export const QuizFeedbackActionsBar: React.FC<QuizFeedbackActionsBarProps> = ({
           <button
             type="button"
             onClick={handleGetHelp}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#15171E] hover:bg-slate-100 dark:hover:bg-[#252933] text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+            className={`min-h-[44px] flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#15171E] hover:bg-slate-100 dark:hover:bg-[#252933] text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+              !codeSnippet && !hasLesson ? "col-span-2" : ""
+            }`}
             title="Get step-by-step help on this question"
           >
-            <MessageSquare className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
+            <MessageSquare className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF] shrink-0" />
             <span>Get Help</span>
           </button>
         </div>
@@ -217,9 +219,9 @@ export const QuizFeedbackActionsBar: React.FC<QuizFeedbackActionsBarProps> = ({
                 <button
                   type="button"
                   onClick={() => setEditableCode(codeSnippet)}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-slate-600 dark:text-[#BFC4CE] hover:bg-slate-200/70 dark:hover:bg-[#252933] cursor-pointer"
+                  className="min-h-[36px] inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#BFC4CE] hover:bg-slate-200/70 dark:hover:bg-[#252933] cursor-pointer"
                 >
-                  <RotateCcw className="w-3 h-3" />
+                  <RotateCcw className="w-3.5 h-3.5" />
                   <span>Reset</span>
                 </button>
               )}
@@ -228,9 +230,9 @@ export const QuizFeedbackActionsBar: React.FC<QuizFeedbackActionsBarProps> = ({
                 type="button"
                 onClick={handleRunLive}
                 disabled={isRunning}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold cursor-pointer disabled:opacity-50"
+                className="min-h-[36px] inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer disabled:opacity-50"
               >
-                <Play className="w-3 h-3 fill-current" />
+                <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Run</span>
               </button>
             </div>

@@ -74,6 +74,18 @@ export const Navbar: React.FC<NavbarProps> = ({
     });
   }, []);
 
+  React.useEffect(() => {
+    if (!mobileMenuOpen && !showRuntimeDetails) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+        setShowRuntimeDetails(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen, showRuntimeDetails]);
+
   const handleSelectMode = (newMode: AppMode) => {
     setMode(newMode);
     setMobileMenuOpen(false);
@@ -240,12 +252,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Code Help Trigger */}
             <button
               id="btn-ai-assist"
+              type="button"
               onClick={onOpenAiAssist}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-[#8BBEFF] dark:hover:bg-[#73aef8] text-white dark:text-[#08090D] text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 touch-target whitespace-nowrap"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-[#8BBEFF] dark:hover:bg-[#73aef8] text-white dark:text-[#08090D] text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 touch-target whitespace-nowrap"
               title="Code Help (Ctrl+K)"
             >
               <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-              <span className="inline">Code Help</span>
+              <span className="hidden min-[380px]:inline">Code Help</span>
+              <span className="min-[380px]:hidden">Help</span>
             </button>
 
             {/* Theme Toggle (Light / Dark) */}
@@ -431,10 +445,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
           />
 
-          <div className="relative w-4/5 max-w-sm h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between p-5 overflow-y-auto">
-            <div className="space-y-6">
+          <div className="relative w-[86vw] max-w-sm h-[100dvh] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] overflow-y-auto">
+            <div className="space-y-5">
               {/* Header in Drawer */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white">
                     <Milk className="w-4 h-4 fill-white/20" />
@@ -444,172 +458,231 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </span>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  aria-label="Close navigation menu"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-                {/* Student Auth Section */}
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/80">
-                  {currentUser ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/60 flex items-center justify-center text-blue-600 dark:text-blue-400 font-mono font-bold text-xs">
-                            {currentUser.substring(0, 2).toUpperCase()}
+              {/* Student Auth Section */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/80">
+                {currentUser ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/60 flex items-center justify-center text-blue-600 dark:text-blue-400 font-mono font-bold text-xs">
+                          {currentUser.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                            Student ID: {currentUser}
                           </div>
-                          <div>
-                            <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                              Student ID: {currentUser}
-                            </div>
-                            <div className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                              Cloud Sync Active
-                            </div>
+                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                            Cloud Sync Active
                           </div>
                         </div>
                       </div>
-                      <button
-                        onClick={() => {
-                          onLogout();
-                          setMobileMenuOpen(false);
-                        }}
-                        className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 rounded-lg border border-rose-200 dark:border-rose-900/40 cursor-pointer"
-                      >
-                        <LogOut className="w-3.5 h-3.5" />
-                        <span>Log Out</span>
-                      </button>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        Login with your student ID (e.g. m162) to sync your Python scripts to the cloud.
-                      </p>
-                      <button
-                        onClick={() => {
-                          onOpenAuth();
-                          setMobileMenuOpen(false);
-                        }}
-                        className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs cursor-pointer"
-                      >
-                        <User className="w-3.5 h-3.5" />
-                        <span>Student Login / Sign In</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Primary Mode Navigation Links */}
-                <div className="space-y-1.5">
-                  <span className="text-xs font-semibold text-slate-400">
-                    Sections
-                  </span>
-
-                  <button
-                    onClick={() => handleSelectMode("playground")}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
-                      mode === "playground"
-                        ? "bg-blue-600 text-white font-bold shadow-xs"
-                        : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Code2 className="w-4 h-4" />
-                      <span className="text-xs">Playground</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 opacity-70" />
-                  </button>
-
-                  <button
-                    onClick={() => handleSelectMode("study")}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
-                      mode === "study"
-                        ? "bg-blue-600 text-white font-bold shadow-xs"
-                        : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <BookOpen className="w-4 h-4" />
-                      <span className="text-xs">Lessons</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 opacity-70" />
-                  </button>
-
-                  <button
-                    onClick={() => handleSelectMode("quiz")}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
-                      mode === "quiz"
-                        ? "bg-emerald-600 text-white font-bold shadow-xs"
-                        : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Target className="w-4 h-4 text-emerald-500 dark:text-[#65D9D0]" />
-                      <span className="text-xs">Python Quiz</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 opacity-70" />
-                  </button>
-
-                  <button
-                    onClick={() => handleSelectMode("games")}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
-                      mode === "games"
-                        ? "bg-purple-600 text-white font-bold shadow-xs"
-                        : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Gamepad2 className="w-4 h-4 text-purple-400" />
-                      <span className="text-xs">Games</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 opacity-70" />
-                  </button>
-
-                  {/* Code Help Trigger */}
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      onOpenAiAssist();
-                    }}
-                    className="w-full flex items-center justify-between p-3 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-xs cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4" />
-                      <span>Code Help</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 opacity-70" />
-                  </button>
-                </div>
-
-                {/* PWA App Installation Trigger */}
-                {!isInstalled && (
-                  <div className="pt-2">
-                    <PWAInstallButton />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full min-h-[40px] flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 rounded-lg border border-rose-200 dark:border-rose-900/40 cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Sign in with your student ID to save your Python files across devices.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenAuth();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full min-h-[42px] flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs cursor-pointer"
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      <span>Student Login</span>
+                    </button>
                   </div>
                 )}
               </div>
 
-              {/* Drawer Footer */}
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>Theme:</span>
-                  <button
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium"
-                  >
-                    {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-500" />}
-                    <span>{theme === "dark" ? "Dark" : "Light"}</span>
-                  </button>
-                </div>
+              {/* Primary Mode Navigation Links */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-slate-400 block pb-0.5">
+                  Sections
+                </span>
 
-                <div className="text-[11px] text-slate-400 text-center">
-                  Learn Python at your own pace
+                <button
+                  type="button"
+                  onClick={() => handleSelectMode("playground")}
+                  className={`w-full min-h-[44px] flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
+                    mode === "playground"
+                      ? "bg-blue-600 text-white font-bold shadow-xs"
+                      : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Code2 className="w-4 h-4" />
+                    <span className="text-xs">Playground</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 opacity-70" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectMode("study")}
+                  className={`w-full min-h-[44px] flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
+                    mode === "study"
+                      ? "bg-blue-600 text-white font-bold shadow-xs"
+                      : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <BookOpen className="w-4 h-4" />
+                    <span className="text-xs">Lessons</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 opacity-70" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectMode("quiz")}
+                  className={`w-full min-h-[44px] flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
+                    mode === "quiz"
+                      ? "bg-emerald-600 text-white font-bold shadow-xs"
+                      : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Target
+                      className={`w-4 h-4 ${
+                        mode === "quiz" ? "text-white" : "text-emerald-600 dark:text-[#65D9D0]"
+                      }`}
+                    />
+                    <span className="text-xs">Python Quiz</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 opacity-70" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectMode("games")}
+                  className={`w-full min-h-[44px] flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer ${
+                    mode === "games"
+                      ? "bg-purple-600 text-white font-bold shadow-xs"
+                      : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Gamepad2
+                      className={`w-4 h-4 ${
+                        mode === "games" ? "text-white" : "text-purple-600 dark:text-[#A98BFF]"
+                      }`}
+                    />
+                    <span className="text-xs">Games</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 opacity-70" />
+                </button>
+
+                {/* Code Help Trigger */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenAiAssist();
+                  }}
+                  className="w-full min-h-[44px] flex items-center justify-between p-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Code Help</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 opacity-70" />
+                </button>
+              </div>
+
+              {/* Offline & Python Status Summary */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200">
+                    <HardDrive className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Offline Support</span>
+                  </span>
+                  {offlineStatus.isPyodideCached ? (
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      Ready Offline
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-amber-600 dark:text-amber-400 font-mono">
+                      {offlineStatus.cachedCount}/{offlineStatus.totalCount}
+                    </span>
+                  )}
                 </div>
+                {!offlineStatus.isPyodideCached && (
+                  <button
+                    type="button"
+                    onClick={() => preloadPyodideForOffline()}
+                    disabled={offlineStatus.isDownloading}
+                    className="w-full min-h-[38px] py-1.5 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[11px] transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    {offlineStatus.isDownloading
+                      ? `Saving (${offlineStatus.downloadProgress}%)...`
+                      : "Save for Offline Use"}
+                  </button>
+                )}
+                {pyodideStatus === "error" && onReloadPyodide && (
+                  <button
+                    type="button"
+                    onClick={() => onReloadPyodide(false)}
+                    className="w-full min-h-[38px] py-1.5 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reload Python</span>
+                  </button>
+                )}
+              </div>
+
+              {/* PWA App Installation Trigger */}
+              {!isInstalled && (
+                <div>
+                  <PWAInstallButton />
+                </div>
+              )}
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <span>Theme</span>
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="min-h-[38px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium cursor-pointer"
+                >
+                  {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-500" />}
+                  <span>{theme === "dark" ? "Dark" : "Light"}</span>
+                </button>
+              </div>
+
+              <div className="text-[11px] text-slate-400 text-center">
+                Learn Python at your own pace
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
       {/* Mobile Sticky Bottom Navigation Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/85 dark:bg-[#15171E]/90 backdrop-blur-md border-t border-slate-200/80 dark:border-white/10 px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-2xl">

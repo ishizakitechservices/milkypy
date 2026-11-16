@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ExecutionResult, ConsoleHistoryEntry } from "../types";
 import { ConsoleHistory } from "./ConsoleHistory";
+import { copyToClipboard } from "../lib/clipboard";
 import {
   Terminal,
   Copy,
@@ -58,7 +59,7 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
     }
   }, [isRunning]);
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!result) return;
     const text = [
       result.stdout || "",
@@ -67,9 +68,11 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
       .filter(Boolean)
       .join("\n\n");
 
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
   };
 
   const handleStdinSubmit = (e: React.FormEvent) => {
@@ -106,7 +109,7 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
           <button
             id="terminal-tab-history"
             onClick={() => setActiveTab("history")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer touch-target ${
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer touch-target ${
               activeTab === "history"
                 ? "bg-white dark:bg-[#252933] text-slate-800 dark:text-[#F3F4F6] border border-slate-200 dark:border-white/10 shadow-xs font-bold"
                 : "text-slate-500 hover:text-slate-800 dark:text-[#BFC4CE] dark:hover:text-white"
@@ -115,8 +118,8 @@ export const TerminalOutput: React.FC<TerminalOutputProps> = ({
             <History className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
             <span>Past Runs</span>
             {history.length > 0 && (
-              <span className="text-[10px] px-1.5 py-0.2 bg-blue-100 dark:bg-[#8BBEFF]/20 text-blue-700 dark:text-[#8BBEFF] rounded-full font-bold">
-                {history.length}
+              <span className="text-[11px] font-mono tabular-nums text-blue-600 dark:text-[#8BBEFF]">
+                ({history.length})
               </span>
             )}
           </button>

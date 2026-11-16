@@ -167,11 +167,12 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
 
         {/* Top Header with Breadcrumbs & Sidebar Toggle */}
         <header className="border-b border-slate-200 dark:border-[#252933] pb-6 space-y-3">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             {/* Sidebar Toggle for Desktop and Mobile */}
             <div className="flex items-center gap-2">
               {onToggleSidebar && (
                 <button
+                  type="button"
                   onClick={onToggleSidebar}
                   className="hidden md:flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 dark:text-[#BFC4CE] dark:hover:text-white px-2.5 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-[#15171E] transition-colors cursor-pointer touch-target"
                   title={sidebarCollapsed ? "Show course outline" : "Collapse course outline"}
@@ -192,16 +193,17 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
 
               {onOpenMobileSidebar && (
                 <button
+                  type="button"
                   onClick={onOpenMobileSidebar}
-                  className="md:hidden flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-[#8BBEFF] px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] transition-colors cursor-pointer touch-target"
+                  className="md:hidden min-h-[40px] flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-[#8BBEFF] px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] transition-colors cursor-pointer"
                 >
-                  <Menu className="w-4 h-4" />
-                  <span>Lessons Outline</span>
+                  <Menu className="w-4 h-4 shrink-0" />
+                  <span>Outline</span>
                 </button>
               )}
             </div>
 
-            {/* Read Time, Quick Modals & Ask AI */}
+            {/* Read Time, Quick Modals & Code Help */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               {lesson.estimatedMinutes && (
                 <div className="hidden sm:flex text-xs text-slate-400 dark:text-[#BFC4CE]/70 items-center gap-1 font-mono mr-1">
@@ -213,8 +215,9 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
                 <button
                   type="button"
                   onClick={onOpenGlossary}
-                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#15171E] dark:hover:bg-[#252933] border border-slate-200 dark:border-[#252933] text-slate-700 dark:text-[#BFC4CE] text-xs font-semibold transition-colors cursor-pointer touch-target"
+                  className="min-h-[40px] flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#15171E] dark:hover:bg-[#252933] border border-slate-200 dark:border-[#252933] text-slate-700 dark:text-[#BFC4CE] text-xs font-semibold transition-colors cursor-pointer"
                   title="Open Python Glossary"
+                  aria-label="Open Python Glossary"
                 >
                   <BookMarked className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
                   <span className="hidden sm:inline">Glossary</span>
@@ -224,10 +227,12 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
                 <button
                   type="button"
                   onClick={onOpenBadges}
-                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#15171E] dark:hover:bg-[#252933] border border-slate-200 dark:border-[#252933] text-slate-700 dark:text-[#BFC4CE] text-xs font-semibold transition-colors cursor-pointer touch-target"
+                  className="min-h-[40px] flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#15171E] dark:hover:bg-[#252933] border border-slate-200 dark:border-[#252933] text-slate-700 dark:text-[#BFC4CE] text-xs font-semibold transition-colors cursor-pointer"
                   title="View Coding Badges & XP"
+                  aria-label="View Coding Badges and XP"
                 >
                   <Award className="w-3.5 h-3.5 text-amber-500 dark:text-[#F2BC72]" />
+                  <span className="hidden sm:inline">Badges</span>
                 </button>
               )}
               {onOpenAiAssist && (
@@ -236,10 +241,10 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
                   onClick={() =>
                     onOpenAiAssist(primaryLessonCode, undefined, lessonContextPayload)
                   }
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-[#8BBEFF]/10 dark:hover:bg-[#8BBEFF]/20 border border-blue-200 dark:border-[#8BBEFF]/30 text-blue-700 dark:text-[#8BBEFF] text-xs font-bold transition-colors cursor-pointer touch-target whitespace-nowrap"
+                  className="min-h-[40px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-[#8BBEFF]/10 dark:hover:bg-[#8BBEFF]/20 border border-blue-200 dark:border-[#8BBEFF]/30 text-blue-700 dark:text-[#8BBEFF] text-xs font-bold transition-colors cursor-pointer whitespace-nowrap"
                   title="Get help with this lesson"
                 >
-                  <MessageSquare className="w-3.5 h-3.5" />
+                  <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                   <span>Code Help</span>
                 </button>
               )}
@@ -296,28 +301,30 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
         </div>
 
         {/* Clean Footer Navigation & Mark Complete */}
-        <footer className="pt-8 pb-4 border-t border-slate-200 dark:border-[#252933]">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <footer className="pt-8 pb-10 border-t border-slate-200 dark:border-[#252933]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             {/* Previous Lesson */}
-            <div>
+            <div className="order-2 sm:order-1">
               {onPrevLesson ? (
                 <button
+                  type="button"
                   onClick={handlePrevClick}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-[#252933] hover:bg-slate-50 dark:hover:bg-[#15171E] text-xs text-slate-700 dark:text-[#F3F4F6] transition-colors cursor-pointer touch-target"
+                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-[#252933] hover:bg-slate-50 dark:hover:bg-[#15171E] text-xs font-medium text-slate-700 dark:text-[#F3F4F6] transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Previous</span>
                 </button>
               ) : (
-                <div />
+                <div className="hidden sm:block" />
               )}
             </div>
 
             {/* Mark Complete & Quiz Actions */}
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="order-1 sm:order-2 flex flex-col xs:flex-row flex-wrap items-stretch xs:items-center justify-center gap-2">
               <button
+                type="button"
                 onClick={() => onToggleComplete(lesson.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer touch-target ${
+                className={`min-h-[44px] flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   isCompleted
                     ? "bg-emerald-50 dark:bg-[#65D9D0]/10 text-emerald-700 dark:text-[#65D9D0] border border-emerald-200 dark:border-[#65D9D0]/30"
                     : "bg-slate-100 dark:bg-[#15171E] hover:bg-slate-200 dark:hover:bg-[#252933] text-slate-800 dark:text-[#F3F4F6] border border-slate-200 dark:border-[#252933]"
@@ -331,7 +338,7 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
                 <button
                   type="button"
                   onClick={() => onStartLessonQuiz(lesson.id)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-[#252933] hover:bg-slate-100 dark:hover:bg-[#15171E] text-xs font-semibold text-slate-700 dark:text-[#F3F4F6] transition-colors cursor-pointer touch-target"
+                  className="min-h-[44px] flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-[#252933] hover:bg-slate-100 dark:hover:bg-[#15171E] text-xs font-semibold text-slate-700 dark:text-[#F3F4F6] transition-colors cursor-pointer"
                 >
                   <Target className="w-3.5 h-3.5 text-emerald-600 dark:text-[#65D9D0]" />
                   <span>Quiz This Lesson</span>
@@ -340,19 +347,20 @@ export const CurriculumLessonReader: React.FC<CurriculumLessonReaderProps> = ({
             </div>
 
             {/* Next Lesson or Course Finish */}
-            <div>
+            <div className="order-3">
               {onNextLesson ? (
                 <button
+                  type="button"
                   onClick={handleNextClick}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-[#8BBEFF] dark:hover:bg-[#8BBEFF]/90 text-white dark:text-[#08090D] text-xs font-bold transition-colors cursor-pointer shadow-xs touch-target"
+                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-[#8BBEFF] dark:hover:bg-[#8BBEFF]/90 text-white dark:text-[#08090D] text-xs font-bold transition-colors cursor-pointer shadow-xs"
                 >
                   <span>Next Lesson</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               ) : (
-                <span className="text-xs font-semibold text-emerald-700 dark:text-[#65D9D0] px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-[#65D9D0]/10 border border-emerald-200 dark:border-[#65D9D0]/30">
+                <div className="text-center text-xs font-semibold text-emerald-700 dark:text-[#65D9D0] px-3 py-2 rounded-lg bg-emerald-50 dark:bg-[#65D9D0]/10 border border-emerald-200 dark:border-[#65D9D0]/30">
                   All Lessons Done
-                </span>
+                </div>
               )}
             </div>
           </div>

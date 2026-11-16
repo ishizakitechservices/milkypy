@@ -27,7 +27,7 @@ export const OfflineIndicator: React.FC = () => {
   // When offline, display clean offline banner
   if (!isOnline) {
     return (
-      <div className="fixed bottom-20 md:bottom-4 left-4 z-50 flex items-center gap-2.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-medium text-white shadow-lg border border-amber-400/40">
+      <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 z-50 flex items-center gap-2.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-medium text-white shadow-lg border border-amber-400/40">
         <WifiOff className="w-4 h-4 text-white shrink-0" />
         <div className="flex flex-col">
           <span className="font-semibold">Offline Mode</span>
@@ -42,7 +42,7 @@ export const OfflineIndicator: React.FC = () => {
   // When online and saving Python files for offline use, show progress
   if (offlineStatus.isDownloading) {
     return (
-      <div className="fixed bottom-20 md:bottom-4 left-4 z-40 flex items-center gap-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 px-3.5 py-2 text-xs text-slate-200 shadow-lg">
+      <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 z-40 flex items-center gap-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 px-3.5 py-2 text-xs text-slate-200 shadow-lg">
         <RefreshCw className="w-3.5 h-3.5 text-blue-400 animate-spin shrink-0" />
         <div className="flex flex-col">
           <span className="font-medium text-slate-100">

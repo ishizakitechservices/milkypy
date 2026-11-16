@@ -4,6 +4,7 @@ import "prismjs/components/prism-python";
 import { getCompletions } from "../lib/pythonAutocomplete";
 import { formatPythonCode } from "../lib/pythonFormatter";
 import { getPythonTypeHint, TypeHintInfo } from "../lib/pythonTypeHints";
+import { copyToClipboard } from "../lib/clipboard";
 import { TypeHintTooltip } from "./TypeHintTooltip";
 import { TypeHintsModal } from "./TypeHintsModal";
 import { AutocompleteItem } from "../types";
@@ -258,11 +259,29 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const lines = code.split("\n");
   const lineNumbers = Array.from({ length: lines.length }, (_, i) => i + 1);
 
-  // Copy code
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+  // Copy code safely (mobile WebView + clipboard fallback)
+  const handleCopy = async () => {
+    const ok = await copyToClipboard(code);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  };
+
+  // Insert mobile quick-key symbol or indent at current cursor
+  const insertQuickKey = (insertText: string, caretOffset?: number) => {
+    if (readOnly || !textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart ?? code.length;
+    const end = textarea.selectionEnd ?? code.length;
+    const nextCode = code.slice(0, start) + insertText + code.slice(end);
+    onChange(nextCode);
+    setTimeout(() => {
+      textarea.focus();
+      const targetPos = start + (caretOffset ?? insertText.length);
+      textarea.setSelectionRange(targetPos, targetPos);
+      syncCursorLine(textarea);
+    }, 0);
   };
 
   // Textarea input & autocomplete handling
@@ -612,6 +631,36 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           )}
         </div>
       </div>
+
+      {/* Mobile Python Quick-Keys Accessory Bar (< lg only) */}
+      {!readOnly && (
+        <div className="lg:hidden flex items-center gap-1 px-2 py-1.5 bg-slate-50 dark:bg-[#11131A] border-b border-slate-200/80 dark:border-white/10 overflow-x-auto no-scrollbar select-none shrink-0">
+          {[
+            { label: "Tab", insert: "    " },
+            { label: "( )", insert: "()", offset: 1 },
+            { label: "[ ]", insert: "[]", offset: 1 },
+            { label: "{ }", insert: "{}", offset: 1 },
+            { label: '" "', insert: '""', offset: 1 },
+            { label: "' '", insert: "''", offset: 1 },
+            { label: ":", insert: ":" },
+            { label: "=", insert: "=" },
+            { label: "#", insert: "# " },
+            { label: "_", insert: "_" },
+            { label: ".", insert: "." },
+            { label: ",", insert: ", " },
+          ].map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => insertQuickKey(item.insert, item.offset)}
+              className="min-w-[36px] min-h-[32px] px-2 rounded-md bg-white dark:bg-[#252933] hover:bg-slate-100 dark:hover:bg-[#353A46] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-[#F3F4F6] font-mono text-[11px] font-semibold shrink-0 cursor-pointer active:scale-95 transition-transform"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Editor Body with Line Numbers & Code Canvas */}
       <div className="flex-1 relative font-mono text-sm leading-relaxed overflow-hidden flex bg-white dark:bg-[#08090D]">

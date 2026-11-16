@@ -1,4 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import Prism from "prismjs";
+import "prismjs/components/prism-python";
 import {
   AIDebugResult,
   AICommentResult,
@@ -24,6 +26,9 @@ import {
   Square,
   ChevronDown,
   Code2,
+  Maximize2,
+  Minimize2,
+  AlertCircle,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -39,6 +44,7 @@ import {
   getOfflineChatReply,
 } from "../lib/offlineAiKnowledge";
 import { getApiUrl, fetchWithTimeout } from "../lib/apiConfig";
+import { copyToClipboard } from "../lib/clipboard";
 import { CopyCodeButton } from "./CopyCodeButton";
 
 interface AIAssistPanelProps {
@@ -102,8 +108,27 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
     typeof navigator !== "undefined" ? navigator.onLine : true
   );
   const [showObjectives, setShowObjectives] = useState(false);
+  const [showCodePreview, setShowCodePreview] = useState(false);
+  const [expandedWidth, setExpandedWidth] = useState(false);
   const activeAbortRef = useRef<AbortController | null>(null);
   const manualCancelRef = useRef(false);
+
+  const attachedCodeLines = useMemo(() => {
+    if (!code || !code.trim()) return 0;
+    return code.split("\n").length;
+  }, [code]);
+
+  const highlightPython = (snippet: string) => {
+    try {
+      return Prism.highlight(
+        snippet || "",
+        Prism.languages.python || Prism.languages.clike,
+        "python"
+      );
+    } catch {
+      return snippet;
+    }
+  };
 
   const handleCancelAiRequest = () => {
     manualCancelRef.current = true;
@@ -122,6 +147,22 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
       setLoading(false);
     }
   }, [isOpen]);
+
+  // Dismiss on Escape (History drawer first, then whole panel)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showHistoryDrawer) {
+          setShowHistoryDrawer(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, showHistoryDrawer, onClose]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -213,14 +254,16 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
   };
 
   // Handler: Copy chat transcript to clipboard
-  const handleCopyChat = () => {
+  const handleCopyChat = async () => {
     if (chatMessages.length === 0) return;
     const transcript = chatMessages
-      .map((m) => `[${m.role === "user" ? "You" : "Milky AI"}]:\n${m.text}\n`)
+      .map((m) => `[${m.role === "user" ? "You" : "Milky"}]:\n${m.text}\n`)
       .join("\n---\n");
-    navigator.clipboard.writeText(transcript);
-    setCopiedChat(true);
-    setTimeout(() => setCopiedChat(false), 2000);
+    const ok = await copyToClipboard(transcript);
+    if (ok) {
+      setCopiedChat(true);
+      setTimeout(() => setCopiedChat(false), 2000);
+    }
   };
 
   useEffect(() => {
@@ -538,30 +581,55 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
   if (!isOpen) return null;
 
+  const askFollowUpInChat = (prompt: string) => {
+    setShowHistoryDrawer(false);
+    setActiveTab("chat");
+    sendChatPrompt(prompt);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/40 flex justify-end">
-      <div className="w-full max-w-lg bg-white dark:bg-[#08090D] border-l border-slate-200 dark:border-[#252933] h-full flex flex-col shadow-xl overflow-hidden select-none">
+    <div
+      className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-[2px] flex justify-end"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`w-full ${
+          expandedWidth ? "sm:max-w-2xl" : "sm:max-w-lg"
+        } bg-white dark:bg-[#08090D] border-l border-slate-200 dark:border-[#252933] h-[100dvh] flex flex-col shadow-2xl overflow-hidden transition-[max-width] duration-200 pb-[env(safe-area-inset-bottom)]`}
+      >
         {/* Panel Header */}
-        <div className="p-3.5 border-b border-slate-200 dark:border-[#252933] bg-slate-100 dark:bg-[#15171E] flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-blue-600 dark:bg-[#8BBEFF] text-white dark:text-[#08090D] shadow-xs">
+        <div className="px-3.5 py-3 border-b border-slate-200 dark:border-[#252933] bg-slate-100 dark:bg-[#15171E] flex items-center justify-between gap-2 shrink-0 select-none">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 rounded-lg bg-blue-600 dark:bg-[#8BBEFF] text-white dark:text-[#08090D] shadow-xs shrink-0">
               <MessageSquare className="w-4 h-4" />
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-[#F3F4F6]">
+            <div className="min-w-0">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-[#F3F4F6] truncate">
                 Code Help
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-[#BFC4CE]">
+              <p className="text-[11px] text-slate-500 dark:text-[#BFC4CE] truncate">
                 Fix errors, explain code, or ask questions
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 shrink-0">
             <button
+              type="button"
+              onClick={() => setExpandedWidth((prev) => !prev)}
+              className="hidden sm:flex items-center justify-center p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-[#252933] text-slate-500 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-white cursor-pointer touch-target"
+              title={expandedWidth ? "Use compact width" : "Widen panel"}
+              aria-label={expandedWidth ? "Use compact width" : "Widen panel"}
+            >
+              {expandedWidth ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+            <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-[#252933] text-slate-500 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-white cursor-pointer touch-target"
-              title="Close sidebar"
+              className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-[#252933] text-slate-500 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-white cursor-pointer touch-target"
+              title="Close panel (Esc)"
+              aria-label="Close Code Help panel"
             >
               <X className="w-4 h-4" />
             </button>
@@ -570,20 +638,21 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
         {/* Offline Mode Indicator Banner */}
         {!isOnline && (
-          <div className="bg-amber-500/10 dark:bg-amber-500/15 border-b border-amber-500/20 px-3.5 py-1.5 flex items-center justify-between text-xs text-amber-700 dark:text-amber-300 font-medium">
-            <div className="flex items-center gap-1.5">
+          <div className="bg-amber-500/10 dark:bg-amber-500/15 border-b border-amber-500/20 px-3.5 py-1.5 flex items-center justify-between text-xs text-amber-800 dark:text-amber-300 font-medium shrink-0">
+            <div className="flex items-center gap-1.5 min-w-0">
               <WifiOff className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              <span>Offline Mode: Built-in Python guide active</span>
+              <span className="truncate">Offline mode: built-in Python guide active</span>
             </div>
-            <span className="text-[10px] bg-amber-500/20 text-amber-800 dark:text-amber-200 px-1.5 py-0.5 rounded font-mono font-semibold">Offline</span>
+            <span className="text-[10px] font-mono font-semibold shrink-0">Offline</span>
           </div>
         )}
 
         {/* Feature Navigation Tabs */}
-        <div className="grid grid-cols-5 p-1.5 bg-slate-50 dark:bg-[#15171E] border-b border-slate-200 dark:border-[#252933] text-[11px] font-semibold">
+        <div className="grid grid-cols-5 p-1.5 gap-1 bg-slate-50 dark:bg-[#15171E] border-b border-slate-200 dark:border-[#252933] text-[11px] font-semibold shrink-0 select-none">
           <button
+            type="button"
             onClick={() => setActiveTab("chat")}
-            className={`py-2 flex flex-col items-center gap-1 rounded-lg transition-all touch-target ${
+            className={`min-h-[42px] py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all cursor-pointer ${
               activeTab === "chat"
                 ? "bg-blue-600 dark:bg-[#8BBEFF] text-white dark:text-[#08090D] shadow-xs font-bold"
                 : "text-slate-600 dark:text-[#BFC4CE] hover:bg-slate-200 dark:hover:bg-[#252933]"
@@ -592,10 +661,11 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
             <MessageCircle className="w-3.5 h-3.5" />
             <span>Chat</span>
           </button>
-          
+
           <button
+            type="button"
             onClick={() => setActiveTab("debug")}
-            className={`py-2 flex flex-col items-center gap-1 rounded-lg transition-all touch-target ${
+            className={`min-h-[42px] py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all cursor-pointer relative ${
               activeTab === "debug"
                 ? "bg-blue-600 dark:bg-[#8BBEFF] text-white dark:text-[#08090D] shadow-xs font-bold"
                 : "text-slate-600 dark:text-[#BFC4CE] hover:bg-slate-200 dark:hover:bg-[#252933]"
@@ -603,11 +673,15 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           >
             <Bug className="w-3.5 h-3.5" />
             <span>Debug</span>
+            {errorMessage && activeTab !== "debug" && (
+              <span className="absolute top-1.5 right-2 w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true" />
+            )}
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab("comments")}
-            className={`py-2 flex flex-col items-center gap-1 rounded-lg transition-all touch-target ${
+            className={`min-h-[42px] py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all cursor-pointer ${
               activeTab === "comments"
                 ? "bg-blue-600 dark:bg-[#8BBEFF] text-white dark:text-[#08090D] shadow-xs font-bold"
                 : "text-slate-600 dark:text-[#BFC4CE] hover:bg-slate-200 dark:hover:bg-[#252933]"
@@ -618,8 +692,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab("explain")}
-            className={`py-2 flex flex-col items-center gap-1 rounded-lg transition-all touch-target ${
+            className={`min-h-[42px] py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all cursor-pointer ${
               activeTab === "explain"
                 ? "bg-blue-600 dark:bg-[#8BBEFF] text-white dark:text-[#08090D] shadow-xs font-bold"
                 : "text-slate-600 dark:text-[#BFC4CE] hover:bg-slate-200 dark:hover:bg-[#252933]"
@@ -630,8 +705,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab("hint")}
-            className={`py-2 flex flex-col items-center gap-1 rounded-lg transition-all touch-target ${
+            className={`min-h-[42px] py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all cursor-pointer ${
               activeTab === "hint"
                 ? "bg-blue-600 dark:bg-[#8BBEFF] text-white dark:text-[#08090D] shadow-xs font-bold"
                 : "text-slate-600 dark:text-[#BFC4CE] hover:bg-slate-200 dark:hover:bg-[#252933]"
@@ -642,9 +718,72 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           </button>
         </div>
 
+        {/* Collapsible Attached Code & Error Bar */}
+        {(attachedCodeLines > 0 || errorMessage) && (
+          <div className="border-b border-slate-200 dark:border-[#252933] bg-slate-50/70 dark:bg-[#11131A] px-3.5 py-2 shrink-0 space-y-2">
+            <div className="flex items-center justify-between gap-2 text-[11px]">
+              <button
+                type="button"
+                onClick={() => setShowCodePreview((prev) => !prev)}
+                className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-[#BFC4CE] hover:text-blue-600 dark:hover:text-[#8BBEFF] cursor-pointer min-w-0"
+              >
+                <Code2 className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF] shrink-0" />
+                <span className="truncate">
+                  {attachedCodeLines > 0
+                    ? `Attached code · ${attachedCodeLines} line${attachedCodeLines === 1 ? "" : "s"}`
+                    : "Error details attached"}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 shrink-0 transition-transform ${
+                    showCodePreview ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {errorMessage && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("debug")}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
+                  >
+                    <AlertCircle className="w-3 h-3" />
+                    <span>View error</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {showCodePreview && (
+              <div className="space-y-2">
+                {attachedCodeLines > 0 && (
+                  <div className="rounded-xl border border-slate-200 dark:border-[#252933] bg-white dark:bg-[#050608] overflow-hidden">
+                    <div className="flex items-center justify-between px-2.5 py-1 border-b border-slate-200 dark:border-[#252933] bg-slate-100/70 dark:bg-[#15171E] text-[10px] font-mono text-slate-500 dark:text-[#BFC4CE]">
+                      <span>Python snippet</span>
+                      <CopyCodeButton code={code} compact />
+                    </div>
+                    <pre className="p-2.5 max-h-36 overflow-auto font-mono text-[11px] leading-relaxed text-slate-800 dark:text-[#F3F4F6]">
+                      <code
+                        dangerouslySetInnerHTML={{
+                          __html: highlightPython(code),
+                        }}
+                      />
+                    </pre>
+                  </div>
+                )}
+                {errorMessage && (
+                  <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 font-mono text-[11px] text-rose-700 dark:text-rose-300 max-h-24 overflow-y-auto whitespace-pre-wrap">
+                    {errorMessage.slice(0, 400)}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Active Curriculum Lesson or Quiz Context Banner */}
         {(lessonContext?.title || lessonContext?.quizQuestion) && (
-          <div className="bg-blue-50 dark:bg-blue-950/40 border-b border-blue-200 dark:border-blue-800/60 px-3.5 py-2.5 space-y-2">
+          <div className="bg-blue-50 dark:bg-blue-950/40 border-b border-blue-200 dark:border-blue-800/60 px-3.5 py-2.5 space-y-2 shrink-0">
             <div className="flex items-center justify-between gap-2 text-xs">
               <span className="font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5 min-w-0 truncate">
                 <Code2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
@@ -722,115 +861,126 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
           </div>
         )}
 
-        {/* Main Content Area */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4">
-          {errorText && (
-            <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-lg text-amber-800 dark:text-amber-300 text-xs flex items-start justify-between gap-2">
-              <span className="font-mono leading-relaxed">{errorText}</span>
-              <button
-                type="button"
-                onClick={() => setErrorText(null)}
-                className="p-0.5 rounded hover:bg-amber-200/50 dark:hover:bg-amber-800/40 shrink-0 cursor-pointer"
-                aria-label="Dismiss notice"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
+        {/* Notice Banner (API fallback notice, etc.) */}
+        {errorText && (
+          <div className="mx-3.5 mt-3 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-lg text-amber-800 dark:text-amber-300 text-xs flex items-start justify-between gap-2 shrink-0">
+            <span className="font-mono leading-relaxed">{errorText}</span>
+            <button
+              type="button"
+              onClick={() => setErrorText(null)}
+              className="p-0.5 rounded hover:bg-amber-200/50 dark:hover:bg-amber-800/40 shrink-0 cursor-pointer"
+              aria-label="Dismiss notice"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
+        {/* Main Content Body (Independent scroll per mode; chat keeps composer pinned) */}
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           {/* TAB 0: CHAT */}
           {activeTab === "chat" && (
-            <div className="flex flex-col h-full space-y-3">
+            <div className="flex-1 min-h-0 flex flex-col">
               {/* Chat Sub-Header / History Toolbar */}
-              <div className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs">
-                <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                  <MessageCircle className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                  <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                    {showHistoryDrawer
-                      ? "Chat History"
-                      : activeSessionTitle || "Code Help"}
-                  </span>
-                </div>
+              <div className="px-3.5 pt-3 pb-2 shrink-0">
+                <div className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <MessageCircle className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      {showHistoryDrawer
+                        ? "Chat History"
+                        : activeSessionTitle || "Code Help"}
+                    </span>
+                  </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {/* New Chat Button */}
-                  <button
-                    onClick={handleNewChat}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
-                    title="Start a new chat conversation"
-                  >
-                    <PlusCircle className="w-3 h-3 text-blue-500" />
-                    <span className="hidden sm:inline">New Chat</span>
-                  </button>
-
-                  {/* History Toggle Button */}
-                  <button
-                    onClick={() => {
-                      setConfirmClearHistory(false);
-                      setShowHistoryDrawer(!showHistoryDrawer);
-                    }}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-bold shadow-2xs transition-colors cursor-pointer ${
-                      showHistoryDrawer
-                        ? "bg-blue-600 border-blue-600 text-white"
-                        : "bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200"
-                    }`}
-                    title="View previous chats"
-                  >
-                    <History className="w-3 h-3" />
-                    <span>History</span>
-                    {savedSessions.length > 0 && (
-                      <span
-                        className={`px-1 py-0.2 rounded-full text-[9px] font-bold ${
-                          showHistoryDrawer
-                            ? "bg-blue-700 text-white"
-                            : "bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200"
-                        }`}
-                      >
-                        {savedSessions.length}
-                      </span>
-                    )}
-                  </button>
-
-                  {/* Copy Chat */}
-                  {chatMessages.length > 0 && !showHistoryDrawer && (
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {/* New Chat Button */}
                     <button
-                      onClick={handleCopyChat}
-                      className="p-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-                      title="Copy chat transcript"
+                      type="button"
+                      onClick={handleNewChat}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                      title="Start a new chat conversation"
                     >
-                      {copiedChat ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-500" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
+                      <PlusCircle className="w-3.5 h-3.5 text-blue-500" />
+                      <span className="hidden xs:inline">New</span>
+                    </button>
+
+                    {/* History Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmClearHistory(false);
+                        setShowHistoryDrawer(!showHistoryDrawer);
+                      }}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-bold shadow-2xs transition-colors cursor-pointer ${
+                        showHistoryDrawer
+                          ? "bg-blue-600 border-blue-600 text-white"
+                          : "bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200"
+                      }`}
+                      title="View previous chats"
+                    >
+                      <History className="w-3.5 h-3.5" />
+                      <span>History</span>
+                      {savedSessions.length > 0 && (
+                        <span className="tabular-nums opacity-80">
+                          ({savedSessions.length})
+                        </span>
                       )}
                     </button>
-                  )}
+
+                    {/* Copy Chat */}
+                    {chatMessages.length > 0 && !showHistoryDrawer && (
+                      <button
+                        type="button"
+                        onClick={handleCopyChat}
+                        className="p-1.5 rounded-lg bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                        title="Copy chat transcript"
+                        aria-label="Copy chat transcript"
+                      >
+                        {copiedChat ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* View 1: History Drawer / List of Saved Sessions */}
               {showHistoryDrawer ? (
-                <div className="flex-1 flex flex-col space-y-3 min-h-0">
+                <div className="flex-1 min-h-0 flex flex-col px-3.5 pb-3.5 space-y-3">
                   {/* Search bar */}
-                  <div className="relative">
+                  <div className="relative shrink-0">
                     <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
                     <input
                       type="text"
                       value={historySearchQuery}
                       onChange={(e) => setHistorySearchQuery(e.target.value)}
                       placeholder="Search past conversations..."
-                      className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-blue-500"
+                      className="w-full pl-8 pr-8 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-blue-500"
                     />
+                    {historySearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setHistorySearchQuery("")}
+                        className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer"
+                        aria-label="Clear search"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
 
                   {/* Sessions List */}
-                  <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                  <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
                     {savedSessions.length === 0 ? (
                       <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-xs">
                         <History className="w-8 h-8 mx-auto mb-2 opacity-40" />
                         <p>No saved chat sessions yet.</p>
                         <p className="text-[11px] mt-1 text-slate-400">
-                          Ask a question and your conversations will appear here!
+                          Ask a question and your conversations will appear here.
                         </p>
                       </div>
                     ) : (
@@ -873,11 +1023,13 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                                     })}
                                   </span>
                                   <button
+                                    type="button"
                                     onClick={(e) => handleDeleteSession(session.id, e)}
-                                    className="p-1 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
+                                    className="p-1.5 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
                                     title="Delete session"
+                                    aria-label="Delete chat session"
                                   >
-                                    <Trash2 className="w-3 h-3" />
+                                    <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
                               </div>
@@ -889,7 +1041,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                               <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
                                 <span>{session.messages.length} messages</span>
                                 <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                                  {isActive ? "Currently Active" : "Click to Resume →"}
+                                  {isActive ? "Currently Active" : "Tap to Resume"}
                                 </span>
                               </div>
                             </div>
@@ -899,21 +1051,21 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   </div>
 
                   {/* History Footer Actions */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 gap-2">
+                  <div className="flex items-center justify-between pt-2.5 border-t border-slate-200 dark:border-slate-800 gap-2 shrink-0">
                     {savedSessions.length > 0 && (
                       confirmClearHistory ? (
                         <div className="flex items-center gap-1.5">
                           <button
                             type="button"
                             onClick={handleClearAllHistory}
-                            className="px-2 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold transition-colors cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold transition-colors cursor-pointer"
                           >
                             Confirm Clear All?
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmClearHistory(false)}
-                            className="px-2 py-1 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-semibold cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-semibold cursor-pointer"
                           >
                             Cancel
                           </button>
@@ -922,13 +1074,14 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                         <button
                           type="button"
                           onClick={handleClearAllHistory}
-                          className="text-[11px] text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-bold transition-colors cursor-pointer"
+                          className="text-[11px] text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-bold transition-colors cursor-pointer py-1"
                         >
                           Clear All History
                         </button>
                       )
                     )}
                     <button
+                      type="button"
                       onClick={() => {
                         setConfirmClearHistory(false);
                         setShowHistoryDrawer(false);
@@ -940,40 +1093,48 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   </div>
                 </div>
               ) : (
-                /* View 2: Active Chat Messages & Input */
+                /* View 2: Scrollable Chat Messages + Pinned Bottom Composer */
                 <>
-                  <div className="flex-1 overflow-y-auto space-y-3 pb-2">
+                  <div className="flex-1 min-h-0 overflow-y-auto px-3.5 py-2 space-y-3">
                     {chatMessages.length === 0 ? (
-                      <div className="text-center text-slate-500 dark:text-slate-400 text-xs py-6 space-y-4">
+                      <div className="text-center text-slate-500 dark:text-slate-400 text-xs py-5 space-y-4">
                         <div>
                           <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50 text-blue-500" />
                           <p className="font-semibold text-slate-700 dark:text-slate-200">
-                            {lessonContext?.title ? `Ready to master "${lessonContext.title}"?` : "Ask me anything, from Python lessons to everyday questions"}
+                            {lessonContext?.title ? `Working on "${lessonContext.title}"?` : "Ask anything about Python or your code"}
                           </p>
                           <p className="text-[11px] text-slate-400 mt-1">
-                            {lessonContext?.title ? "I can guide you through the lesson objectives, explain the code, or review your work." : "I know the full MilkyPy curriculum and can teach, debug, or chat normally."}
+                            {lessonContext?.title
+                              ? "I can walk through the lesson goals, explain code line by line, or check your solution."
+                              : "Ask a coding question, share a bug, or pick one of the prompts below."}
                           </p>
                         </div>
-                        <div className="flex flex-wrap justify-center gap-2 px-2">
-                          {(lessonContext?.title
+                        <div className="flex flex-wrap justify-center gap-2 px-1">
+                          {(errorMessage
                             ? [
-                                `Walk me through the objectives of "${lessonContext.title}"`,
-                                "How do I write the code for this lesson exercise?",
-                                "Check my current editor code against lesson goals",
+                                "Explain what this error means and how to fix it",
+                                "Walk through what my code runs line by line",
+                                "Show a corrected version of my script",
+                              ]
+                            : lessonContext?.title
+                            ? [
+                                `Walk me through the goals of "${lessonContext.title}"`,
+                                "How do I start this lesson exercise?",
+                                "Check my current code against lesson goals",
                                 "Give me a simple step-by-step breakdown",
                               ]
                             : [
-                                "Teach me a lesson from the Python curriculum",
-                                "Explain what this code does step-by-step",
-                                "Find any bugs or edge cases in my code",
-                                "What should I learn next in Python?",
+                                "Teach me a topic from the Python curriculum",
+                                "Explain what my code does step by step",
+                                "Check my code for bugs or edge cases",
+                                "What should I practice next?",
                               ]
                           ).map((starter) => (
                             <button
                               key={starter}
                               type="button"
                               onClick={() => sendChatPrompt(starter)}
-                              className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 dark:bg-slate-800/80 dark:hover:bg-blue-950/50 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 text-[11px] font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                              className="min-h-[38px] px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 dark:bg-slate-800/80 dark:hover:bg-blue-950/50 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 text-[11px] font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer text-left"
                             >
                               {starter}
                             </button>
@@ -984,16 +1145,21 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                       chatMessages.map((msg, idx) => (
                         <div
                           key={idx}
-                          className={`flex flex-col max-w-[90%] p-3 rounded-2xl text-xs ${
+                          className={`flex flex-col max-w-[92%] p-3 rounded-2xl text-xs ${
                             msg.role === "user"
                               ? "bg-blue-600 text-white self-end ml-auto rounded-tr-sm"
-                              : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 self-start mr-auto rounded-tl-sm border border-slate-200 dark:border-slate-700"
+                              : "bg-slate-100 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 self-start mr-auto rounded-tl-sm border border-slate-200 dark:border-slate-700"
                           }`}
                         >
-                          <div className="font-bold text-[10px] mb-1 opacity-70 uppercase tracking-wider">
-                            {msg.role === "user" ? "You" : "Milky"}
+                          <div className="flex items-center justify-between gap-3 mb-1">
+                            <span className="font-bold text-[10px] opacity-75 uppercase tracking-wider">
+                              {msg.role === "user" ? "You" : "Milky"}
+                            </span>
+                            {msg.role === "model" && (
+                              <CopyCodeButton code={msg.text} compact label="Copy reply" />
+                            )}
                           </div>
-                          <div className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-700 prose-p:leading-relaxed">
+                          <div className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-700 prose-p:leading-relaxed break-words">
                             <ReactMarkdown
                               components={{
                                 code({ node, inline, className, children, ...props }: any) {
@@ -1008,6 +1174,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                                         <div className="flex items-center gap-1.5">
                                           <CopyCodeButton code={codeString} compact />
                                           <button
+                                            type="button"
                                             onClick={() => applyCodeFix(codeString)}
                                             className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-sans text-[10px] font-bold flex items-center gap-1 flex-1 justify-center cursor-pointer"
                                           >
@@ -1037,15 +1204,15 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                       ))
                     )}
                     {loading && (
-                      <div className="flex items-center justify-between gap-2 text-slate-500 text-xs ml-2 p-2 rounded-lg bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+                      <div className="flex items-center justify-between gap-2 text-slate-500 text-xs p-2.5 rounded-lg bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
                         <div className="flex items-center gap-2">
                           <RotateCcw className="w-3.5 h-3.5 animate-spin text-blue-500" />
-                          <span>Thinking...</span>
+                          <span>Writing answer...</span>
                         </div>
                         <button
                           type="button"
                           onClick={handleCancelAiRequest}
-                          className="px-2 py-1 rounded-md bg-rose-600/15 hover:bg-rose-600/25 text-rose-600 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                          className="px-2.5 py-1 rounded-md bg-rose-600/15 hover:bg-rose-600/25 text-rose-600 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                         >
                           <Square className="w-2.5 h-2.5 fill-current" />
                           <span>Cancel</span>
@@ -1055,42 +1222,48 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                     <div ref={chatEndRef} />
                   </div>
 
-                  <form
-                    onSubmit={handleChatSubmit}
-                    className="flex items-end gap-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl border border-slate-200 dark:border-slate-700"
-                  >
-                    <textarea
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      placeholder="Ask anything — Python, curriculum lessons, or general help... (Enter to send)"
-                      className="flex-1 bg-transparent border-none focus:ring-0 resize-none text-xs text-slate-800 dark:text-slate-200 min-h-[40px] max-h-[120px]"
-                      rows={2}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleChatSubmit();
-                        }
-                      }}
-                    />
-                    {loading ? (
-                      <button
-                        type="button"
-                        onClick={handleCancelAiRequest}
-                        className="p-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer shrink-0"
-                        title="Cancel AI response"
-                      >
-                        <Square className="w-4 h-4 fill-white" />
-                      </button>
-                    ) : (
-                      <button
-                        type="submit"
-                        disabled={!chatInput.trim()}
-                        className="p-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:opacity-50 text-white transition-colors cursor-pointer shrink-0"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    )}
-                  </form>
+                  {/* Pinned Chat Input Form */}
+                  <div className="p-3 pt-2 border-t border-slate-200 dark:border-[#252933] bg-white dark:bg-[#08090D] shrink-0">
+                    <form
+                      onSubmit={handleChatSubmit}
+                      className="flex items-end gap-2 bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700"
+                    >
+                      <textarea
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder="Ask about your code or a lesson..."
+                        className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 resize-none text-xs sm:text-xs text-slate-800 dark:text-slate-200 min-h-[40px] max-h-[120px] py-1"
+                        rows={2}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleChatSubmit();
+                          }
+                        }}
+                      />
+                      {loading ? (
+                        <button
+                          type="button"
+                          onClick={handleCancelAiRequest}
+                          className="min-w-[40px] min-h-[40px] p-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer shrink-0 flex items-center justify-center"
+                          title="Cancel reply"
+                          aria-label="Cancel reply"
+                        >
+                          <Square className="w-4 h-4 fill-white" />
+                        </button>
+                      ) : (
+                        <button
+                          type="submit"
+                          disabled={!chatInput.trim()}
+                          className="min-w-[40px] min-h-[40px] p-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:opacity-50 text-white transition-colors cursor-pointer shrink-0 flex items-center justify-center"
+                          title="Send message"
+                          aria-label="Send message"
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                      )}
+                    </form>
+                  </div>
                 </>
               )}
             </div>
@@ -1098,27 +1271,28 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
           {/* TAB 1: DEBUGGER */}
           {activeTab === "debug" && (
-            <div className="space-y-4">
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-xs space-y-2">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-xs space-y-2.5">
                 <div className="text-slate-800 dark:text-slate-200 font-bold">Inspect & Fix Code Bug</div>
-                <p className="text-slate-500 dark:text-slate-400 text-[11px]">
-                  Scans your Python code and error traces to deliver instant corrections and tips.
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                  Checks your Python code and error message to show what went wrong and how to fix it.
                 </p>
 
                 {errorMessage && (
-                  <div className="p-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded font-mono text-[11px] text-rose-700 dark:text-rose-300">
-                    {errorMessage.slice(0, 300)}
+                  <div className="p-2.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-lg font-mono text-[11px] text-rose-700 dark:text-rose-300 max-h-32 overflow-y-auto whitespace-pre-wrap">
+                    {errorMessage.slice(0, 400)}
                   </div>
                 )}
 
                 {loading ? (
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       disabled
-                      className="flex-1 py-2 bg-blue-500/80 text-white rounded-lg font-bold flex items-center justify-center gap-2"
+                      className="flex-1 min-h-[42px] py-2 bg-blue-500/80 text-white rounded-lg font-bold flex items-center justify-center gap-2"
                     >
                       <RotateCcw className="w-4 h-4 animate-spin" />
-                      <span>Analyzing Code...</span>
+                      <span>Checking code...</span>
                     </button>
                     <button
                       type="button"
@@ -1131,8 +1305,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={handleDebug}
-                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                    className="w-full min-h-[44px] py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
                   >
                     <Bug className="w-4 h-4" />
                     <span>Find Fix</span>
@@ -1142,14 +1317,16 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
               {debugResult && (
                 <div className="space-y-3">
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs space-y-2">
-                    <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-mono text-[10px] uppercase font-bold">
-                      Bug Type: {debugResult.bugType}
-                    </span>
-                    <p className="text-slate-800 dark:text-slate-200">{debugResult.explanation}</p>
+                  <div className="p-3.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs space-y-2">
+                    <div className="text-[11px] font-mono font-bold text-blue-800 dark:text-[#8BBEFF] uppercase tracking-wider">
+                      Bug type · {debugResult.bugType}
+                    </div>
+                    <p className="text-slate-800 dark:text-slate-200 leading-relaxed">
+                      {debugResult.explanation}
+                    </p>
 
-                    {debugResult.tips && (
-                      <ul className="list-disc list-inside text-slate-600 dark:text-slate-400 text-[11px] space-y-1">
+                    {debugResult.tips && debugResult.tips.length > 0 && (
+                      <ul className="list-disc list-inside text-slate-600 dark:text-slate-400 text-[11px] space-y-1 pt-1">
                         {debugResult.tips.map((tip, idx) => (
                           <li key={idx}>{tip}</li>
                         ))}
@@ -1157,22 +1334,43 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                     )}
                   </div>
 
-                  {/* Fixed Code Display */}
+                  {/* Fixed Code Display with Prism Syntax Highlighting + Copy */}
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center text-xs font-mono text-slate-700 dark:text-slate-300">
-                      <span>Corrected Python Code</span>
-                      <button
-                        onClick={() => applyCodeFix(debugResult.fixedCode)}
-                        className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-sans text-xs font-bold flex items-center gap-1 shadow-sm"
-                      >
-                        {applied ? <Check className="w-3.5 h-3.5" /> : <Code2 className="w-3.5 h-3.5" />}
-                        <span>{applied ? "Applied!" : "Apply Fix to Code"}</span>
-                      </button>
+                    <div className="flex flex-wrap justify-between items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
+                      <span className="font-mono font-semibold">Fixed Python Code</span>
+                      <div className="flex items-center gap-1.5">
+                        <CopyCodeButton code={debugResult.fixedCode} compact />
+                        <button
+                          type="button"
+                          onClick={() => applyCodeFix(debugResult.fixedCode)}
+                          className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-sans text-xs font-bold flex items-center gap-1 shadow-xs cursor-pointer"
+                        >
+                          {applied ? <Check className="w-3.5 h-3.5" /> : <Code2 className="w-3.5 h-3.5" />}
+                          <span>{applied ? "Applied!" : "Apply Fix"}</span>
+                        </button>
+                      </div>
                     </div>
-                    <pre className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-xs text-emerald-700 dark:text-emerald-400 overflow-x-auto">
-                      {debugResult.fixedCode}
+                    <pre className="p-3 bg-slate-50 dark:bg-[#050608] border border-slate-200 dark:border-[#252933] rounded-xl font-mono text-xs overflow-x-auto leading-relaxed text-slate-800 dark:text-[#F3F4F6]">
+                      <code
+                        dangerouslySetInnerHTML={{
+                          __html: highlightPython(debugResult.fixedCode),
+                        }}
+                      />
                     </pre>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      askFollowUpInChat(
+                        `Can you explain the ${debugResult.bugType} fix you suggested in simple steps?`
+                      )
+                    }
+                    className="w-full py-2 px-3 rounded-lg border border-slate-200 dark:border-[#252933] hover:bg-slate-50 dark:hover:bg-[#15171E] text-xs font-semibold text-blue-600 dark:text-[#8BBEFF] flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Ask a follow-up question in Chat</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -1180,21 +1378,22 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
           {/* TAB 2: GUIDED COMMENTS */}
           {activeTab === "comments" && (
-            <div className="space-y-4">
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-xs space-y-2">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-xs space-y-2.5">
                 <div className="text-slate-800 dark:text-slate-200 font-bold">Add Code Comments</div>
-                <p className="text-slate-500 dark:text-slate-400 text-[11px]">
-                  Adds clear <span className="font-mono text-blue-600 dark:text-blue-400"># comments</span> to explain what each part of your code does.
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                  Adds short <span className="font-mono text-blue-600 dark:text-blue-400"># comments</span> above key lines to explain what your script does.
                 </p>
 
                 {loading ? (
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       disabled
-                      className="flex-1 py-2 bg-blue-500/80 text-white rounded-lg font-bold flex items-center justify-center gap-2"
+                      className="flex-1 min-h-[42px] py-2 bg-blue-500/80 text-white rounded-lg font-bold flex items-center justify-center gap-2"
                     >
                       <RotateCcw className="w-4 h-4 animate-spin" />
-                      <span>Adding Comments...</span>
+                      <span>Adding comments...</span>
                     </button>
                     <button
                       type="button"
@@ -1207,8 +1406,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={handleAddComments}
-                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                    className="w-full min-h-[44px] py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
                   >
                     <MessageSquare className="w-4 h-4" />
                     <span>Add Comments</span>
@@ -1218,23 +1418,31 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
               {commentResult && (
                 <div className="space-y-3">
-                  <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-lg text-xs text-emerald-800 dark:text-emerald-300">
+                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-lg text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
                     {commentResult.summary}
                   </div>
 
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center text-xs font-mono text-slate-700 dark:text-slate-300">
-                      <span>Commented Python Code</span>
-                      <button
-                        onClick={() => applyCodeFix(commentResult.commentedCode)}
-                        className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-sans text-xs font-bold flex items-center gap-1"
-                      >
-                        {applied ? <Check className="w-3.5 h-3.5" /> : <Code2 className="w-3.5 h-3.5" />}
-                        <span>{applied ? "Applied!" : "Apply Comments"}</span>
-                      </button>
+                    <div className="flex flex-wrap justify-between items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
+                      <span className="font-mono font-semibold">Commented Python Code</span>
+                      <div className="flex items-center gap-1.5">
+                        <CopyCodeButton code={commentResult.commentedCode} compact />
+                        <button
+                          type="button"
+                          onClick={() => applyCodeFix(commentResult.commentedCode)}
+                          className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-sans text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          {applied ? <Check className="w-3.5 h-3.5" /> : <Code2 className="w-3.5 h-3.5" />}
+                          <span>{applied ? "Applied!" : "Apply Comments"}</span>
+                        </button>
+                      </div>
                     </div>
-                    <pre className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-xs text-slate-800 dark:text-slate-100 overflow-x-auto whitespace-pre-wrap">
-                      {commentResult.commentedCode}
+                    <pre className="p-3 bg-slate-50 dark:bg-[#050608] border border-slate-200 dark:border-[#252933] rounded-xl font-mono text-xs text-slate-800 dark:text-[#F3F4F6] overflow-x-auto leading-relaxed">
+                      <code
+                        dangerouslySetInnerHTML={{
+                          __html: highlightPython(commentResult.commentedCode),
+                        }}
+                      />
                     </pre>
                   </div>
                 </div>
@@ -1244,26 +1452,27 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
           {/* TAB 3: CODE EXPLAINER */}
           {activeTab === "explain" && (
-            <div className="space-y-4">
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 text-xs space-y-2">
-                <div className="text-slate-800 dark:text-slate-200 font-medium">Explain Code</div>
-                <p className="text-slate-600 dark:text-slate-400 text-[11px]">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-xs space-y-2.5">
+                <div className="text-slate-800 dark:text-slate-200 font-bold">Explain Code</div>
+                <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
                   Explains what your Python code does in simple, plain words.
                 </p>
 
                 {loading ? (
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       disabled
-                      className="flex-1 py-2 bg-blue-500/80 text-white rounded font-medium flex items-center justify-center gap-2"
+                      className="flex-1 min-h-[42px] py-2 bg-blue-500/80 text-white rounded-lg font-medium flex items-center justify-center gap-2"
                     >
                       <RotateCcw className="w-4 h-4 animate-spin" />
-                      <span>Explaining Code...</span>
+                      <span>Explaining code...</span>
                     </button>
                     <button
                       type="button"
                       onClick={handleCancelAiRequest}
-                      className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <Square className="w-3.5 h-3.5 fill-white" />
                       <span>Cancel</span>
@@ -1271,8 +1480,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={handleExplain}
-                    className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    className="w-full min-h-[44px] py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
                     <HelpCircle className="w-4 h-4" />
                     <span>Explain Code</span>
@@ -1282,35 +1492,43 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
               {explainResult && (
                 <div className="space-y-3 text-xs">
-                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-1">
-                    <div className="font-semibold text-blue-600 dark:text-blue-400">Summary:</div>
-                    <p className="text-slate-800 dark:text-slate-200">{explainResult.summary}</p>
+                  <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                    <div className="font-semibold text-blue-600 dark:text-blue-400">Summary</div>
+                    <p className="text-slate-800 dark:text-slate-200 leading-relaxed">{explainResult.summary}</p>
                   </div>
 
-                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
-                    <div className="font-semibold text-emerald-700 dark:text-emerald-400">Steps:</div>
-                    <ol className="list-decimal list-inside space-y-1 text-slate-800 dark:text-slate-200">
+                  <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                    <div className="font-semibold text-emerald-700 dark:text-emerald-400">Step by Step</div>
+                    <ol className="list-decimal list-inside space-y-1.5 text-slate-800 dark:text-slate-200 leading-relaxed">
                       {explainResult.steps.map((step, idx) => (
                         <li key={idx}>{step}</li>
                       ))}
                     </ol>
                   </div>
 
-                  {explainResult.concepts && (
-                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-1">
-                      <div className="font-semibold text-purple-700 dark:text-purple-300">Topics Used:</div>
-                      <div className="flex flex-wrap gap-1.5 mt-1">
-                        {explainResult.concepts.map((c, idx) => (
-                          <span
-                            key={idx}
-                            className="px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-mono text-[10px] border border-purple-200 dark:border-purple-500/20"
-                          >
-                            {c}
-                          </span>
-                        ))}
-                      </div>
+                  {explainResult.concepts && explainResult.concepts.length > 0 && (
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+                      <div className="font-semibold text-purple-700 dark:text-purple-300">Topics Used</div>
+                      <p className="text-[11px] font-mono text-slate-700 dark:text-slate-300 leading-relaxed">
+                        {explainResult.concepts.join(" · ")}
+                      </p>
                     </div>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      askFollowUpInChat(
+                        `Walk me through ${
+                          explainResult.concepts?.[0] || "this Python code"
+                        } with a quick practice example.`
+                      )
+                    }
+                    className="w-full py-2 px-3 rounded-lg border border-slate-200 dark:border-[#252933] hover:bg-slate-50 dark:hover:bg-[#15171E] text-xs font-semibold text-blue-600 dark:text-[#8BBEFF] flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Ask a follow-up question in Chat</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -1318,18 +1536,19 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
 
           {/* TAB 4: LESSON HINT */}
           {activeTab === "hint" && (
-            <div className="space-y-4">
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 text-xs space-y-2">
-                <div className="text-slate-800 dark:text-slate-200 font-medium">Get a Hint</div>
-                <p className="text-slate-600 dark:text-slate-400 text-[11px]">
-                  Get a small hint for your current task without giving away the full answer.
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-xs space-y-2.5">
+                <div className="text-slate-800 dark:text-slate-200 font-bold">Get a Hint</div>
+                <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
+                  Get a helpful nudge for your current task without giving away the full answer.
                 </p>
 
                 {loading ? (
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       disabled
-                      className="flex-1 py-2 bg-blue-500/80 text-white rounded font-medium flex items-center justify-center gap-2"
+                      className="flex-1 min-h-[42px] py-2 bg-blue-500/80 text-white rounded-lg font-medium flex items-center justify-center gap-2"
                     >
                       <RotateCcw className="w-4 h-4 animate-spin" />
                       <span>Thinking...</span>
@@ -1337,7 +1556,7 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                     <button
                       type="button"
                       onClick={handleCancelAiRequest}
-                      className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <Square className="w-3.5 h-3.5 fill-white" />
                       <span>Cancel</span>
@@ -1345,8 +1564,9 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={handleGetHint}
-                    className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    className="w-full min-h-[44px] py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
                     <Lightbulb className="w-4 h-4" />
                     <span>Show Hint</span>
@@ -1355,17 +1575,34 @@ export const AIAssistPanel: React.FC<AIAssistPanelProps> = ({
               </div>
 
               {hintResult && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg text-xs space-y-2 text-amber-800 dark:text-amber-200">
-                  <div className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-                    <Lightbulb className="w-4 h-4" />
-                    <span>Hint</span>
-                  </div>
-                  <p>{hintResult.hint}</p>
-                  {hintResult.conceptToReview && (
-                    <div className="text-[11px] font-mono text-slate-600 dark:text-slate-400">
-                      Topic to review: <span className="text-amber-700 dark:text-amber-300">{hintResult.conceptToReview}</span>
+                <div className="space-y-3">
+                  <div className="p-3.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-xl text-xs space-y-2 text-amber-800 dark:text-amber-200">
+                    <div className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                      <Lightbulb className="w-4 h-4" />
+                      <span>Hint</span>
                     </div>
-                  )}
+                    <p className="leading-relaxed">{hintResult.hint}</p>
+                    {hintResult.conceptToReview && (
+                      <div className="text-[11px] font-mono text-slate-600 dark:text-slate-400">
+                        Topic to review: <span className="text-amber-700 dark:text-amber-300">{hintResult.conceptToReview}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      askFollowUpInChat(
+                        `I still need a bit more help with ${
+                          hintResult.conceptToReview || lessonContext?.title || "this step"
+                        }. What should my first line be?`
+                      )
+                    }
+                    className="w-full py-2 px-3 rounded-lg border border-slate-200 dark:border-[#252933] hover:bg-slate-50 dark:hover:bg-[#15171E] text-xs font-semibold text-blue-600 dark:text-[#8BBEFF] flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Still stuck? Ask in Chat</span>
+                  </button>
                 </div>
               )}
             </div>

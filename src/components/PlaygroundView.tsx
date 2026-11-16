@@ -454,7 +454,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-[calc(100vh-7.5rem)] lg:min-h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-3.5rem)] overflow-y-auto lg:overflow-hidden bg-slate-50 dark:bg-[#08090D] p-1.5 xs:p-2.5 sm:p-4 2xl:p-6 space-y-3 w-full max-w-[2400px] mx-auto">
+    <div className="flex-1 flex flex-col min-h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] lg:min-h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-3.5rem)] overflow-y-auto lg:overflow-hidden bg-slate-50 dark:bg-[#08090D] p-1.5 xs:p-2.5 sm:p-4 2xl:p-6 pb-20 lg:pb-4 space-y-2.5 sm:space-y-3 w-full max-w-[2400px] mx-auto">
       {quizReturnContext && onReturnToQuiz && (
         <div className="rounded-xl border border-blue-200 dark:border-[#8BBEFF]/30 bg-blue-50/70 dark:bg-[#15171E] px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0">
           <div className="min-w-0 flex-1 flex items-center gap-2 text-xs">
@@ -490,94 +490,51 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
         </div>
       )}
 
-      {/* Refined 'Graphite' Unified Toolbar Bar */}
-      <div className="bg-white dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] rounded-2xl px-3 py-2 flex items-center justify-between gap-2 select-none shadow-xs shrink-0 backdrop-blur-md relative z-20">
-        {/* Left: User Cloud Files Selector */}
-        <CloudFileManager
-          currentUser={currentUser}
-          userFiles={userFiles}
-          activeFileId={activeFileId}
-          activeCode={activeCode}
-          onSelectFile={onSelectFile}
-          onSaveFile={onSaveFile}
-          onCreateFile={onCreateFile}
-          onDeleteFile={onDeleteFile}
-          onOpenAuth={onOpenAuth}
-        />
-
-        {/* Right: Icon-Based View Switcher + Unified Action Menu + Run Button */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Mobile/Tablet View Switcher (Icon-Based: Code | Output | Split) */}
-          <div className="lg:hidden flex items-center bg-slate-100 dark:bg-[#252933] p-1 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setMobileTab("editor")}
-              className={`p-1.5 px-2 rounded-lg transition-all flex items-center gap-1 cursor-pointer touch-target ${
-                mobileTab === "editor"
-                  ? "bg-white dark:bg-[#15171E] text-blue-600 dark:text-[#8BBEFF] shadow-xs font-bold"
-                  : "text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
-              }`}
-              title="Show Code Editor Only"
-            >
-              <CodeIcon className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden sm:inline">Code</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileTab("terminal")}
-              className={`p-1.5 px-2 rounded-lg transition-all flex items-center gap-1 cursor-pointer touch-target ${
-                mobileTab === "terminal"
-                  ? "bg-white dark:bg-[#15171E] text-blue-600 dark:text-[#8BBEFF] shadow-xs font-bold"
-                  : "text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
-              }`}
-              title="Show Terminal Output Only"
-            >
-              <TerminalIcon className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden sm:inline">Output</span>
-              {executionResult?.isError && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#F08089]" />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileTab("split")}
-              className={`p-1.5 px-2 rounded-lg transition-all flex items-center gap-1 cursor-pointer touch-target ${
-                mobileTab === "split"
-                  ? "bg-white dark:bg-[#15171E] text-blue-600 dark:text-[#8BBEFF] shadow-xs font-bold"
-                  : "text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
-              }`}
-              title="Split View Editor and Terminal"
-            >
-              <Columns className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden sm:inline">Split</span>
-            </button>
+      {/* Refined Unified Toolbar Bar (Two clean rows on mobile/tablet, single row on desktop) */}
+      <div className="bg-white dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] rounded-2xl px-2.5 sm:px-3 py-2 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 select-none shadow-xs shrink-0 backdrop-blur-md relative z-20">
+        {/* Row 1: File Manager + Tools + Primary Run/Stop */}
+        <div className="flex items-center justify-between gap-2 w-full min-w-0">
+          <div className="min-w-0 flex-1 lg:flex-initial overflow-x-auto no-scrollbar">
+            <CloudFileManager
+              currentUser={currentUser}
+              userFiles={userFiles}
+              activeFileId={activeFileId}
+              activeCode={activeCode}
+              onSelectFile={onSelectFile}
+              onSaveFile={onSaveFile}
+              onCreateFile={onCreateFile}
+              onDeleteFile={onDeleteFile}
+              onOpenAuth={onOpenAuth}
+            />
           </div>
 
-          {/* Unified 'Action Menu' Collapsed Secondary Controls */}
-          <div className="relative">
-            <button
-              id="playground-action-menu-toggle"
-              type="button"
-              onClick={() => setActionMenuOpen(!actionMenuOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer touch-target ${
-                actionMenuOpen
-                  ? "bg-slate-200 dark:bg-[#252933] border-blue-500/50 dark:border-[#8BBEFF]/50 text-blue-600 dark:text-[#8BBEFF]"
-                  : "bg-slate-100 dark:bg-[#252933] hover:bg-slate-200 dark:hover:bg-[#353A46] border-slate-200 dark:border-white/10 text-slate-700 dark:text-[#F3F4F6]"
-              }`}
-              title="Open secondary code tools"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
-              <span className="hidden sm:inline">Tools</span>
-              <ChevronDown className={`w-3 h-3 transition-transform ${actionMenuOpen ? "rotate-180" : ""}`} />
-            </button>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Unified 'Action Menu' Collapsed Secondary Controls */}
+            <div className="relative">
+              <button
+                id="playground-action-menu-toggle"
+                type="button"
+                onClick={() => setActionMenuOpen(!actionMenuOpen)}
+                className={`min-h-[38px] flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  actionMenuOpen
+                    ? "bg-slate-200 dark:bg-[#252933] border-blue-500/50 dark:border-[#8BBEFF]/50 text-blue-600 dark:text-[#8BBEFF]"
+                    : "bg-slate-100 dark:bg-[#252933] hover:bg-slate-200 dark:hover:bg-[#353A46] border-slate-200 dark:border-white/10 text-slate-700 dark:text-[#F3F4F6]"
+                }`}
+                title="Open secondary code tools"
+                aria-label="Open code tools"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600 dark:text-[#8BBEFF]" />
+                <span className="hidden xs:inline">Tools</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${actionMenuOpen ? "rotate-180" : ""}`} />
+              </button>
 
-            {actionMenuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-30"
-                  onClick={() => setActionMenuOpen(false)}
-                />
-                <div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] rounded-2xl p-1.5 shadow-xl z-40 space-y-1 font-sans text-xs">
+              {actionMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setActionMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-[#15171E] border border-slate-200 dark:border-[#252933] rounded-2xl p-1.5 shadow-xl z-40 space-y-1 font-sans text-xs">
                     {/* Starter Templates Picker */}
                     <div>
                       <button
@@ -684,31 +641,80 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                   </div>
                 </>
               )}
-          </div>
+            </div>
 
-          {/* Icon-Based Primary Run / Stop Code Navigation */}
-          {isRunning ? (
-            <button
-              id="btn-stop-code"
-              onClick={handleStop}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 touch-target"
-              title="Stop running Python code"
-            >
-              <Square className="w-4 h-4 fill-current shrink-0" />
-              <span className="font-bold">Stop</span>
-            </button>
-          ) : (
-            <button
-              id="btn-run-code"
-              onClick={handleRun}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#65D9D0] dark:hover:bg-[#65D9D0]/90 text-white dark:text-[#050608] text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer shrink-0 touch-target"
-              title="Run Python code (Ctrl+Enter)"
-            >
-              <Play className="w-4 h-4 fill-current shrink-0" />
-              <span className="font-bold">Run</span>
-              <span className="hidden xl:inline font-mono opacity-80 text-[10px]">(Ctrl+Enter)</span>
-            </button>
-          )}
+            {/* Icon-Based Primary Run / Stop Code Navigation */}
+            {isRunning ? (
+              <button
+                id="btn-stop-code"
+                type="button"
+                onClick={handleStop}
+                className="min-h-[38px] flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
+                title="Stop running Python code"
+              >
+                <Square className="w-4 h-4 fill-current shrink-0" />
+                <span className="font-bold">Stop</span>
+              </button>
+            ) : (
+              <button
+                id="btn-run-code"
+                type="button"
+                onClick={handleRun}
+                className="min-h-[38px] flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#65D9D0] dark:hover:bg-[#65D9D0]/90 text-white dark:text-[#050608] text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
+                title="Run Python code (Ctrl+Enter)"
+              >
+                <Play className="w-4 h-4 fill-current shrink-0" />
+                <span className="font-bold">Run</span>
+                <span className="hidden xl:inline font-mono opacity-80 text-[10px]">(Ctrl+Enter)</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Row 2 (Mobile & Tablet only): Full-width Code | Output | Split View Switcher */}
+        <div className="lg:hidden grid grid-cols-3 gap-1 bg-slate-100 dark:bg-[#252933] p-1 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-semibold">
+          <button
+            type="button"
+            onClick={() => setMobileTab("editor")}
+            className={`min-h-[36px] py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              mobileTab === "editor"
+                ? "bg-white dark:bg-[#15171E] text-blue-600 dark:text-[#8BBEFF] shadow-xs font-bold"
+                : "text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
+            }`}
+            title="Show Code Editor Only"
+          >
+            <CodeIcon className="w-3.5 h-3.5 shrink-0" />
+            <span>Code</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab("terminal")}
+            className={`min-h-[36px] py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              mobileTab === "terminal"
+                ? "bg-white dark:bg-[#15171E] text-blue-600 dark:text-[#8BBEFF] shadow-xs font-bold"
+                : "text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
+            }`}
+            title="Show Terminal Output Only"
+          >
+            <TerminalIcon className="w-3.5 h-3.5 shrink-0" />
+            <span>Output</span>
+            {executionResult?.isError && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#F08089]" aria-hidden="true" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab("split")}
+            className={`min-h-[36px] py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              mobileTab === "split"
+                ? "bg-white dark:bg-[#15171E] text-blue-600 dark:text-[#8BBEFF] shadow-xs font-bold"
+                : "text-slate-600 dark:text-[#BFC4CE] hover:text-slate-900 dark:hover:text-[#F3F4F6]"
+            }`}
+            title="Split View Editor and Terminal"
+          >
+            <Columns className="w-3.5 h-3.5 shrink-0" />
+            <span>Split</span>
+          </button>
         </div>
       </div>
 
@@ -721,8 +727,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             mobileTab === "terminal"
               ? "hidden lg:flex lg:h-full"
               : mobileTab === "editor"
-              ? "h-[calc(100vh-12rem)] lg:h-full"
-              : "h-[220px] xs:h-[260px] sm:h-[300px] md:h-[340px] lg:h-full"
+              ? "h-[calc(100dvh-16rem)] min-h-[340px] lg:h-full"
+              : "h-[250px] xs:h-[270px] sm:h-[310px] md:h-[340px] lg:h-full"
           }`}
         >
           <CodeEditor
@@ -742,8 +748,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             mobileTab === "editor"
               ? "hidden lg:flex lg:h-full"
               : mobileTab === "terminal"
-              ? "h-[calc(100vh-12rem)] lg:h-full"
-              : "h-[200px] xs:h-[230px] sm:h-[270px] md:h-[310px] lg:h-full"
+              ? "h-[calc(100dvh-16rem)] min-h-[320px] lg:h-full"
+              : "h-[220px] xs:h-[240px] sm:h-[270px] md:h-[310px] lg:h-full"
           }`}
         >
           <TerminalOutput
